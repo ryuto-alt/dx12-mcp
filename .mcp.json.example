@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/mcp.json",
+  "_comment": "テンプレ。このファイルを .mcp.json にコピーし、<REPO> を clone した絶対パスに置換する(例 Windows: C:/Users/you/dx12, macOS/Linux: /home/you/dx12)。.mcp.json は .gitignore 済みなので各自で生成する。パスは Windows でも前方スラッシュ '/' でOK(Node が解釈する)。絶対パスを手で書く代わりに install.ps1 / install.sh を実行すれば解決済みの登録コマンドが出る。MCP サーバは純 Node(v24+)製で C++ 非依存=Windows/macOS/Linux から動く。別マシンの Windows エディタを遠隔操作する場合は env DX12_MCP_HOST をそのホストの IP にする。",
+  "mcpServers": {
+    "dx12-engine": {
+      "command": "node",
+      "args": ["<REPO>/tools/mcp-server/index.ts"],
+      "env": {
+        "DX12_MCP_HOST": "127.0.0.1",
+        "DX12_MCP_PORT": "8787"
+      }
+    }
+  }
+}
