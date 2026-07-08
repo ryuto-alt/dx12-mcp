@@ -323,6 +323,43 @@ dx12_validate_scene()
 
 ---
 
+## テクスチャ / アニメーション / マルチプレイヤー(v0.5.0 追加)
+
+### テクスチャ割当
+```
+dx12_list_assets(type:"texture")                       # パスを探す
+dx12_set_texture(name:"Wall", path:"textures/brick.png")            # albedo(既定)
+dx12_set_texture(name:"Wall", path:"textures/brick_n.png", slot:"normal")
+dx12_set_texture(name:"Wall", path:"")                 # 解除(Material 既定に戻す)
+```
+Inspector の D&D と同じインスタンス単位 override。Material は共有なので他インスタンスに波及しない。
+スプライトのテクスチャは `dx12_set_component(component:"sprite2d", data:{texturePath:...})` の方。
+
+### スケルタルアニメーション
+```
+dx12_get_anim_state(name:"Player")                     # → {clips:["Idle","Walk","Run"]}
+dx12_play_anim(name:"Player", clipName:"Run", blend:0.2)
+```
+アニメーションの時間進行は Play 中。クリップはモデルロード時に読み込まれたもののみ。
+
+### マルチプレイヤーのローカルテストループ
+```
+# ①複製したいエンティティに複製マークを付ける(Editor 中)
+dx12_set_component(name:"Player", component:"networkIdentity", data:{})
+dx12_set_component(name:"Player", component:"networkTransform", data:{syncPosition:true})
+# ②ロール設定 → Play(EnterPlayMode が自動で Host する)
+dx12_net_setup(role:"host")
+dx12_play()
+# ③2個目のエンジンプロセスを起動して自動接続させる
+dx12_net_launch_test_client()
+dx12_step_frames(120)                                  # 接続待ち
+# ④観測
+dx12_net_status()                                      # → players:[{id,rttMs,...}], syncedEntityCount
+```
+`net_launch_test_client` はホスト Playing 中のみ。終わったら `dx12_stop`(ロールは `net_setup(role:"offline")` で解除)。
+
+---
+
 ## MODE_CONFLICT(3): Playing 中は生成系が失敗する
 
 Playing 中に `create_entity` / `spawn_model` / `delete_entity` / `open_scene` 等を呼ぶと
