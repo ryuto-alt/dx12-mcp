@@ -2,7 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { EngineClient } from "./engineClient.ts";
+import { auditUiTree, designBrief } from "./uiQuality.ts";
+import { BLUEPRINT_EXAMPLE, composeUi } from "./uiComposer.ts";
+import { compareUiImages } from "./uiCompare.ts";
+import { downloadFont } from "./uiAssets.ts";
 
 // DX12 ゲームエンジン用 MCP サーバ。Codex / Claude Code から接続し、
 // 起動中のエディタ(TCP 127.0.0.1:<port>)を叩いてゲームを作っていくための入口。
@@ -16,7 +22,7 @@ import { EngineClient } from "./engineClient.ts";
 // result のフィールド名(entityId 等)もエンジンの返り値をそのまま通す。
 
 const engine = new EngineClient();
-const server = new McpServer({ name: "dx12-engine", version: "0.5.0" });
+const server = new McpServer({ name: "dx12-engine", version: "0.7.0" });
 
 type ToolResult = {
   content: ({ type: "text"; text: string } | { type: "image"; data: string; mimeType: string })[];
@@ -203,6 +209,48 @@ reg(
 );
 
 reg(
+  "dx12_ui_tree",
+  "UIツリー取得",
+  "ゲーム内 UI のツリー構造を丸ごと JSON で返す(キャンバスごと)。各ノード: {entityId, name, components(uiImage/uiButton等の種別), uiRect(anchor/offset/order/visible), resolvedRect:[x,y,w,h](レイアウト解決済み・キャンバス空間px=uiRectと同じ単位), text?, children}。★UI を組む時の基本ループ: create_entity(ui_*) → set_component(uiRect等) → ui_tree で位置を数値確認 → dx12_ui_screenshot で見た目確認。兄弟の描画順は uiRect.order(大きいほど手前)、親変更は dx12_set_parent。",
+  {},
+  { readOnlyHint: true },
+  () => run(() => engine.call("ui_tree", {})),
+);
+
+reg(
+  "dx12_ui_design_brief",
+  "ゲームUIデザイン方針",
+  "画面を組む前に、ジャンルと画面目的から構図・視覚階層・余白・操作サイズ・避けるべきAI的表現を返す。単なる色テーマではなく、title/HUD/inventory/settings/result/dialogごとに情報設計を変える。★ui_composeや手動生成の前に呼び、返ったbriefを設計判断の基準にする。",
+  {
+    genre: z.enum(["cinematic", "tactical", "fantasy", "horror", "arcade", "cozy"]).describe("作品の視覚文法。安易な青紫ネオン固定を避け、ゲーム固有の方向性を選ぶ。"),
+    screen: z.enum(["title", "hud", "inventory", "settings", "result", "dialog", "other"]).describe("作る画面の役割。"),
+    tone: z.string().optional().describe("premium / playful / restrained / brutalist 等の補助トーン。"),
+  },
+  { readOnlyHint: true },
+  ({ genre, screen, tone }) => run(async () => designBrief(genre, screen, tone)),
+);
+
+reg(
+  "dx12_ui_audit",
+  "ゲームUI品質監査",
+  "現在のui_treeを自動解析し、崩れ・入力遮断・小さな操作領域・文字切れ・文字あふれ・rich/wrap競合・操作要素の重なり・過装飾・色の散乱を検出する。score/grade/passと、entityId付きの修正案を返す。★UI生成後は必ずstrictでpassさせ、その後ui_screenshotで美的判断を行う。数値監査だけで完成扱いにしない。",
+  { strictness: z.enum(["balanced", "strict"]).optional().describe("strictはwarningが1件でもpass=false。最終検証ではstrict推奨。") },
+  { readOnlyHint: true },
+  ({ strictness }) => run(async () => auditUiTree(await engine.call("ui_tree", {}), strictness ?? "balanced")),
+);
+
+reg(
+  "dx12_ui_compose",
+  "制約付きゲームUI構築",
+  "役割(role)とレイアウト意図(dock/stack/grid)から、Canvas・UIRect・UILayout・スタイル・ボタンラベル・控えめなインタラクションをまとめて構築する。生offsetの手計算を減らしUI崩れを防ぐ。themeは色だけでなく角・枠・コントラストの文法を変える。既存UIは消さず、prefix付きの新Canvasを作る。失敗時は作成Canvasを自動削除して半端なUIを残さない。構築後は返されるnext順にui_audit→ui_screenshot→save_sceneを行う。blueprint例: " + JSON.stringify(BLUEPRINT_EXAMPLE),
+  {
+    blueprint: z.any().describe("{theme,prefix,sortOrder?,root}。node={name,kind:'panel|text|button|stack|grid',role?,text?,event?,layout?,flow?,style?,textStyle?,children?}。layout.dock='fill|top|bottom|left|right|center|point', margin=数値または[l,t,r,b], width/height。stack.flow={direction:'vertical|horizontal',cellHeight,cellWidth,spacing,padding}、grid.flow={columns,...}。全nameはblueprint内で一意。"),
+  },
+  { destructiveHint: false },
+  ({ blueprint }) => run(() => composeUi(engine, blueprint)),
+);
+
+reg(
   "dx12_describe_lua_api",
   "Lua API 辞書",
   "Lua コンポーネントスクリプトから使えるバインディング一覧を binding ごと(entity/transform/Vec3/self/scene/input/camera/physics/audio/ui/fx/events/globals/prelude)に返す静的辞書。★重要: MCP で見えるコンポーネントと Lua から読める API は違う。entity から直接読めるデータは transform だけで、entity.boxCollider 等は nil(collider/rigidBody の値は physics:getVelocity(e) 等の別 API 経由)。Lua を書く前にこれで実際に読める API を確認すると取り違えを防げる。",
@@ -278,7 +326,7 @@ reg(
   "コンポーネントを設定(無ければ追加・あれば置換)。component は jsonKey、data は dx12_describe_components の形。tags は data=文字列配列、DataComponent(data) は {key:{t,v}} オブジェクト。即時反映で {entityId, component} を返す。形が不安なら先に dx12_describe_components を見るとええ。",
   {
     ...entityRef,
-    component: z.string().describe("jsonKey。例: pointLight, directionalLight, spotLight, camera, rigidBody, boxCollider, transform, tags, data, particleEmitter, trailRenderer, networkIdentity, networkTransform, sprite2d, audioSource, trigger"),
+    component: z.string().describe("jsonKey。例: pointLight, directionalLight, spotLight, camera, rigidBody, boxCollider, transform, tags, data, particleEmitter, trailRenderer, networkIdentity, networkTransform, sprite2d, audioSource, trigger, uiCanvas, uiRect, uiImage, uiText, uiButton, uiSlider, uiToggle, uiScrollView, uiAnimator"),
     data: z.union([z.record(z.any()), z.array(z.any())]).describe("コンポーネントの値。オブジェクト or 配列(tags は文字列配列)。dx12_describe_components の fields に合わせる。"),
   },
   { idempotentHint: true },
@@ -490,20 +538,24 @@ reg(
 reg(
   "dx12_create_entity",
   "エンティティ生成",
-  "エンティティを生成する(エディタ専用)。フレーム境界で実処理されるが、Node が完了を待って【本物の {entityId, name, sceneGeneration} を同期で返す】({queued} は返らへん)。idempotency_key を付けると、再試行で同じキーが来ても二重生成されず同じ結果が返る。light_*/camera/particle_emitter/trigger は既定パラメータで生成される空エンティティ+コンポーネント(中身は dx12_describe_components 参照)。細かい値は生成後 dx12_set_component / dx12_set_transform で調整する。",
+  "エンティティを生成する(エディタ専用)。フレーム境界で実処理されるが、Node が完了を待って【本物の {entityId, name, sceneGeneration} を同期で返す】({queued} は返らへん)。idempotency_key を付けると、再試行で同じキーが来ても二重生成されず同じ結果が返る。light_*/camera/particle_emitter/trigger は既定パラメータで生成される空エンティティ+コンポーネント(中身は dx12_describe_components 参照)。細かい値は生成後 dx12_set_component / dx12_set_transform で調整する。★ui_* はゲーム内UI: エディタと同じ部品構成で生成(ui_button=背景+ラベル子、ui_toggle=箱+ラベル子)され、応答に entityIds(生成された全id)も付く。親は parent/parentName で明示指定(省略時は最初のCanvas、Canvas不在なら自動生成)。レイアウト調整は set_component の uiRect、構造確認は dx12_ui_tree、見た目確認は dx12_ui_screenshot。",
   {
     type: z.enum([
       "box", "sphere", "plane", "empty", "camera",
       "light_directional", "light_point", "light_spot",
       "particle_emitter", "trigger",
-    ]).describe("種別。empty は Transform のみ。light_*/camera/particle_emitter/trigger は該当コンポーネント付きで生成(値は既定。set_component で調整)。"),
+      "ui_canvas", "ui_image", "ui_text", "ui_button",
+      "ui_slider", "ui_toggle", "ui_scrollview",
+    ]).describe("種別。empty は Transform のみ。light_*/camera/particle_emitter/trigger は該当コンポーネント付きで生成(値は既定。set_component で調整)。ui_* はゲーム内UI要素(uiRect 等付き)。"),
     name: z.string().optional().describe("エンティティ名(一意推奨)。省略時は種別名。"),
-    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。"),
+    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。UI 要素では未使用(uiRect で配置)。"),
+    parent: z.number().int().optional().describe("UI 要素の親エンティティ id(ui_canvas 以外で有効)。parentName と排他。"),
+    parentName: z.string().optional().describe("UI 要素の親エンティティ名(完全一致)。"),
     idempotency_key: z.string().optional().describe("再試行の重複防止キー。同じキーの再送は二重生成されない。"),
   },
   {},
-  ({ type, name, position, idempotency_key }) =>
-    run(() => engine.call("create_entity", { type, name, position, idempotency_key })),
+  ({ type, name, position, parent, parentName, idempotency_key }) =>
+    run(() => engine.call("create_entity", { type, name, position, parent, parentName, idempotency_key })),
 );
 
 // プリミティブを1コールで生成＋整形する合成ヘルパ(create_entity → set_transform/set_pbr/set_color)。
@@ -631,6 +683,15 @@ reg(
   { path: z.string().describe("assets 相対パス。例: scenes/title.json") },
   {},
   ({ path }) => run(() => engine.call("open_scene", { path })),
+);
+
+reg(
+  "dx12_open_project",
+  "プロジェクトを開く",
+  "プロジェクトを開く(ランチャーのクリックと同等)。path はプロジェクトルートの絶対パス(.dx12proj のあるフォルダ)。アセットルート/シーン/game.lua がそのプロジェクトに切り替わる。ロードは非同期に数フレームかけて進むので、完了確認は dx12_ping の currentScene / entityCount で行うこと。開いた後は古い entityId は無効になる。",
+  { path: z.string().describe("プロジェクトルートの絶対パス。例: C:/Users/me/MyGame") },
+  {},
+  ({ path }) => run(() => engine.call("open_project", { path })),
 );
 
 reg(
@@ -915,17 +976,18 @@ reg(
 reg(
   "dx12_play_anim",
   "アニメーション再生",
-  "スケルタルアニメーションのクリップをクロスフェード再生する(Lua の playAnim/playAnimByName と同じ経路)。clipName(名前) か clip(index) で指定、blend はフェード秒(既定 0.3)。loop を渡すとループ設定も変更。クリップ一覧は dx12_get_anim_state で確認。★アニメーションの更新は Play 中に進む。entity(id) か name 指定。",
+  "スケルタルアニメーションのクリップをクロスフェード再生する(Lua の playAnim/playAnimByName と同じ経路)。clipName(名前) か clip(index) で指定、blend はフェード秒(既定 0.3)。loop を渡すとループ設定、speed を渡すと再生速度倍率も変更。クリップ一覧は dx12_get_anim_state で確認。★アニメーションの更新は Play 中に進む。entity(id) か name 指定。",
   {
     ...entityRef,
     clip: z.number().int().optional().describe("クリップ index。clipName と排他(clipName 優先)。省略時 0。"),
     clipName: z.string().optional().describe("クリップ名(完全一致)。dx12_get_anim_state の clips から選ぶ。"),
     blend: z.number().optional().describe("クロスフェード秒。省略で 0.3。"),
     loop: z.boolean().optional().describe("ループ再生するか。省略で現状維持。"),
+    speed: z.number().optional().describe("再生速度倍率(1.0=等速、2.0=2倍速、0=一時停止)。省略で現状維持。"),
   },
   {},
-  ({ entity, name, clip, clipName, blend, loop }) =>
-    run(() => engine.call("play_anim", { entity, name, clip, clipName, blend, loop })),
+  ({ entity, name, clip, clipName, blend, loop, speed }) =>
+    run(() => engine.call("play_anim", { entity, name, clip, clipName, blend, loop, speed })),
 );
 
 reg(
@@ -973,8 +1035,227 @@ reg(
 );
 
 // ════════════════════════════════════════════════════════════════
+//  シーン編集の強化(カメラ操作・境界・向き・接地・階層)
+// ════════════════════════════════════════════════════════════════
+
+reg(
+  "dx12_get_editor_camera",
+  "エディタカメラ取得",
+  "シーンビューを描いてるカメラの状態を返す。{position, forward, yawDeg, pitchDeg, fovYDeg, orthographic, mode}。Editor 中はフライカメラ、Playing 中はゲームカメラ。dx12_set_editor_camera で戻す時の保存用にも。",
+  {},
+  { readOnlyHint: true },
+  () => run(() => engine.call("get_editor_camera", {})),
+);
+
+reg(
+  "dx12_set_editor_camera",
+  "エディタカメラ設定",
+  "エディタのフライカメラを任意視点に置く(focus_camera より自由。俯瞰・引き構図・特定アングルの確認用)。position で位置、target で注視点(yaw/pitch を自動逆算)、または yawDeg/pitchDeg を直接指定。★Editor 限定(Playing 中は MODE_CONFLICT)。この後 dx12_screenshot でその視点の絵が撮れる(dx12_screenshot_from が一発でやる)。",
+  {
+    position: vec3.optional().describe("カメラ位置 [x,y,z]。省略で現在位置のまま。"),
+    target: vec3.optional().describe("注視点 [x,y,z]。指定すると yaw/pitch を自動計算(yawDeg/pitchDeg より優先)。"),
+    yawDeg: z.number().optional().describe("Y軸回転(度)。target 指定時は無視。"),
+    pitchDeg: z.number().optional().describe("X軸回転(度、±89 でクランプ)。target 指定時は無視。"),
+  },
+  { idempotentHint: true },
+  ({ position, target, yawDeg, pitchDeg }) =>
+    run(() => engine.call("set_editor_camera", { position, target, yawDeg, pitchDeg })),
+);
+
+reg(
+  "dx12_get_bounds",
+  "ワールドAABB取得",
+  "エンティティのワールド空間 AABB を返す。{min, max, center, size, hasMesh}。回転・スケール・親子変換込み。「テーブルの上に置く」「壁にぴったり寄せる」等、配置座標を数値で決める時の基礎情報。includeChildren=true で子孫も含めた全体境界。メッシュ無し(ライト等)は位置の点(size=0)。",
+  {
+    ...entityRef,
+    includeChildren: z.boolean().optional().describe("true で子孫エンティティの AABB も合成する(モデルルートが empty の時に有効)。"),
+  },
+  { readOnlyHint: true },
+  ({ entity, name, includeChildren }) =>
+    run(() => engine.call("get_bounds", { entity, name, includeChildren })),
+);
+
+reg(
+  "dx12_look_at",
+  "エンティティを向ける",
+  "エンティティを目標(座標 or 別エンティティ)の方へ回転させる(+Z が正面の想定で rotation Euler を書く)。カメラを被写体へ、敵をプレイヤーへ、砲台を目標へ等。upright=true で水平回転のみ(ピッチ 0=キャラ向け)。★rotation はローカル値なので親が回転してると厳密なワールド向きからずれる。",
+  {
+    ...entityRef,
+    target: vec3.optional().describe("目標のワールド座標 [x,y,z]。targetEntity/targetName と排他。"),
+    targetEntity: z.number().int().optional().describe("目標エンティティ id。"),
+    targetName: z.string().optional().describe("目標エンティティ名(完全一致)。"),
+    upright: z.boolean().optional().describe("true でピッチ 0(水平回転のみ)。キャラや車など直立させたい時。"),
+  },
+  {},
+  ({ entity, name, target, targetEntity, targetName, upright }) =>
+    run(() => engine.call("look_at", { entity, name, target, targetEntity, targetName, upright })),
+);
+
+reg(
+  "dx12_snap_to_ground",
+  "接地(下の面に置く)",
+  "エンティティを直下の床/他メッシュの天面に置く(AABB ベース、Editor 中でも動く)。XZ が重なる他メッシュの天面のうち自分の天面以下で最も高いものへ底面を合わせる。床が無ければ y=0 平面へ。offset で浮かせられる。spawn した物が空中に浮いてる/めり込んでる時の修正に。{groundY, movedBy, position, groundEntityId?} が返る。",
+  {
+    ...entityRef,
+    offset: z.number().optional().describe("接地面からの追加オフセット(m)。既定 0。"),
+  },
+  { idempotentHint: true },
+  ({ entity, name, offset }) => run(() => engine.call("snap_to_ground", { entity, name, offset })),
+);
+
+reg(
+  "dx12_get_hierarchy",
+  "シーン階層ツリー取得",
+  "シーン全体の親子ツリーを返す。{roots:[{entityId, name, children:[...]}], count, sceneGeneration}。dx12_list_entities のフラット一覧と違い構造(どれが誰の子か)が分かる。プレハブ/モデルの内部構造確認やシーン整理に。",
+  {},
+  { readOnlyHint: true },
+  () => run(() => engine.call("get_hierarchy", {})),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  アセット操作(import / メタ情報 / 移動 / 削除)
+// ════════════════════════════════════════════════════════════════
+
+reg(
+  "dx12_import_asset",
+  "外部アセット取り込み",
+  "assets の外にあるファイル/フォルダをプロジェクトの assets/ へコピーする(ダウンロードした素材や /asset コマンドの出力の取り込み用)。sourcePath は絶対パス可(唯一 assets 外を読むツール)、destPath は assets 相対。フォルダを渡すと再帰コピー。★.gltf は同階層の .bin/テクスチャを参照するのでフォルダごと import すること。{imported:[相対パス...], count} が返る。",
+  {
+    sourcePath: z.string().describe("取り込み元の絶対パス(ファイル or フォルダ)。例: C:/Users/me/Downloads/rock.glb"),
+    destPath: z.string().describe("assets 相対の置き先。ファイルなら 'models/rock.glb'、フォルダ/末尾'/' ならその中へ元ファイル名で入る。"),
+    overwrite: z.boolean().optional().describe("true で既存を上書き。既定 false(存在したらエラー)。"),
+  },
+  {},
+  ({ sourcePath, destPath, overwrite }) =>
+    run(() => engine.call("import_asset", { sourcePath, destPath, overwrite })),
+);
+
+reg(
+  "dx12_asset_info",
+  "アセットのメタ情報",
+  "アセットの中身情報を GPU を使わず読む。モデル(gltf/glb/fbx/obj): meshCount/totalVertices/totalFaces/materialCount/boneCount/hasSkeleton/animations[{name,durationSec}]/aabbMin,aabbMax(メッシュローカル近似)。テクスチャ(png/jpg/dds/tga/bmp/hdr): width/height/mipLevels/format/isCubemap。その他は type と fileSizeBytes のみ。spawn 前に「このモデルどのくらいの大きさ? アニメ持ってる?」を確認するのに使う。",
+  {
+    path: z.string().describe("assets 相対パス。例: models/enemy.glb"),
+  },
+  { readOnlyHint: true },
+  ({ path }) => run(() => engine.call("asset_info", { path })),
+);
+
+reg(
+  "dx12_move_asset",
+  "アセット移動/リネーム",
+  "assets 内のファイル/フォルダを移動・リネームする。★シーン/プレハブ内の参照パスは自動更新されない(参照済みアセットを動かすとロードが壊れる。dx12_list_entities → get_entity で modelPath 等を確認してから)。",
+  {
+    from: z.string().describe("assets 相対の移動元。"),
+    to: z.string().describe("assets 相対の移動先。"),
+    overwrite: z.boolean().optional().describe("true で既存ファイルを上書き(ディレクトリは不可)。既定 false。"),
+  },
+  {},
+  ({ from, to, overwrite }) => run(() => engine.call("move_asset", { from, to, overwrite })),
+);
+
+reg(
+  "dx12_delete_asset",
+  "アセット削除",
+  "assets 内のファイルを削除する。ディレクトリは recursive=true が必須(誤爆防止)。★シーン/プレハブが参照中のアセットを消すとロードが壊れる。取り返しがつかないので消す前に本当に未参照か確認すること。",
+  {
+    path: z.string().describe("assets 相対パス。"),
+    recursive: z.boolean().optional().describe("ディレクトリを丸ごと消す時に true。既定 false。"),
+  },
+  { destructiveHint: true },
+  ({ path, recursive }) => run(() => engine.call("delete_asset", { path, recursive })),
+);
+
+// ════════════════════════════════════════════════════════════════
 //  合成ツール(エンジンには無い。Node 内で複数 call を順に行う)
 // ════════════════════════════════════════════════════════════════
+
+// 決定的な乱数(mulberry32)。同じ seed なら同じ配置=AI のリトライで結果が再現する。
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+reg(
+  "dx12_scatter",
+  "一括配置(散布/グリッド)",
+  "プリミティブ/モデル/プレハブを矩形エリアへ一括配置する(木を50本、コインを敷き詰める等を1回の呼び出しで)。placement='random'(seed 付き乱数、同 seed で再現) か 'grid'(等間隔)。randomYaw で向きをばらし、scaleRange でサイズをばらす。snapToGround=true で1体ずつ接地。★Editor 限定(Playing 中は不可)。{entities:[{entityId, name}], count, seed} が返る。多数配置は時間がかかる(1体ずつフレーム境界で生成)。",
+  {
+    type: z.string().optional().describe("プリミティブ種別(box/sphere/plane/empty 等、dx12_create_entity と同じ)。type/model/prefab のどれか1つ必須。"),
+    model: z.string().optional().describe("モデルの assets 相対パス(.gltf/.glb/.fbx/.obj)。"),
+    prefab: z.string().optional().describe("プレハブの assets 相対パス(.prefab)。"),
+    count: z.number().int().min(1).max(200).describe("配置する個数(1..200)。"),
+    area: z.array(z.number()).length(4).describe("配置エリア [minX, minZ, maxX, maxZ](ワールド座標)。"),
+    y: z.number().optional().describe("配置する高さ(Y)。既定 0。snapToGround を使うなら地面より上に。"),
+    placement: z.enum(["random", "grid"]).optional().describe("random=seed 付き乱数(既定) / grid=等間隔グリッド。"),
+    seed: z.number().int().optional().describe("乱数 seed。同じ seed なら同じ配置(既定 1)。"),
+    randomYaw: z.boolean().optional().describe("true で各個体の Y 回転をランダムに(既定: random 時 true / grid 時 false)。"),
+    scaleRange: z.array(z.number()).length(2).optional().describe("[min, max] の一様スケール倍率をランダム適用。例 [0.8, 1.3]。"),
+    snapToGround: z.boolean().optional().describe("true で配置後に1体ずつ snap_to_ground を呼ぶ。"),
+    namePrefix: z.string().optional().describe("エンティティ名の接頭辞(連番付与)。省略で種別/ファイル名。"),
+  },
+  {},
+  (args: any) => run(async () => {
+    const { count, area, placement = "random", seed = 1, scaleRange, snapToGround } = args;
+    const sources = [args.type, args.model, args.prefab].filter((s: any) => s != null);
+    if (sources.length !== 1) throw new Error("type / model / prefab のどれか1つだけ指定してや");
+    const [minX, minZ, maxX, maxZ] = area;
+    const y = args.y ?? 0;
+    const randomYaw = args.randomYaw ?? (placement === "random");
+    const rng = mulberry32(seed);
+    const prefix = args.namePrefix
+      ?? (args.type ?? String(args.model ?? args.prefab).split("/").pop()!.replace(/\.[^.]*$/, ""));
+
+    // 位置リストを先に決める(grid は行×列で等間隔、random は seed 付き乱数)
+    const positions: [number, number, number][] = [];
+    if (placement === "grid") {
+      const cols = Math.ceil(Math.sqrt(count));
+      const rows = Math.ceil(count / cols);
+      for (let i = 0; i < count; i++) {
+        const cx = i % cols, rz = Math.floor(i / cols);
+        const fx = cols > 1 ? cx / (cols - 1) : 0.5;
+        const fz = rows > 1 ? rz / (rows - 1) : 0.5;
+        positions.push([minX + (maxX - minX) * fx, y, minZ + (maxZ - minZ) * fz]);
+      }
+    } else {
+      for (let i = 0; i < count; i++)
+        positions.push([minX + (maxX - minX) * rng(), y, minZ + (maxZ - minZ) * rng()]);
+    }
+
+    const entities: any[] = [];
+    const errors: any[] = [];
+    for (let i = 0; i < count; i++) {
+      const nm = `${prefix}_${String(i + 1).padStart(3, "0")}`;
+      try {
+        let created: any;
+        if (args.type)        created = await engine.call("create_entity", { type: args.type, name: nm, position: positions[i] });
+        else if (args.model)  created = await engine.call("spawn_model", { path: args.model, name: nm, position: positions[i] });
+        else                  created = await engine.call("spawn_prefab", { path: args.prefab, name: nm, position: positions[i] });
+        const id = created?.rootEntityId ?? created?.entityId;
+        const tf: any = {};
+        if (randomYaw) tf.rotation = [0, rng() * 360, 0];
+        if (scaleRange) {
+          const s = scaleRange[0] + (scaleRange[1] - scaleRange[0]) * rng();
+          tf.scale = [s, s, s];
+        }
+        if (Object.keys(tf).length) await engine.call("set_transform", { entity: id, ...tf });
+        if (snapToGround) await engine.call("snap_to_ground", { entity: id });
+        entities.push({ entityId: id, name: created?.name ?? nm });
+      } catch (e: any) {
+        errors.push({ index: i, error: e.message });
+        if (errors.length >= 3) break;   // 失敗が3件溜まったら打ち切り(Playing 中など根本原因があるはず)
+      }
+    }
+    const out: any = { entities, count: entities.length, seed, placement };
+    if (errors.length) out.errors = errors;
+    return out;
+  }),
+);
 
 reg(
   "dx12_batch",
@@ -1049,6 +1330,70 @@ server.registerTool(
   },
 );
 
+// エディタウィンドウ全体のスクショ(ImGui パネル込み)。ゲーム内 UI / UIエディタの見た目確認用。
+server.registerTool(
+  "dx12_ui_screenshot",
+  {
+    title: "UIスクリーンショット",
+    description: "エディタウィンドウ全体(ImGui パネル込み)を PNG で返す。★dx12_screenshot(シーンRT)には写らないゲーム内 UI プレビュー・UIエディタ・インスペクタが写る = AI が組んだ UI の見た目を目で確認して直すのに使う。ウィンドウが最小化中はエラー。レイアウトの数値確認は dx12_ui_tree の方が正確。",
+    inputSchema: {},
+    annotations: { title: "UIスクリーンショット", openWorldHint: false, readOnlyHint: true },
+  },
+  async () => {
+    try {
+      const shot = await engine.call("ui_screenshot", {});
+      if (!shot || !shot.path) throw new Error("ui_screenshot が path を返さんかった");
+      return imageResult(shot.path, { width: shot.width, height: shot.height });
+    } catch (e: any) {
+      return errResult(e);
+    }
+  },
+);
+
+// 参照UIスクショ + 現在UI を横並び1枚に合成して返す比較ツール(outputSchema なし = image 結果)。
+server.registerTool(
+  "dx12_ui_compare",
+  {
+    title: "参照UIとの比較",
+    description: "参照ゲームのUIスクショ(referencePath)と現在のUI(ui_screenshot)を横並び1枚(左=参照、右=現在、間に区切り線)に合成したPNGで返す。2枚を別々に見るより正確に差分を比較できる。text にピクセル差分率 diffRatio(%) と両画像サイズも返す。grid=true で右側(現在)に8pxグリッド線を薄く重畳(整列・余白の確認用)。★使い方: 合成画像を見て『参照と違う点を3つ』具体的に挙げてから直し、再度このツールで確認するループを回す。1回で寄せきろうとしない。",
+    inputSchema: {
+      referencePath: z.string().describe("参照UI画像(PNG)の絶対パス。ユーザーから貰った目標スクショ。"),
+      grid: z.boolean().optional().describe("true で右側(現在のUI)に8pxグリッド線を薄く重畳。整列確認用。既定 false。"),
+    },
+    annotations: { title: "参照UIとの比較", openWorldHint: false, readOnlyHint: true },
+  },
+  async ({ referencePath, grid }) => {
+    try {
+      const shot = await engine.call("ui_screenshot", {});
+      if (!shot || !shot.path) throw new Error("ui_screenshot が path を返さんかった");
+      const r = compareUiImages(fs.readFileSync(referencePath), fs.readFileSync(shot.path), { grid });
+      const outPath = path.join(os.tmpdir(), `dx12_ui_compare_${Date.now()}.png`);
+      fs.writeFileSync(outPath, r.compositePng);
+      return imageResult(outPath, { diffRatio: Number(r.diffRatio.toFixed(2)), refSize: r.refSize, curSize: r.curSize });
+    } catch (e: any) {
+      return errResult(e);
+    }
+  },
+);
+
+// ── UI 素材(フォント導入) ──────────────────────────────────────
+reg(
+  "dx12_install_font",
+  "Google Fonts からフォント導入",
+  "Google Fonts からフォント(.ttf)をダウンロードして現在のプロジェクトの assets/fonts/ へ取り込む。返る fontPath を uiText.fontPath に設定して使う(例: dx12_set_component で uiText:{fontPath:'fonts/NotoSansJP-700.ttf'})。★日本語を表示する UI には日本語対応フォント(Noto Sans JP / M PLUS Rounded 1c / Zen Kaku Gothic New 等)を選ぶこと — Roboto 等の欧文フォントでは日本語が豆腐(□)になる。family は Google Fonts のファミリー名そのまま(スペース含む)。{fontPath, family, weight} が返る。",
+  {
+    family: z.string().describe("Google Fonts のファミリー名。例: 'Noto Sans JP', 'Roboto', 'Bebas Neue'"),
+    weight: z.number().int().optional().describe("ウェイト(100–900)。省略時は 400。太字見出しは 700 推奨。"),
+  },
+  {},
+  ({ family, weight }) =>
+    run(async () => {
+      const { tmpPath, fileName } = await downloadFont(family, weight);
+      await engine.call("import_asset", { sourcePath: tmpPath, destPath: `fonts/${fileName}`, overwrite: true });
+      return { fontPath: `fonts/${fileName}`, family, weight: weight ?? 400 };
+    }),
+);
+
 // ゲームカメラ視点のスクショ。アクティブな CameraComponent でシーンを1フレーム描いて撮る。
 // Editor 中でも Play せずにゲームカメラの画角を確認できる(Playing 中は通常 screenshot と同じ絵)。
 server.registerTool(
@@ -1065,6 +1410,85 @@ server.registerTool(
       if (!shot || !shot.path) throw new Error("screenshot_game_view が path を返さんかった");
       return imageResult(shot.path, { width: shot.width, height: shot.height, mode: shot.mode });
     } catch (e: any) {
+      return errResult(e);
+    }
+  },
+);
+
+// 任意視点スクショ(set_editor_camera → 次フレームで screenshot)。俯瞰/引きの構図を一発で。
+server.registerTool(
+  "dx12_screenshot_from",
+  {
+    title: "任意視点スクショ",
+    description: "エディタカメラを指定の位置・注視点へ動かしてからスクショを撮り、PNG 画像で返す(dx12_set_editor_camera + dx12_screenshot の合成)。俯瞰でレイアウト全体を見る、プレイヤー視点の高さで見る等。★Editor 限定。image ブロック + text(path/サイズ)を返す。",
+    inputSchema: {
+      position: vec3.describe("カメラ位置 [x,y,z]。"),
+      target: vec3.optional().describe("注視点 [x,y,z]。省略で現在の向きのまま位置だけ移動。"),
+    },
+    annotations: { title: "任意視点スクショ", openWorldHint: false, idempotentHint: true },
+  },
+  async ({ position, target }) => {
+    try {
+      await engine.call("set_editor_camera", { position, target });
+      const shot = await engine.call("screenshot", {});
+      if (!shot || !shot.path) throw new Error("screenshot が path を返さんかった");
+      return imageResult(shot.path, { position, target, width: shot.width, height: shot.height });
+    } catch (e: any) {
+      return errResult(e);
+    }
+  },
+);
+
+// テクスチャを画像として見る(エンジンが dds/tga 含め PNG へ変換 → 画像ブロックで返す)。
+server.registerTool(
+  "dx12_view_texture",
+  {
+    title: "テクスチャを見る",
+    description: "assets 内のテクスチャ(png/jpg/dds/tga/bmp/hdr)を PNG に変換して画像で返す。割り当てる前に絵柄を目で確認するのに使う。長辺 maxSize(既定 1024)超は縮小。キューブマップは先頭面のみ。image ブロック + text(元パス/サイズ)を返す。",
+    inputSchema: {
+      path: z.string().describe("assets 相対パス。例: textures/rust.png"),
+      maxSize: z.number().int().optional().describe("返す画像の長辺上限 px(16..4096)。既定 1024。"),
+    },
+    annotations: { title: "テクスチャを見る", openWorldHint: false, readOnlyHint: true },
+  },
+  async ({ path, maxSize }) => {
+    try {
+      const r = await engine.call("read_texture", { path, maxSize });
+      if (!r || !r.path) throw new Error("read_texture が path を返さんかった");
+      return imageResult(r.path, { sourcePath: r.sourcePath, width: r.width, height: r.height });
+    } catch (e: any) {
+      return errResult(e);
+    }
+  },
+);
+
+// モデルのプレビュー(一時 spawn → 寄せて撮影 → 削除)。spawn する価値があるか見た目で判断する用。
+server.registerTool(
+  "dx12_preview_model",
+  {
+    title: "モデルプレビュー",
+    description: "モデルを一時的にシーン外(遠方)へ spawn して撮影し、すぐ削除して PNG で返す(spawn_model → focus_and_screenshot → delete_entity の合成)。アセットの見た目を配置前に確認するのに使う。★Editor 限定。シーンは変更されない(一時エンティティは必ず削除される)。image ブロック + text(path/サイズ)を返す。",
+    inputSchema: {
+      path: z.string().describe("モデルの assets 相対パス(.gltf/.glb/.fbx/.obj)。"),
+    },
+    annotations: { title: "モデルプレビュー", openWorldHint: false, readOnlyHint: true },
+  },
+  async ({ path }) => {
+    let previewId: number | null = null;
+    try {
+      const created = await engine.call("spawn_model",
+        { path, name: "__mcp_preview__", position: [0, -10000, 0] });
+      previewId = created?.entityId;
+      await engine.call("focus_camera", { entity: previewId });
+      const shot = await engine.call("screenshot", {});
+      if (!shot || !shot.path) throw new Error("screenshot が path を返さんかった");
+      const img = imageResult(shot.path, { model: path, width: shot.width, height: shot.height });
+      await engine.call("delete_entity", { entity: previewId });
+      previewId = null;
+      return img;
+    } catch (e: any) {
+      // 撮影に失敗しても一時エンティティは残さない
+      if (previewId != null) { try { await engine.call("delete_entity", { entity: previewId }); } catch {} }
       return errResult(e);
     }
   },

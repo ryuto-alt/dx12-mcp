@@ -50,7 +50,7 @@ args = ["C:\\Users\\<you>\\dx12-mcp\\index.ts"]
 
 ## 構成
 - `engineClient.ts` … TCP フレーミング + id 相関の薄いクライアント（ポートは env `DX12_MCP_PORT` → `%TEMP%/dx12_mcp.port` → 8787 の順で自動解決。別マシンは `DX12_MCP_HOST`）
-- `index.ts` … MCP サーバ本体(stdio)。70+ ツールを公開（全量はエンジンリポジトリの [docs/MCP.md](https://github.com/ryuto-alt/dx12/blob/main/docs/MCP.md) 参照）
+- `index.ts` … MCP サーバ本体(stdio)。87 ツールを公開（全量はエンジンリポジトリの [docs/MCP.md](https://github.com/ryuto-alt/dx12/blob/main/docs/MCP.md) 参照）
 - `test.ts` … mock エンジンで framing/相関/エラーを検証(`node test.ts`)
 - `AGENTS.md` … AI エージェント向け運用ガイド（典型ワークフロー・禁止パターン）
 
@@ -65,6 +65,8 @@ args = ["C:\\Users\\<you>\\dx12-mcp\\index.ts"]
 | アニメーション | `dx12_play_anim` `dx12_get_anim_state` |
 | マルチプレイヤー | `dx12_net_setup` `dx12_net_status` `dx12_net_launch_test_client` |
 | 再生/検証 | `dx12_play` `dx12_stop` `dx12_step_frames` `dx12_key_press` `dx12_raycast` `dx12_get_physics_state` `dx12_screenshot` `dx12_validate_scene` `dx12_build_game` |
+| シーン編集強化 | `dx12_get_bounds` `dx12_look_at` `dx12_snap_to_ground` `dx12_get_hierarchy` `dx12_set_editor_camera` `dx12_screenshot_from` `dx12_scatter` |
+| アセット操作 | `dx12_import_asset` `dx12_asset_info` `dx12_move_asset` `dx12_delete_asset` `dx12_view_texture` `dx12_preview_model` |
 
 生成/削除/シーン読込/Play/Stop は**遅延同期**: エンジンはフレーム境界で実処理し、完了後に
 本物の結果(`entityId` 等)を同期で返す。「name で list して探す」旧パターンは不要。

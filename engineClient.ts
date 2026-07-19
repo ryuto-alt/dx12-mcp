@@ -29,7 +29,16 @@ for (const m of [
   "create_shader", "read_shader", "set_mesh_shader",
   // 入力シミュレーション(即時)
   "key_down", "key_up", "key_press",
+  // シーン編集(同期)
+  "get_editor_camera", "set_editor_camera", "get_bounds", "look_at",
+  "snap_to_ground", "get_hierarchy",
+  // アセット操作(同期・軽量)
+  "move_asset", "delete_asset",
 ]) TIMEOUT_BY_METHOD[m] = 8000;
+// アセット操作(重め): probe は Assimp の読込、import はフォルダコピー、read_texture は変換。
+TIMEOUT_BY_METHOD["asset_info"]   = 30000;
+TIMEOUT_BY_METHOD["import_asset"] = 60000;
+TIMEOUT_BY_METHOD["read_texture"] = 15000;
 // step_frames は最大 600 フレーム(~10s)回ってから返るので長めに。
 TIMEOUT_BY_METHOD["step_frames"] = 30000;
 // 遅延同期(エンティティ生成/削除/複製) = 15000ms
