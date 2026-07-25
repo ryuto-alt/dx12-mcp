@@ -578,6 +578,166 @@ colorGroups は近似色(RGB 1/8刻み)をまとめた代表色・使用回数�
 
 ---
 
+## 地形・スカルプト・ライティング・診断（v0.7 追加）
+
+### 画面の「ここ」を指して聞く / 触る — dx12_pick
+
+スクショを見て「この物体は何？」「ここの床の高さは？」に答える口。**エディタの左クリック選択と
+同じ実装（`RaycastScene`）**を通るので、AI が見たものと人が選ぶものが一致する。
+
+```
+dx12_screenshot()                       # 1280x720 の絵が返る
+dx12_pick(x: 640, y: 400)               # そのピクセルに何があるか
+# → {hits:[{entityId:42, name:"Rock", submeshIndex:0, distance:12.3,
+#           worldPos:[3.2,1.1,-8.0], worldNormal:[0,1,0], isIcon:false}], count:1}
+
+dx12_pick(u: 0.5, v: 0.5, all: true)    # 画面中央の重なりを手前から全部
+```
+
+`worldPos` はそのまま `dx12_set_transform` の position や `dx12_sculpt_brush` の position に使える。
+ライト/カメラ/空オブジェクトはアイコン当たり（`isIcon:true`）で拾う。
+
+真下の高さを知りたいだけなら `dx12_raycast_precise`:
+
+```
+dx12_raycast_precise(origin:[10, 200, -4], direction:[0,-1,0])
+# → hits[0].worldPos[1] が地面の実際の高さ、worldNormal が傾き
+```
+
+★ `dx12_raycast`（物理コライダー基準・**Playing 中のみ**）とは別物。
+`dx12_raycast_precise` は描画メッシュ基準で **Editor でも動く**（地形の起伏に正しく当たる）。
+
+### ワークフロー: 山を作って木を配置する
+
+```
+# ① 地形を作る（同名があれば設定更新なので撃ち直しても安全）
+dx12_terrain_create(name:"Terrain", resolution:128, worldSize:400, maxHeight:120)
+# → {entityId: 88, created:true, ...}
+
+# ② 土台の形を一発生成（★彫る前に必ずこっちを先に。高さを丸ごと作り直すので後からやると彫りが消える）
+dx12_terrain_generate(entity:88, preset:"mountains", seed:7, amplitude:60, edgeFalloff:0.6)
+# → {minHeight:-2.1, maxHeight:58.4, params:{...}}   同じ seed なら毎回同じ地形
+
+# ③ 浸食で「CG くさい斜面」を自然にする
+dx12_terrain_erode(entity:88, iterations:24, talusDeg:32)
+
+# ④ 平地を作る（絶対値なので何回撃っても同じ形に収束する＝冪等寄り）
+dx12_terrain_sculpt(entity:88, brush:"flatten", point:[0,0], radius:40, strength:2, flattenHeight:10)
+
+# ⑤ 見た目を確認（★彫った結果は次フレームで反映されるので step_frames を挟む）
+dx12_step_frames(frames:2)
+dx12_screenshot_from(position:[0,180,-260], target:[0,0,0])
+
+# ⑥ 木を地形に沿って置く: まず候補点の高さと傾きを聞く
+dx12_terrain_sample(entity:88, points:[[-40,-20],[10,35],[60,-5]])
+# → samples:[{x:-40,z:-20,worldY:23.4,slopeDeg:12.1,inside:true}, ...]
+
+# ⑦ 急斜面(slopeDeg 大)を避けて worldY へ置く
+dx12_spawn_model(path:"models/tree.glb", position:[-40, 23.4, -20], name:"Tree_1")
+
+# ⑧ ばら撒くなら scatter + snap（snap_to_ground は三角形精密なので地形の起伏に吸い付く）
+dx12_scatter(model:"models/tree.glb", count:40, area:[-150,-150,150,150],
+             seed:3, randomYaw:true, scaleRange:[0.8,1.3], snapToGround:true)
+
+dx12_save_scene()
+```
+
+★地形の編集は**すべて Editor 限定**（Playing 中は `MODE_CONFLICT(3)` → 先に `dx12_stop`）。
+高さ配列は `assets/terrain/<name>.hf` に自動保存され、Jolt の当たり判定も同じ配列を読むので
+彫れば衝突も一緒に動く。
+
+### ワークフロー: 洞窟・アーチ・岩みたいな異形を作る（スカルプト）
+
+地形（ハイトフィールド）は XZ グリッドなので**オーバーハングが作れない**。せり出した岩・
+アーチ・洞窟はこっち。
+
+```
+# ① 素体（岩なら sphere、アーチ/柱なら cylinder、崖なら box）
+dx12_sculpt_create(name:"Rock_A", primitive:"sphere", subdivisions:20, size:4, position:[0,2,0])
+# → {entityId: 91, vertexCount: 1682, ...}
+
+# ② 彫る場所は画面から拾うのが確実
+dx12_focus_and_screenshot(entity:91)
+dx12_pick(u:0.5, v:0.5)          # → worldPos:[0.1, 3.8, -1.6]
+
+# ③ ブラシ（position はワールド。radius/strength は★メッシュのローカル単位）
+dx12_sculpt_brush(entity:91, brush:"draw",   position:[0.1,3.8,-1.6], radius:1.2, strength:0.6)
+dx12_sculpt_brush(entity:91, brush:"noise",  position:[0.1,3.8,-1.6], radius:2.0, strength:0.3)
+dx12_sculpt_brush(entity:91, brush:"smooth", position:[0.1,3.8,-1.6], radius:1.5, strength:1.0)
+# 左右対称に彫るなら symmetryX:true
+
+# ④ 既存モデルを彫れるようにする（元の .glb は書き換えない。コピーができる）
+dx12_sculpt_make_editable(name:"Statue")
+# → {entityId: 95, name:"Statue_Sculpt", created:true, vertexCount:...}
+
+dx12_step_frames(frames:2)
+dx12_focus_and_screenshot(entity:91)
+```
+
+★ブラシは**相対操作**（撃つたびに彫れる）。狙いすぎず「少し撃つ → 見る」を繰り返すのが速い。
+
+### ワークフロー: ライティングを詰める
+
+```
+# ① まず現状把握。★ここで「上限超過」が出てたら何をやっても暗いままなので最初に見る
+dx12_list_lights()
+# → budget:{point:{used:11,max:8}, ...}, warnings:["ポイントライトが上限超過 (11/8)。超えた分は無言で描画されない..."]
+#    各ライトの overBudget / effective で、どれが効いていないか分かる
+
+# ② 土台をプリセットで決める（エディタの「ライティング」窓と同じ実装＝人の操作と結果が一致する）
+dx12_apply_lighting_preset(preset:"dusk")   # day / dusk / night / indoor / horror / studio
+
+# ③ 太陽を絶対値で詰める（冪等。何回撃っても同じ結果）
+dx12_set_sun(timeOfDay: 17.2)                       # 時刻カーブで向き/色/強度/環境光を一括
+dx12_set_sun(azimuth: -35, elevation: 12)           # 方位/高度を直接（太陽が見える方向）
+dx12_set_sun(kelvin: 2900, intensity: 2.4)          # 電球色にする
+
+# ④ ポストで仕上げ
+dx12_set_post_process(bloomOn:true, bloom:0.45, vignetteOn:true, vignette:0.35)
+
+# ⑤ 目で見る
+dx12_screenshot_game_view()
+```
+
+★上限は 点 8 / スポット 8、影は spot 4 / point 2。**超えた分は無言で描画されない**
+（パーティクルの発光ライトも枠を使う）。「増やしたのに明るくならない」はほぼこれ。
+
+### ワークフロー: 壊れてないか 1 発で確認する
+
+```
+dx12_diagnose(fast: true)     # 重い検査(textures/models=assets全走査)を外して数秒で返す
+# → {summary:{errors:1, warnings:3, ok:false}, checks:[{id:"lighting", issues:[{level:2, text:"..."}]}]}
+
+# 判定は summary.errors > 0 だけを見ればいい（注意/情報は失敗ではない）
+dx12_diagnose(only: ["lighting","terrain","picking"])   # 気になる所だけ
+dx12_diagnose()                                          # 全部（アセット数によっては数十秒〜）
+```
+
+検査 ID: `shaders` / `textures` / `models` / `gamma` / `scene_assets` / `lighting` /
+`terrain` / `picking` / `instancing` / `scripts`。
+issue は日本語 1 行で「次の一手」まで書いてある。`instancing` は 1 度も描画していないと測れない
+（`skipped` に理由が入る）。**シーンをいじった後・Play する前に 1 回叩く**のが安上がり。
+
+---
+
+## エラーメッセージの読み方（hint / 有効値）
+
+引数を間違えたときのエラーには、**次に何をすればいいか**と**有効値の一覧**が付いてくる。
+推測でリトライせず、そのまま従うのが速い。
+
+```
+エラー(code=2): unknown brush: dig
+ヒント: 有効値のどれかを指定してくれ
+有効な値: raise, lower, smooth, flatten, noise
+```
+
+```
+エラー(code=3): cannot modify terrain while Playing
+ヒント: 先に dx12_stop で Editor へ戻してくれ
+```
+
+---
+
 ## エラーコード早見表
 
 | コード | 意味 | 典型的な対処 |

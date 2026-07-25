@@ -9,6 +9,11 @@ import { auditUiTree, designBrief } from "./uiQuality.ts";
 import { BLUEPRINT_EXAMPLE, composeUi } from "./uiComposer.ts";
 import { compareUiImages } from "./uiCompare.ts";
 import { downloadFont } from "./uiAssets.ts";
+import {
+  LIGHTING_PRESETS, SCULPT_BRUSHES, SCULPT_PRIMITIVES, TERRAIN_BRUSHES, TERRAIN_PRESETS,
+  DIAG_CHECKS, fastDiagnoseOnly, normalizeDiagnoseOnly, normalizeStrokePoints,
+  v2, v3, v4,
+} from "./sceneTools.ts";
 
 // DX12 ゲームエンジン用 MCP サーバ。Codex / Claude Code から接続し、
 // 起動中のエディタ(TCP 127.0.0.1:<port>)を叩いてゲームを作っていくための入口。
@@ -39,10 +44,16 @@ const OUT = {
 };
 
 // エラーを日本語整形(error_code があれば付ける)。isError:true なら outputSchema 検証はスキップされる。
+// エンジン/ツールが hint(次の一手) と valid_values(有効値) を添えてきたら必ず出す。
+// 「何が悪いか」だけでなく「次にどうすればいいか」が本文に入っているかが成功率に直結する。
 function errResult(e: any): ToolResult {
   const code = e?.code;
-  const msg = code != null ? `エラー(code=${code}): ${e.message}` : `エラー: ${e.message}`;
-  return { content: [{ type: "text", text: msg }], isError: true };
+  const lines = [code != null ? `エラー(code=${code}): ${e.message}` : `エラー: ${e.message}`];
+  if (e?.hint) lines.push(`ヒント: ${e.hint}`);
+  if (Array.isArray(e?.valid_values) && e.valid_values.length > 0) {
+    lines.push(`有効な値: ${e.valid_values.join(", ")}`);
+  }
+  return { content: [{ type: "text", text: lines.join("\n") }], isError: true };
 }
 
 // JSON 結果ツール用ラッパ。result を text(JSON 文字列) + structuredContent({result}) の両方に入れる。
@@ -95,7 +106,12 @@ function reg(
 }
 
 // ── 共通 zod 部品 ────────────────────────────────────────────────
-const vec3 = z.array(z.number()).length(3);
+// v2 / v3 / v4（固定長の数値配列）は sceneTools.ts から import している。
+// ★呼ぶたびに【新しい zod インスタンス】を返す関数であることが重要。同じインスタンスを
+//   1 ツール内の複数フィールドで使い回すと JSON Schema が $ref に畳まれ、$ref を解決しない
+//   クライアントで「received string」と誤判定される（set_transform の rotation/scale が
+//   弾かれていた既知の不具合）。新しいツールでも必ず v3() の形で使うこと。
+//   回帰テストは sceneTools.test.ts。
 const entityId = z.number().int().describe("エンティティ id(int)。dx12_list_entities / dx12_find_entity で取得。");
 // エンティティ指定(id か name のどちらか)。name は完全一致。Stop / open_scene 後は id が変わる
 // (sceneGeneration も変わる)ので、安定して操作したいときは name 指定が便利。両方省略は不可。
@@ -310,10 +326,10 @@ reg(
   "エンティティの Transform を設定する。指定したフィールドだけ更新。回転は rotation(Euler 度) か quaternion([x,y,z,w]) のどちらか。即時反映で ok を返す。",
   {
     ...entityRef,
-    position: vec3.optional().describe("[x,y,z]"),
-    rotation: vec3.optional().describe("[x,y,z] Euler 度。quaternion と併用しない。"),
+    position: v3().optional().describe("[x,y,z]"),
+    rotation: v3().optional().describe("[x,y,z] Euler 度。quaternion と併用しない。"),
     quaternion: z.array(z.number()).length(4).optional().describe("[x,y,z,w] クォータニオン。rotation と併用しない。"),
-    scale: vec3.optional().describe("[x,y,z]"),
+    scale: v3().optional().describe("[x,y,z]"),
   },
   { idempotentHint: true },
   ({ entity, name, position, rotation, quaternion, scale }) =>
@@ -357,6 +373,20 @@ reg(
   },
   { idempotentHint: true },
   ({ entity, name, parent }) => run(() => engine.call("set_parent", { entity, name, parent })),
+);
+
+reg(
+  "dx12_group_entities",
+  "グループ化",
+  "複数エンティティを空の親(グループ)へまとめる。ヒエラルキーの Ctrl+G と同じ。★親は原点・無回転・スケール1で作るので子のワールド位置は動かない(見た目は完全に同じまま)。以後はグループを dx12_set_transform で動かせば中身ごと移動/回転/拡縮できる。指定した中に親子関係があれば子側は自動で除外(親ごと動くため)。全員が同じ親の下にいたらグループもその親の下に入る。エディタと同じく Undo 可能。{groupId, name, count} を返す。エンティティが増えてヒエラルキーが膨れた時の整理に使う。",
+  {
+    entities: z.array(z.number().int()).optional().describe("まとめる エンティティ id の配列。names と併用可。"),
+    names: z.array(z.string()).optional().describe("まとめる エンティティ名(完全一致)の配列。entities と併用可。"),
+    name: z.string().optional().describe("グループ名。省略時 'Group'。重複したら連番が付く。"),
+  },
+  {},
+  ({ entities, names, name }) =>
+    run(() => engine.call("group_entities", { entities, names, name })),
 );
 
 reg(
@@ -411,7 +441,7 @@ reg(
   "メッシュの基本色(頂点色の乗算)を設定する。足場やコインの色付けに。color は [r,g,b](0..1)。entity(id) か name 指定。金属感は dx12_set_pbr の metallic/roughness と併用。",
   {
     ...entityRef,
-    color: vec3.describe("[r,g,b] 0..1。例: 金色=[1,0.84,0]"),
+    color: v3().describe("[r,g,b] 0..1。例: 金色=[1,0.84,0]"),
   },
   { idempotentHint: true },
   ({ entity, name, color }) => run(() => engine.call("set_color", { entity, name, color })),
@@ -548,7 +578,7 @@ reg(
       "ui_slider", "ui_toggle", "ui_scrollview",
     ]).describe("種別。empty は Transform のみ。light_*/camera/particle_emitter/trigger は該当コンポーネント付きで生成(値は既定。set_component で調整)。ui_* はゲーム内UI要素(uiRect 等付き)。"),
     name: z.string().optional().describe("エンティティ名(一意推奨)。省略時は種別名。"),
-    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。UI 要素では未使用(uiRect で配置)。"),
+    position: v3().optional().describe("[x,y,z]。省略時 [0,0,0]。UI 要素では未使用(uiRect で配置)。"),
     parent: z.number().int().optional().describe("UI 要素の親エンティティ id(ui_canvas 以外で有効)。parentName と排他。"),
     parentName: z.string().optional().describe("UI 要素の親エンティティ名(完全一致)。"),
     idempotency_key: z.string().optional().describe("再試行の重複防止キー。同じキーの再送は二重生成されない。"),
@@ -581,10 +611,10 @@ reg(
   "ボックス(立方体)を1コールで生成。足場/壁/床に最適。position/scale/rotation/color/metallic/roughness をまとめて指定でき、内部で create_entity→set_transform→set_pbr→set_color を順に実行する。{entityId, name, sceneGeneration} を返す。",
   {
     name: z.string().optional().describe("エンティティ名。省略時 'Box'。"),
-    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。"),
-    scale: vec3.optional().describe("[x,y,z]。足場なら例 [4,0.5,4]。"),
-    rotation: vec3.optional().describe("[x,y,z] Euler 度。"),
-    color: vec3.optional().describe("[r,g,b] 0..1 基本色。"),
+    position: v3().optional().describe("[x,y,z]。省略時 [0,0,0]。"),
+    scale: v3().optional().describe("[x,y,z]。足場なら例 [4,0.5,4]。"),
+    rotation: v3().optional().describe("[x,y,z] Euler 度。"),
+    color: v3().optional().describe("[r,g,b] 0..1 基本色。"),
     metallic: z.number().optional().describe("金属度 0..1。"),
     roughness: z.number().optional().describe("粗さ 0..1。"),
   },
@@ -598,10 +628,10 @@ reg(
   "スフィア(球)を1コールで生成。position/scale/rotation/color/metallic/roughness をまとめて指定可。{entityId, name, sceneGeneration} を返す。",
   {
     name: z.string().optional().describe("エンティティ名。省略時 'Sphere'。"),
-    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。"),
-    scale: vec3.optional().describe("[x,y,z]。"),
-    rotation: vec3.optional().describe("[x,y,z] Euler 度。"),
-    color: vec3.optional().describe("[r,g,b] 0..1 基本色。"),
+    position: v3().optional().describe("[x,y,z]。省略時 [0,0,0]。"),
+    scale: v3().optional().describe("[x,y,z]。"),
+    rotation: v3().optional().describe("[x,y,z] Euler 度。"),
+    color: v3().optional().describe("[r,g,b] 0..1 基本色。"),
     metallic: z.number().optional().describe("金属度 0..1。"),
     roughness: z.number().optional().describe("粗さ 0..1。"),
   },
@@ -615,7 +645,7 @@ reg(
   "コイン風の収集アイテムを1コールで生成(金色の薄い円盤状スフィア + tag 'coin' + 金属光沢)。足場ゲームの収集物置きに。position/name 指定可。回転やスコア加算は別途 Lua/trigger で付ける。{entityId, name, sceneGeneration} を返す。",
   {
     name: z.string().optional().describe("エンティティ名。省略時 'Coin'。"),
-    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。"),
+    position: v3().optional().describe("[x,y,z]。省略時 [0,0,0]。"),
   },
   {},
   ({ name, position }) => run(async () => {
@@ -635,7 +665,7 @@ reg(
   "モデル(.gltf/.glb/.fbx/.obj)を assets 相対パスから生成する。GPU ロードを伴いフレーム境界で実処理されるが、Node が完了を待って【本物の {entityId, name, sceneGeneration} を同期で返す】。idempotency_key で再試行の二重生成を防げる。",
   {
     path: z.string().describe("assets 相対パス。例: models/player.glb"),
-    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。"),
+    position: v3().optional().describe("[x,y,z]。省略時 [0,0,0]。"),
     name: z.string().optional().describe("エンティティ名。省略時はファイル名(拡張子なし)。"),
     idempotency_key: z.string().optional().describe("再試行の重複防止キー。同じキーの再送は二重生成されない。"),
   },
@@ -650,7 +680,7 @@ reg(
   "プレハブ(.prefab)を assets 相対パスから生成する。フレーム境界で実処理され、Node が完了を待って【本物の {entityId, rootEntityId, entityIds:[...], name, sceneGeneration} を同期で返す】。",
   {
     path: z.string().describe("assets 相対パス。例: prefabs/enemy.prefab"),
-    position: vec3.optional().describe("[x,y,z]。省略時 [0,0,0]。"),
+    position: v3().optional().describe("[x,y,z]。省略時 [0,0,0]。"),
     name: z.string().optional().describe("ルートエンティティ名。省略時はプレハブ名。"),
   },
   {},
@@ -762,6 +792,32 @@ reg(
   ({ frames }) => run(() => engine.call("step_frames", { frames })),
 );
 
+reg(
+  "dx12_perf_stats",
+  "パフォーマンス統計",
+  "直近 window フレーム(既定60)の性能統計を即時取得。fps / frameMs(avg,min,max,p95) / cpu(workMs,fenceWaitMs,presentMs) / gpuPassMs(total,shadows,prepassSsao,mainScene,particles,postFx,ui ※約3フレーム遅れのGPUタイムスタンプ) / drawCalls / culled / triangles / vsync / fpsLimit / scene(エンティティ内訳・shadows/ssao) と analysis(verdict: gpu-bound|cpu-bound|fps-limit-capped 等 + 改善ノート)を返す。FPS が出ない時はまずこれで犯人を特定する。",
+  { window: z.number().int().optional().describe("平均するフレーム数(既定 60, 最大 240)。") },
+  { readOnlyHint: true },
+  ({ window }) => run(() => engine.call("perf_stats", { window })),
+);
+
+reg(
+  "dx12_benchmark",
+  "ベンチマーク実行",
+  "N フレーム(既定300, 30..3600)計測してから統計を返す遅延同期ベンチ。返り値は dx12_perf_stats と同形式 + frames / fps1PercentLow(p99フレーム時間の逆数=スパイク体感指標)。★既定で計測中だけ FPS上限/VSync を外す(uncap)ので、fpsLimit に張り付かない真のスループットが出る。カメラ位置・シーン・Play/Editor 状態は呼び出し側が事前に整えること。最適化の前後で同条件で回して比較するのが正しい使い方。実行中の重複呼び出しはエラー。",
+  {
+    frames: z.number().int().optional().describe("計測フレーム数(既定 300)。30..3600。"),
+    uncap: z.boolean().optional().describe("計測中だけ FPS上限/VSync を外す(既定 true)。false で普段の設定のまま測る。"),
+  },
+  { readOnlyHint: true },
+  ({ frames, uncap }) =>
+    run(() =>
+      engine.call("benchmark", { frames, uncap }, {
+        // 30fps まで落ちてても間に合う余裕: frames×34ms + 10s
+        timeout: (frames ?? 300) * 67 + 10000,
+      })),
+);
+
 // ════════════════════════════════════════════════════════════════
 //  ランタイム物理検証(raycast/overlap/velocity) — 全て同期・読み取り系。
 //  bodies は Play 中のみ登録される(RegisterBody は Play 開始/loadScene 時)。
@@ -773,8 +829,8 @@ reg(
   "レイキャスト",
   "origin から direction 方向へ物理レイを飛ばし、最初にヒットしたボディを調べる。★Playing 中のみ意味のある結果(Editor 中は body 未登録なので hit=false)。{hit, distance?, point?, normal?, entityId?, name?}。normal は現状 常に up 方向の近似値(エンジンの既知の制約)。当たり判定確認・地面/壁の検出・ラインオブサイトの確認に。",
   {
-    origin: vec3.describe("[x,y,z] レイの始点。"),
-    direction: vec3.describe("[x,y,z] レイの方向(正規化不要。エンジン側で正規化される)。"),
+    origin: v3().describe("[x,y,z] レイの始点。"),
+    direction: v3().describe("[x,y,z] レイの方向(正規化不要。エンジン側で正規化される)。"),
     maxDistance: z.number().optional().describe("最大距離(既定 1000)。"),
   },
   { readOnlyHint: true },
@@ -787,8 +843,8 @@ reg(
   "ボックス範囲の物理クエリ",
   "center を中心とする AABB(半幅 halfExtents)と重なっている物理ボディのエンティティを列挙する。★Playing 中のみ意味のある結果。{entities:[{entityId,name}], count}。dx12_query_entities の box(Transform.position ベースの単純判定)とは違い、実際のコライダー形状で判定する。",
   {
-    center: vec3.describe("[x,y,z]"),
-    halfExtents: vec3.describe("[x,y,z] AABB の半幅。"),
+    center: v3().describe("[x,y,z]"),
+    halfExtents: v3().describe("[x,y,z] AABB の半幅。"),
     maxResults: z.number().int().optional().describe("最大取得数(既定 32、上限 256)。"),
   },
   { readOnlyHint: true },
@@ -801,7 +857,7 @@ reg(
   "球範囲の物理クエリ",
   "center を中心とする半径 radius の球と重なっている物理ボディのエンティティを列挙する。★Playing 中のみ意味のある結果。{entities:[{entityId,name}], count}。爆発範囲・索敵範囲・トリガー代替の確認に。",
   {
-    center: vec3.describe("[x,y,z]"),
+    center: v3().describe("[x,y,z]"),
     radius: z.number().describe("半径。"),
     maxResults: z.number().int().optional().describe("最大取得数(既定 32、上限 256)。"),
   },
@@ -869,7 +925,7 @@ reg(
     saturationOn: z.boolean().optional(), saturation: z.number().optional(),
     warmthOn: z.boolean().optional(), warmth: z.number().optional(),
     hueOn: z.boolean().optional(), hueShift: z.number().optional(),
-    tintOn: z.boolean().optional(), tint: vec3.optional(),
+    tintOn: z.boolean().optional(), tint: v3().optional(),
     bloomOn: z.boolean().optional(), bloom: z.number().optional(), bloomThreshold: z.number().optional(),
     vignetteOn: z.boolean().optional(), vignette: z.number().optional(),
     chromaticOn: z.boolean().optional(), chromatic: z.number().optional(),
@@ -886,7 +942,7 @@ reg(
     waveOn: z.boolean().optional(), waveAmp: z.number().optional(), waveFreq: z.number().optional(), waveSpeed: z.number().optional(),
     radialOn: z.boolean().optional(), radial: z.number().optional(),
     glitchOn: z.boolean().optional(), glitch: z.number().optional(),
-    outlineOn: z.boolean().optional(), outline: z.number().optional(), outlineColor: vec3.optional(),
+    outlineOn: z.boolean().optional(), outline: z.number().optional(), outlineColor: v3().optional(),
     fxaaOn: z.boolean().optional(),
   },
   { idempotentHint: true },
@@ -1052,8 +1108,8 @@ reg(
   "エディタカメラ設定",
   "エディタのフライカメラを任意視点に置く(focus_camera より自由。俯瞰・引き構図・特定アングルの確認用)。position で位置、target で注視点(yaw/pitch を自動逆算)、または yawDeg/pitchDeg を直接指定。★Editor 限定(Playing 中は MODE_CONFLICT)。この後 dx12_screenshot でその視点の絵が撮れる(dx12_screenshot_from が一発でやる)。",
   {
-    position: vec3.optional().describe("カメラ位置 [x,y,z]。省略で現在位置のまま。"),
-    target: vec3.optional().describe("注視点 [x,y,z]。指定すると yaw/pitch を自動計算(yawDeg/pitchDeg より優先)。"),
+    position: v3().optional().describe("カメラ位置 [x,y,z]。省略で現在位置のまま。"),
+    target: v3().optional().describe("注視点 [x,y,z]。指定すると yaw/pitch を自動計算(yawDeg/pitchDeg より優先)。"),
     yawDeg: z.number().optional().describe("Y軸回転(度)。target 指定時は無視。"),
     pitchDeg: z.number().optional().describe("X軸回転(度、±89 でクランプ)。target 指定時は無視。"),
   },
@@ -1081,7 +1137,7 @@ reg(
   "エンティティを目標(座標 or 別エンティティ)の方へ回転させる(+Z が正面の想定で rotation Euler を書く)。カメラを被写体へ、敵をプレイヤーへ、砲台を目標へ等。upright=true で水平回転のみ(ピッチ 0=キャラ向け)。★rotation はローカル値なので親が回転してると厳密なワールド向きからずれる。",
   {
     ...entityRef,
-    target: vec3.optional().describe("目標のワールド座標 [x,y,z]。targetEntity/targetName と排他。"),
+    target: v3().optional().describe("目標のワールド座標 [x,y,z]。targetEntity/targetName と排他。"),
     targetEntity: z.number().int().optional().describe("目標エンティティ id。"),
     targetName: z.string().optional().describe("目標エンティティ名(完全一致)。"),
     upright: z.boolean().optional().describe("true でピッチ 0(水平回転のみ)。キャラや車など直立させたい時。"),
@@ -1422,8 +1478,8 @@ server.registerTool(
     title: "任意視点スクショ",
     description: "エディタカメラを指定の位置・注視点へ動かしてからスクショを撮り、PNG 画像で返す(dx12_set_editor_camera + dx12_screenshot の合成)。俯瞰でレイアウト全体を見る、プレイヤー視点の高さで見る等。★Editor 限定。image ブロック + text(path/サイズ)を返す。",
     inputSchema: {
-      position: vec3.describe("カメラ位置 [x,y,z]。"),
-      target: vec3.optional().describe("注視点 [x,y,z]。省略で現在の向きのまま位置だけ移動。"),
+      position: v3().describe("カメラ位置 [x,y,z]。"),
+      target: v3().optional().describe("注視点 [x,y,z]。省略で現在の向きのまま位置だけ移動。"),
     },
     annotations: { title: "任意視点スクショ", openWorldHint: false, idempotentHint: true },
   },
@@ -1492,6 +1548,340 @@ server.registerTool(
       return errResult(e);
     }
   },
+);
+
+// ════════════════════════════════════════════════════════════════
+//  精密ピッキング / ワールドレイ(三角形単位)
+//  エディタのクリック選択とまったく同じ RaycastScene を通すので、
+//  「MCP が見たもの」と「エディタで選ばれるもの」がズレない。
+// ════════════════════════════════════════════════════════════════
+
+// 列挙は sceneTools.ts の定数から作る(エンジンの enum と 1 箇所で対応付ける)。
+const enumOf = (values: readonly string[]) => z.enum(values as unknown as [string, ...string[]]);
+
+reg(
+  "dx12_pick",
+  "画面座標でピック(三角形精密)",
+  "シーンビューの画面座標から三角形単位でレイキャストして、当たったエンティティを手前から順に返す。"
+  + "座標は x/y(ピクセル。dx12_screenshot / dx12_project_world_to_screen と同じ左上原点)か u/v(0..1 の正規化。中央=0.5,0.5)。"
+  + "返り値 {hits:[{entityId,name,submeshIndex,distance,worldPos,worldNormal,isIcon}], count, totalHits, screen, viewport, mode}。"
+  + "★スクリーンショットを見て『この物体は何？』『ここの床の高さは？』に答える口。worldPos はそのまま "
+  + "dx12_set_transform / dx12_sculpt_brush の座標に使える。既定は最前面 1 件、all:true で重なり全部(循環選択の順)。"
+  + "ライト/カメラ/空オブジェクトはアイコン当たり(isIcon:true)で拾う。includeIcons:false でメッシュだけに絞る。",
+  {
+    x: z.number().optional().describe("ピクセル X(左上原点)。y と対で指定。u/v と排他。"),
+    y: z.number().optional().describe("ピクセル Y(左上原点)。x と対で指定。"),
+    u: z.number().optional().describe("正規化 X(0..1)。v と対で指定。画面中央は 0.5。"),
+    v: z.number().optional().describe("正規化 Y(0..1)。u と対で指定。"),
+    all: z.boolean().optional().describe("true で重なり全部を手前から返す(既定 false=最前面のみ)。"),
+    maxHits: z.number().int().optional().describe("all:true のときの最大件数(既定 16、上限 64)。"),
+    includeIcons: z.boolean().optional().describe("ライト/カメラ/空オブジェクトのアイコン当たりを含めるか(既定 true)。"),
+    trianglePrecise: z.boolean().optional().describe("三角形単位で判定(既定 true)。false でメッシュ AABB 止まり(粗いが速い)。"),
+    maxCandidates: z.number().int().optional().describe("ナローフェーズに掛ける候補数の上限(既定 64)。密集シーンで奥まで拾いたいときだけ上げる。"),
+  },
+  { readOnlyHint: true, idempotentHint: true },
+  ({ x, y, u, v, all, maxHits, includeIcons, trianglePrecise, maxCandidates }) =>
+    run(() => engine.call("pick", { x, y, u, v, all, maxHits, includeIcons, trianglePrecise, maxCandidates })),
+);
+
+reg(
+  "dx12_raycast_precise",
+  "ワールドレイキャスト(三角形精密)",
+  "ワールド空間のレイを飛ばして【描画メッシュの三角形】と交差判定する。返り値は dx12_pick と同形式。"
+  + "★dx12_raycast との違い: あちらは Jolt の物理コライダー基準で Playing 中のみ有効。こっちは描画メッシュ基準で "
+  + "Editor でも動き、地形の起伏や彫った岩の実際の表面に当たる(コライダーの有無に依存しない)。"
+  + "用途: 真下へ撃って接地高さを取る / 視線が通るか確認 / 配置前に地面の法線(傾き)を知る。"
+  + "スキンドメッシュ(SkeletalAnimation 持ち)だけはバインドポーズの AABB 止まりになる。",
+  {
+    origin: v3().describe("[x,y,z] レイの始点(ワールド)。"),
+    direction: v3().describe("[x,y,z] レイの方向(正規化不要)。真下は [0,-1,0]。"),
+    maxDistance: z.number().optional().describe("最大距離(既定 1000)。0 で無制限。"),
+    all: z.boolean().optional().describe("true で貫通した全ヒットを手前から返す(既定 false=最前面のみ)。"),
+    maxHits: z.number().int().optional().describe("all:true のときの最大件数(既定 16、上限 64)。"),
+    trianglePrecise: z.boolean().optional().describe("三角形単位で判定(既定 true)。"),
+    maxCandidates: z.number().int().optional().describe("候補数の上限(既定 256)。"),
+  },
+  { readOnlyHint: true, idempotentHint: true },
+  ({ origin, direction, maxDistance, all, maxHits, trianglePrecise, maxCandidates }) =>
+    run(() => engine.call("raycast_precise",
+      { origin, direction, maxDistance, all, maxHits, trianglePrecise, maxCandidates })),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  ハイトフィールド地形（山・丘・峡谷。★Editor 限定）
+//  高さ配列は assets/terrain/<name>.hf に自動保存され、Jolt の HeightFieldShape が
+//  同じ配列を読む＝彫れば当たり判定も一緒に動く。
+// ════════════════════════════════════════════════════════════════
+
+reg(
+  "dx12_terrain_create",
+  "地形を作る/設定を更新",
+  "ハイトフィールド地形を作る(静的コライダー付き)。★冪等: 同じ name の地形が既にあれば作り直さず設定だけ更新する"
+  + "(resolution か worldSize を変えたときだけ高さ配列がリセットされ heightsReset:true が返る)。"
+  + "返り値 {entityId, name, created, resolution, worldSize, maxHeight, sceneGeneration}。"
+  + "作った直後は真っ平ら。山にするのは dx12_terrain_generate、手で彫るのは dx12_terrain_sculpt。"
+  + "★Editor 限定(Playing 中は MODE_CONFLICT)。resolution が高いほど細かく彫れるが重い(128 が使いやすい)。",
+  {
+    name: z.string().optional().describe("エンティティ名(既定 \"Terrain\")。同名があれば設定更新になる。"),
+    resolution: z.number().int().optional().describe("1 辺のサンプル数(既定 128、16..512。内部で 4 の倍数へ丸め)。"),
+    worldSize: z.number().optional().describe("1 辺のワールド長 m(既定 200)。セル幅 = worldSize/(resolution-1)。"),
+    maxHeight: z.number().optional().describe("ブラシの高さクランプ ±この値(既定 200)。"),
+    position: v3().optional().describe("[x,y,z] 地形の原点(既定 [0,0,0])。地形は XZ グリッドなので回転/スケールは効かない。"),
+    uvScale: z.number().optional().describe("地形全体での UV 繰り返し数(既定 24)。タイリングテクスチャの密度。"),
+    color: v3().optional().describe("[r,g,b] 0..1 頂点色(マテリアル未割当時の見た目)。"),
+  },
+  { idempotentHint: true },
+  ({ name, resolution, worldSize, maxHeight, position, uvScale, color }) =>
+    run(() => engine.call("terrain_create",
+      { name, resolution, worldSize, maxHeight, position, uvScale, color })),
+);
+
+reg(
+  "dx12_terrain_generate",
+  "地形を一発生成(fBm)",
+  "fBm ノイズで地形の高さを丸ごと作り直す。preset は hills(なだらかな丘) / canyon(峡谷) / mountains(険しい山脈)。"
+  + "★同じ seed と params なら毎回まったく同じ地形になる(冪等)。既存の彫りは消えるので、手で彫る前に必ずこれを先にやる。"
+  + "個別パラメータ(frequency/octaves/amplitude/ridged/baseHeight/edgeFalloff/valleyDepth)は preset の値を上書きする。"
+  + "返り値に実際に使った params と minHeight/maxHeight が入るので、次の調整の基準にできる。★Editor 限定。",
+  {
+    ...entityRef,
+    preset: enumOf(TERRAIN_PRESETS).optional().describe("生成プリセット(既定 hills)。"),
+    seed: z.number().int().optional().describe("乱数シード(既定 1337)。変えると同じ preset でも別の地形になる。"),
+    frequency: z.number().optional().describe("空間周波数。小さいほど大きな起伏(0.0001..1)。"),
+    octaves: z.number().int().optional().describe("重ねるノイズの段数(1..8)。多いほどディテールが増える。"),
+    amplitude: z.number().optional().describe("高さの振幅 m。"),
+    ridged: z.number().optional().describe("0..1。1 に近いほど鋭い尾根(山脈らしくなる)。"),
+    baseHeight: z.number().optional().describe("全体のかさ上げ m。"),
+    edgeFalloff: z.number().optional().describe("0..1。>0 で外周へ向かって高さを落とす(島にする / 縁の崖を防ぐ)。"),
+    valleyDepth: z.number().optional().describe(">0 で低い所をさらに下げる(峡谷になる)。"),
+  },
+  { idempotentHint: true, destructiveHint: true },
+  (a) => run(() => engine.call("terrain_generate", a)),
+);
+
+reg(
+  "dx12_terrain_sculpt",
+  "地形をブラシで彫る",
+  "地形をブラシで彫る。point:[x,z] で 1 点、points:[[x,z],...] で連続ストローク(稜線・道・堀を一気に引ける。最大 512 点)。"
+  + "座標は【ワールド XZ】(y は不要)。brush は raise(盛る)/lower(削る)/smooth(ならす)/flatten(平らに)/noise(岩肌)。"
+  + "★相対操作なので同じ呼び出しを 2 回撃つと 2 回ぶん彫れる。絶対値で整地したいときは brush:\"flatten\" + flattenHeight "
+  + "を使うと何回撃っても同じ形に収束する(冪等寄り)。strength は raise/lower/noise はメートル、smooth/flatten は寄せ具合(2 でほぼ完全)。"
+  + "彫る場所は dx12_pick / dx12_raycast_precise の worldPos か dx12_terrain_sample で決める。★Editor 限定。",
+  {
+    ...entityRef,
+    brush: enumOf(TERRAIN_BRUSHES).optional().describe("ブラシ種別(既定 raise)。浸食は dx12_terrain_erode。"),
+    point: v2().optional().describe("[x,z] ワールド座標の 1 点。"),
+    points: z.array(z.array(z.number())).optional().describe("[[x,z],...] 連続ストローク(最大 512 点)。[x,y,z] でも可(y は無視)。"),
+    worldPos: v3().optional().describe("[x,y,z] ワールド座標(y は無視)。dx12_pick の worldPos をそのまま渡せる。"),
+    radius: z.number().optional().describe("ブラシ半径 m(既定 12)。"),
+    strength: z.number().optional().describe("1 ストロークぶんの適用量(既定 5)。"),
+    falloff: z.number().optional().describe("縁のぼかし 0..1(既定 0.5)。0=硬い縁 / 1=とろけるように滑らか。"),
+    flattenHeight: z.number().optional().describe("brush:flatten の目標高さ(ワールド Y)。省略時は最初の点の現在高さ。"),
+    mirrorX: z.boolean().optional().describe("X ミラー(x を反転した位置にも同じ筆を置く)。"),
+    mirrorZ: z.boolean().optional().describe("Z ミラー。"),
+    noiseFrequency: z.number().optional().describe("brush:noise の周波数(既定 0.03)。"),
+    noiseOctaves: z.number().int().optional().describe("brush:noise のオクターブ(1..8)。"),
+    noiseRidged: z.number().optional().describe("brush:noise の尾根っぽさ 0..1。"),
+    seed: z.number().int().optional().describe("brush:noise のシード。"),
+  },
+  { idempotentHint: false },
+  ({ point, points, worldPos, ...rest }) =>
+    run(() => {
+      // 点の形は Node 側で畳んでからエンジンへ渡す(エラー文をここで具体的にできる & 二重指定で二度塗りしない)。
+      const pts = normalizeStrokePoints({ point, points, worldPos });
+      return engine.call("terrain_sculpt", { ...rest, points: pts });
+    }),
+);
+
+reg(
+  "dx12_terrain_erode",
+  "地形を浸食させる",
+  "熱浸食(安息角 talusDeg を超えた斜面の土砂を隣へ落とす)を掛ける。生成直後の CG くさい斜面が一気に自然になる。"
+  + "region:[minX,minZ,maxX,maxZ](ワールド XZ)で範囲を絞れる(省略で全面)。"
+  + "★相対操作: 繰り返すほど崩れる。まず iterations:16〜40 で試して、足りなければ撃ち足すのが速い。★Editor 限定。",
+  {
+    ...entityRef,
+    iterations: z.number().int().optional().describe("反復回数(既定 16、1..200)。多いほど崩れて滑らかになる。"),
+    talusDeg: z.number().optional().describe("安息角 度(既定 34)。小さいほどよく崩れる。"),
+    region: v4().optional().describe("[minX,minZ,maxX,maxZ] ワールド XZ の矩形。省略で地形全面。"),
+  },
+  { idempotentHint: false },
+  (a) => run(() => engine.call("terrain_erode", a)),
+);
+
+reg(
+  "dx12_terrain_sample",
+  "地形の高さ/法線を問い合わせ",
+  "地形の高さ・法線・傾きを座標で問い合わせる(読み取り専用)。points:[[x,z],...] を渡すと各点の "
+  + "{x,z,height,worldY,normal,slopeDeg,inside} が返る。points 省略なら地形の情報(原点・解像度・worldSize・"
+  + "cellSize・boundsXZ・minHeight/maxHeight)だけ返る。"
+  + "★木や建物を地形に沿って並べる時の基本: ここで worldY を取って dx12_set_transform の y に入れる。"
+  + "slopeDeg が大きい所(急斜面)には置かない、といった判断もこれでできる。",
+  {
+    ...entityRef,
+    points: z.array(z.array(z.number())).optional().describe("[[x,z],...] ワールド座標(最大 512 点)。[x,y,z] でも可(y は無視)。"),
+  },
+  { readOnlyHint: true, idempotentHint: true },
+  (a) => run(() => engine.call("terrain_sample", a)),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  頂点スカルプト（洞窟・アーチ・岩など、ハイトフィールドで作れない異形。★Editor 限定）
+// ════════════════════════════════════════════════════════════════
+
+reg(
+  "dx12_sculpt_create",
+  "スカルプト素体を作る",
+  "彫るための素体メッシュ(box/sphere/plane/cylinder)を作る。岩は sphere、アーチ・柱は cylinder、崖は box が早い。"
+  + "★冪等: 同じ name があれば素体は作り直さず(彫った形を失わない)見た目設定だけ更新する。"
+  + "subdivisions が細かいほど彫り込めるが重い(16〜24 が使いやすい)。"
+  + "地形と違いオーバーハング(せり出し)が作れるのが利点。返り値 {entityId, name, created, vertexCount, triangleCount}。★Editor 限定。",
+  {
+    name: z.string().optional().describe("エンティティ名(既定 \"Sculpt\")。同名があれば設定更新になる。"),
+    primitive: enumOf(SCULPT_PRIMITIVES).optional().describe("素体の形(既定 sphere)。"),
+    subdivisions: z.number().int().optional().describe("分割数(既定 16、1..64)。細かいほど彫り込めるが重い。"),
+    size: z.number().optional().describe("一辺/直径のローカル長 m(既定 2)。"),
+    position: v3().optional().describe("[x,y,z] 配置(既定 [0,0,0])。"),
+    uvScale: z.number().optional().describe("UV の倍率(既定 1)。"),
+    color: v3().optional().describe("[r,g,b] 0..1 頂点色。"),
+    collision: z.boolean().optional().describe("彫った形の MeshShape コライダーを作るか(既定 true)。"),
+  },
+  { idempotentHint: true },
+  (a) => run(() => engine.call("sculpt_create", a)),
+);
+
+reg(
+  "dx12_sculpt_make_editable",
+  "既存モデルを彫れるようにする",
+  "既にシーンにあるモデル(MeshRenderer 持ち)から【彫れるコピー】を作る。元の .glb 等には一切書き戻さない。"
+  + "全サブメッシュを 1 つに畳んで同じ姿勢の場所に置くので、見た目は重なったまま。"
+  + "★冪等: 同名(既定 \"<元の名前>_Sculpt\")の変換結果が既にあればそれを返す(撃ち直しても増えない)。"
+  + "CPU 頂点キャッシュを持たないモデルは変換できない(その場合は dx12_sculpt_create で素体から彫る)。"
+  + "スキン付きモデルを変換するとボーン追従は落ちる(静的な形として彫る前提)。★Editor 限定。",
+  {
+    ...entityRef,
+    name: z.string().optional().describe("できるエンティティの名前(既定 \"<元の名前>_Sculpt\")。"),
+  },
+  { idempotentHint: true },
+  (a) => run(() => engine.call("sculpt_make_editable", a)),
+);
+
+reg(
+  "dx12_sculpt_brush",
+  "スカルプトを彫る",
+  "スカルプトメッシュの頂点をブラシで動かす。position は【ワールド座標】で渡す(dx12_pick / dx12_raycast_precise の "
+  + "worldPos をそのまま渡すのが確実)。brush は draw(法線方向に盛る)/pull・push(direction 方向へ引く・押す)/"
+  + "smooth(ならす)/flatten(平らに)/pinch(つまむ)/noise(岩肌)/grab(掴んで動かす。grabDelta 必須)。"
+  + "symmetryX/Y/Z で左右対称に彫れる(最大 8 個の筆)。"
+  + "★radius / strength は【メッシュのローカル単位】= Transform の scale が掛かる前の大きさ。"
+  + "★相対操作(撃つたびに彫れる)。トポロジは変わらないのでコライダーも彫った形に追従する。★Editor 限定。",
+  {
+    ...entityRef,
+    brush: enumOf(SCULPT_BRUSHES).optional().describe("ブラシ種別(既定 draw)。"),
+    position: v3().optional().describe("[x,y,z] ブラシ中心(ワールド)。localPosition と排他。どちらか必須。"),
+    localPosition: v3().optional().describe("[x,y,z] ブラシ中心(メッシュのローカル空間)。position と排他。"),
+    radius: z.number().optional().describe("ブラシ半径(ローカル単位。既定 0.5)。"),
+    strength: z.number().optional().describe("1 回ぶんの適用量(既定 0.2)。"),
+    falloff: z.number().optional().describe("縁のぼかし 0..1(既定 0.5)。"),
+    direction: v3().optional().describe("[x,y,z] pull/push が押し引きする向き(ワールド)。省略時は法線方向。"),
+    grabDelta: v3().optional().describe("[x,y,z] brush:grab の移動量(ワールド)。grab では必須。"),
+    symmetryX: z.boolean().optional().describe("X ミラー対称。"),
+    symmetryY: z.boolean().optional().describe("Y ミラー対称。"),
+    symmetryZ: z.boolean().optional().describe("Z ミラー対称。"),
+    noiseFrequency: z.number().optional().describe("brush:noise の周波数(既定 1.5)。"),
+    noiseOctaves: z.number().int().optional().describe("brush:noise のオクターブ(1..8)。"),
+    noiseRidged: z.number().optional().describe("brush:noise の尾根っぽさ 0..1。"),
+    seed: z.number().int().optional().describe("brush:noise のシード。"),
+  },
+  { idempotentHint: false },
+  (a) => run(() => engine.call("sculpt_brush", a)),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  ライティング
+// ════════════════════════════════════════════════════════════════
+
+reg(
+  "dx12_list_lights",
+  "ライト一覧と灯数バジェット",
+  "シーンのライトを種別・色・強度・range・コーン角・影の有無つきで列挙する。"
+  + "★同時に【GPU へ送れる灯数の上限に対する使用数】と超過警告を返すのが本命(点 8 / スポット 8、影は spot 4 / point 2)。"
+  + "上限を超えた分は【無言で描画されない】ので、『ライトを置いたのに暗い』の原因はほぼこれ。"
+  + "各ライトの overBudget / effective を見れば、どれが効いていないか一目で分かる。"
+  + "平行光(太陽)は先頭 1 灯だけが有効。limit/cursor でページングできる(既定 50 件)。",
+  {
+    limit: z.number().int().optional().describe("1 回に返す件数(既定 50、1..200)。"),
+    cursor: z.number().int().optional().describe("続きを取るときに前回の nextCursor を渡す。"),
+  },
+  { readOnlyHint: true, idempotentHint: true },
+  ({ limit, cursor }) => run(() => engine.call("list_lights", { limit, cursor })),
+);
+
+reg(
+  "dx12_set_sun",
+  "太陽(平行光)を設定",
+  "シーンの太陽(最初の DirectionalLight)の向き・色・強度・環境光を【絶対値で】設定する(冪等)。"
+  + "timeOfDay(0..24)を渡すと向き・色・強度・環境光を時刻カーブで一括決定する(エディタのスライダや "
+  + "Lua の Lighting.setTimeOfDay とまったく同じカーブ)。方位/高度で直接指定するなら azimuth / elevation。"
+  + "★azimuth / elevation は【太陽が見える方向】(方位: +Z が 0°、+X が 90° / 高度: 0=地平線、90=真上)。"
+  + "色は color:[r,g,b] か kelvin(色温度 1000..40000K。電球色 2900 / 昼白色 5600)。"
+  + "timeOfDay と個別指定を同時に渡すと、時刻で決めた値の上に個別指定が乗る。",
+  {
+    timeOfDay: z.number().optional().describe("0..24 の時刻。向き/色/強度/環境光をまとめて決める。"),
+    azimuth: z.number().optional().describe("方位角(度)。+Z が 0°、+X が 90°。"),
+    elevation: z.number().optional().describe("高度角(度)。0=地平線、90=真上(-89..89)。"),
+    color: v3().optional().describe("[r,g,b] 0..1。kelvin より優先。"),
+    kelvin: z.number().optional().describe("色温度 K(1000..40000)。2900=電球色 / 5600=昼白色 / 7800=曇天。"),
+    intensity: z.number().optional().describe("光の強さ(0..100)。"),
+    ambient: z.number().optional().describe("この光が供給する環境光(影部分の明るさ。0..5)。"),
+  },
+  { idempotentHint: true },
+  (a) => run(() => engine.call("set_sun", a)),
+);
+
+reg(
+  "dx12_apply_lighting_preset",
+  "ライティング・プリセット適用",
+  "太陽 + ポストプロセスをまとめて『それらしい絵』に振る(冪等)。エディタの「ライティング」窓のプリセットと"
+  + "【同じ実装・同じ値】なので、AI が触った結果と人が押した結果が一致する。"
+  + "day=真上から白い光 / dusk=低いオレンジ+強めのブルーム / night=青白い弱い光+低い環境光 / "
+  + "indoor=電球色の斜め光+環境光多め / horror=ほぼ真っ暗+冷たい薄明かり+強いビネット / studio=均一なニュートラル光。"
+  + "まずこれで土台を作ってから dx12_set_sun / dx12_set_post_process で詰めるのが速い。"
+  + "太陽(平行光)が無いシーンではポストだけ適用される。",
+  {
+    preset: enumOf(LIGHTING_PRESETS).describe("プリセット名。"),
+  },
+  { idempotentHint: true },
+  ({ preset }) => run(() => engine.call("apply_lighting_preset", { preset })),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  エンジン診断（「壊れてないか」を 1 発で聞く口）
+// ════════════════════════════════════════════════════════════════
+
+reg(
+  "dx12_diagnose",
+  "エンジン診断(機械可読)",
+  "『いま何か壊れてないか？』を 1 回で聞くツール。シェーダーの作り忘れ・壊れたテクスチャ・法線マップが sRGB・"
+  + "参照切れアセット・ライトの上限超過・地形の .hf 不整合・ピッキングが破綻する条件・インスタンシングの不適格理由・"
+  + "Lua の閉じ忘れ、を検査して JSON で返す。"
+  + "★判定は summary.errors > 0 だけを見ればよい(注意/情報は失敗ではない)。各 issue は日本語 1 行で次の一手が書いてある。"
+  + "fast:true か only で重い検査(textures/models = assets 全走査で数十秒)を外せる。"
+  + "instancing は 1 度も描画していないと測れない(skipped に理由が入る)。",
+  {
+    only: z.array(z.string()).optional().describe(
+      `実行する検査 ID の配列。省略で全検査。有効値: ${DIAG_CHECKS.join(", ")}`),
+    fast: z.boolean().optional().describe("true で重い検査(textures/models)を外して数秒で返す。only 指定時は無視。"),
+  },
+  { readOnlyHint: true, idempotentHint: true },
+  ({ only, fast }) =>
+    run(() => {
+      const normalized = normalizeDiagnoseOnly(only);
+      const target = normalized !== "" ? normalized : (fast ? fastDiagnoseOnly() : "");
+      // 重い検査を含むときだけ長いタイムアウトを使う(既定 180s は待たせすぎなので短縮する)。
+      const heavy = target === "" || target.includes("textures") || target.includes("models");
+      return engine.call("diagnose", { only: target }, heavy ? undefined : { timeout: 30000 });
+    }),
 );
 
 const transport = new StdioServerTransport();

@@ -20,7 +20,7 @@ for (const m of [
   "ping", "list_entities", "get_entity", "find_entity", "query_entities",
   "list_scenes", "list_assets", "get_mode", "get_log", "describe_components",
   "describe_lua_api", "get_scene_settings", "get_lua_component_state",
-  "project_world_to_screen", "screenshot", "screenshot_game_view",
+  "project_world_to_screen", "screenshot", "screenshot_game_view", "perf_stats",
   // 同期編集
   "set_transform", "set_component", "remove_component", "set_parent",
   "rename_entity", "select_entity", "focus_camera", "set_pbr", "set_color", "set_lua_property",
@@ -34,7 +34,21 @@ for (const m of [
   "snap_to_ground", "get_hierarchy",
   // アセット操作(同期・軽量)
   "move_asset", "delete_asset",
+  // 精密ピッキング / レイキャスト(同期・読み取り)
+  "pick", "raycast_precise",
+  // 地形・スカルプトの問い合わせ / 軽い編集(同期)
+  "terrain_sample", "terrain_sculpt", "sculpt_brush",
+  // ライティング(同期)
+  "list_lights", "set_sun", "apply_lighting_preset",
 ]) TIMEOUT_BY_METHOD[m] = 8000;
+// 地形の一発生成 / 浸食は解像度 512 だと数十万セルを何周もするので長め。
+TIMEOUT_BY_METHOD["terrain_generate"] = 30000;
+TIMEOUT_BY_METHOD["terrain_erode"]    = 60000;
+// 遅延同期(地形/スカルプトの生成。CPU メッシュ生成 + GPU アップロードをフレーム境界で行う)。
+for (const m of ["terrain_create", "sculpt_create", "sculpt_make_editable"])
+  TIMEOUT_BY_METHOD[m] = 45000;
+// 診断は textures/models を外しても数秒、全部やると assets 全走査で数十秒〜。
+TIMEOUT_BY_METHOD["diagnose"] = 180000;
 // アセット操作(重め): probe は Assimp の読込、import はフォルダコピー、read_texture は変換。
 TIMEOUT_BY_METHOD["asset_info"]   = 30000;
 TIMEOUT_BY_METHOD["import_asset"] = 60000;
@@ -157,8 +171,11 @@ export class EngineClient {
     });
     if (msg.ok === false) {
       // error_code をそのまま Error.code に載せて投げる(Node は型チェックせず実行するので any 経由で代入)。
+      // error_hint / error_values(エンジンが「次の一手」と有効値を添えてきた場合)も運ぶ。
       const err: any = new Error(msg.error || "engine error");
       if (msg.error_code != null) err.code = msg.error_code;
+      if (msg.error_hint) err.hint = msg.error_hint;
+      if (Array.isArray(msg.error_values)) err.valid_values = msg.error_values;
       throw err;
     }
     return msg.result ?? null;

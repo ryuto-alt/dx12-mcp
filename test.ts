@@ -410,6 +410,89 @@ console.log("\n[19-24] 新ツール(name 透過 / 新 method タイムアウト 
   server.close();
 }
 
+// ─── [25-31] 地形/スカルプト/ライティング/診断ツールの配線 ──────────────────
+// 新 method のタイムアウト割り当てと、エンジンが返す error_hint / error_values が
+// Error オブジェクトへ載って伝わることを確認する。
+
+console.log("\n[25-31] 新ツール(地形/スカルプト/ライティング/診断)の配線");
+{
+  function terrainHandler(req: any, sock: net.Socket): void {
+    if (req.method === "terrain_generate") {
+      // 実機は解像度 512 で数秒。ここでは 150ms 遅延（default=100ms では落ちる長さ）。
+      setTimeout(() => {
+        sock.write(JSON.stringify({ id: req.id, ok: true,
+          result: { entityId: 7, preset: req.params?.preset ?? "hills", minHeight: -3, maxHeight: 42 } }) + "\n");
+      }, 150);
+    } else if (req.method === "terrain_create") {
+      // 遅延同期（フレーム境界で GPU メッシュ生成）を 200ms 遅延で模す。
+      setTimeout(() => {
+        sock.write(JSON.stringify({ id: req.id, ok: true,
+          result: { entityId: 11, name: req.params?.name ?? "Terrain", created: true } }) + "\n");
+      }, 200);
+    } else if (req.method === "terrain_sculpt") {
+      // 未知のブラシ名を弾く経路（hint と valid_values 付きのエラー）。
+      sock.write(JSON.stringify({
+        id: req.id, ok: false, error: "unknown brush: dig", error_code: 2,
+        error_hint: "有効値のどれかを指定してくれ",
+        error_values: ["raise", "lower", "smooth", "flatten", "noise"],
+      }) + "\n");
+    } else {
+      sock.write(JSON.stringify({ id: req.id, ok: true, result: req.params }) + "\n");
+    }
+  }
+
+  const { server, port } = await startMock(terrainHandler);
+  // defaultTimeoutMs=100ms。これより遅い method が解決するなら専用タイムアウトが効いている証拠。
+  const c = new EngineClient("127.0.0.1", port, 100);
+
+  // 25. pick — 同期クラス。u/v がそのまま透過する
+  assert.deepStrictEqual(await c.call("pick", { u: 0.5, v: 0.5, all: true }),
+    { u: 0.5, v: 0.5, all: true });
+  pass("pick — 同期解決 / u,v,all 透過");
+
+  // 26. raycast_precise — origin/direction が配列のまま透過する
+  assert.deepStrictEqual(
+    await c.call("raycast_precise", { origin: [0, 10, 0], direction: [0, -1, 0] }),
+    { origin: [0, 10, 0], direction: [0, -1, 0] },
+  );
+  pass("raycast_precise — origin/direction 配列が透過");
+
+  // 27. terrain_generate — TIMEOUT_BY_METHOD=30000ms が選ばれ 150ms 遅延でも解決
+  const tg = await c.call("terrain_generate", { preset: "mountains", seed: 7 });
+  assert.strictEqual(tg.preset, "mountains", "terrain_generate が専用タイムアウトで解決すること");
+  pass("terrain_generate — TIMEOUT_BY_METHOD=30000ms > 150ms delay で解決");
+
+  // 28. terrain_create — 遅延同期(45000ms)で本物の entityId が返る
+  const tc = await c.call("terrain_create", { name: "Mountain" });
+  assert.strictEqual(tc.entityId, 11, "terrain_create が遅延後に entityId を返すこと");
+  assert.strictEqual(tc.created, true);
+  pass("terrain_create — 遅延同期 45000ms > 200ms delay で entityId 解決");
+
+  // 29. error_hint / error_values が Error に載って伝わる（AI が次の一手を読める）
+  await assert.rejects(
+    () => c.call("terrain_sculpt", { brush: "dig", point: [0, 0] }),
+    (e: any) => e.code === 2
+      && e.hint === "有効値のどれかを指定してくれ"
+      && Array.isArray(e.valid_values) && e.valid_values.includes("flatten"),
+    "error_hint / error_values が Error.hint / Error.valid_values へ載ること",
+  );
+  pass("error_hint / error_values — Error へ伝播（次の一手と有効値）");
+
+  // 30. list_lights — ページング引数が透過する
+  assert.deepStrictEqual(await c.call("list_lights", { limit: 20, cursor: 40 }),
+    { limit: 20, cursor: 40 });
+  pass("list_lights — limit/cursor 透過（ページング）");
+
+  // 31. diagnose — opts.timeout で明示上書きできる（速い検査だけなら短くする運用）
+  assert.deepStrictEqual(
+    await c.call("diagnose", { only: "lighting,terrain" }, { timeout: 30000 }),
+    { only: "lighting,terrain" },
+  );
+  pass("diagnose — only 透過 / opts.timeout 上書き可");
+
+  server.close();
+}
+
 // ─── 結果サマリ ──────────────────────────────────────────────────────────────
 console.log(`\nOK: 全 ${passed} テスト通過`);
 process.exit(0);

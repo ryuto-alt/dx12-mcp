@@ -50,15 +50,17 @@ args = ["C:\\Users\\<you>\\dx12-mcp\\index.ts"]
 
 ## 構成
 - `engineClient.ts` … TCP フレーミング + id 相関の薄いクライアント（ポートは env `DX12_MCP_PORT` → `%TEMP%/dx12_mcp.port` → 8787 の順で自動解決。別マシンは `DX12_MCP_HOST`）
-- `index.ts` … MCP サーバ本体(stdio)。87 ツールを公開（全量はエンジンリポジトリの [docs/MCP.md](https://github.com/ryuto-alt/dx12/blob/main/docs/MCP.md) 参照）
+- `index.ts` … MCP サーバ本体(stdio)。112 ツールを公開（全量はエンジンリポジトリの [docs/MCP.md](https://github.com/ryuto-alt/dx12/blob/main/docs/MCP.md) 参照）
+- `sceneTools.ts` … 地形/スカルプト/診断の引数正規化と共通 zod 部品（純ロジック・エンジン非依存）
 - `test.ts` … mock エンジンで framing/相関/エラーを検証(`node test.ts`)
+- `sceneTools.test.ts` … 引数正規化・列挙定数・zod スキーマの回帰テスト(`node sceneTools.test.ts`)
 - `AGENTS.md` … AI エージェント向け運用ガイド（典型ワークフロー・禁止パターン）
 
 ## ツール(抜粋)
 
 | カテゴリ | 主なツール |
 |---|---|
-| エンティティ | `dx12_list_entities` `dx12_get_entity` `dx12_create_entity` `dx12_delete_entity` `dx12_set_transform` `dx12_set_parent` `dx12_duplicate_entity` |
+| エンティティ | `dx12_list_entities` `dx12_get_entity` `dx12_create_entity` `dx12_delete_entity` `dx12_set_transform` `dx12_set_parent` `dx12_group_entities` `dx12_duplicate_entity` |
 | コンポーネント | `dx12_describe_components` `dx12_set_component` `dx12_remove_component`（particleEmitter / trailRenderer / networkIdentity / networkTransform 等も対応） |
 | 見た目 | `dx12_set_pbr` `dx12_set_color` `dx12_set_texture` `dx12_create_shader` `dx12_set_mesh_shader` `dx12_set_sprite_shader` `dx12_set_post_process` `dx12_set_ssao` |
 | Lua | `dx12_create_lua_component` `dx12_attach_lua_component` `dx12_set_lua_property` `dx12_eval_lua` `dx12_describe_lua_api` |
@@ -67,6 +69,11 @@ args = ["C:\\Users\\<you>\\dx12-mcp\\index.ts"]
 | 再生/検証 | `dx12_play` `dx12_stop` `dx12_step_frames` `dx12_key_press` `dx12_raycast` `dx12_get_physics_state` `dx12_screenshot` `dx12_validate_scene` `dx12_build_game` |
 | シーン編集強化 | `dx12_get_bounds` `dx12_look_at` `dx12_snap_to_ground` `dx12_get_hierarchy` `dx12_set_editor_camera` `dx12_screenshot_from` `dx12_scatter` |
 | アセット操作 | `dx12_import_asset` `dx12_asset_info` `dx12_move_asset` `dx12_delete_asset` `dx12_view_texture` `dx12_preview_model` |
+| 精密ピック | `dx12_pick`（画面座標→三角形精密ヒット列） `dx12_raycast_precise`（描画メッシュ基準のワールドレイ） |
+| 地形 | `dx12_terrain_create` `dx12_terrain_generate` `dx12_terrain_sculpt` `dx12_terrain_erode` `dx12_terrain_sample` |
+| スカルプト | `dx12_sculpt_create` `dx12_sculpt_make_editable` `dx12_sculpt_brush` |
+| ライティング | `dx12_list_lights`（灯数バジェット警告つき） `dx12_set_sun` `dx12_apply_lighting_preset` |
+| 診断 | `dx12_diagnose`（シェーダー/テクスチャ/シーン参照/ライト/地形/ピッキング/Lua を一括検査） |
 
 生成/削除/シーン読込/Play/Stop は**遅延同期**: エンジンはフレーム境界で実処理し、完了後に
 本物の結果(`entityId` 等)を同期で返す。「name で list して探す」旧パターンは不要。
