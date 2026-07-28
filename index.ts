@@ -940,7 +940,7 @@ reg(
   "dx12_perf_stats",
   "パフォーマンス統計",
   "直近 window フレーム(既定60)の性能統計を即時取得。fps / frameMs(avg,min,max,p95) / cpu(workMs,fenceWaitMs,presentMs) / "
-  + "gpuPassMs(total, shadows, depthPrepass, prepassSsao, clusterCull, raytracing, rtScreen, screenSpaceGi, volFog, mainScene, particles, postFx, ui "
+  + "gpuPassMs(total, shadows, depthPrepass, prepassSsao, clusterCull, raytracing, rtScreen, ddgi, screenSpaceGi, volFog, mainScene, particles, postFx, ui "
   + "※約3フレーム遅れのGPUタイムスタンプ。raytracing = DXR の BLAS 遅延構築 + TLAS の毎フレーム再構築(加速構造だけ)、"
   + "rtScreen = RT サン影 + RT-AO + RT デバッグのスクリーン空間パス。どちらも DXR OFF なら 0) / "
   + "drawCalls / culled / triangles / vsync / fpsLimit / scene(エンティティ内訳・shadows/ssao) と "
