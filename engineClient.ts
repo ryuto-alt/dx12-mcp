@@ -20,7 +20,7 @@ for (const m of [
   "ping", "list_entities", "get_entity", "find_entity", "query_entities",
   "list_scenes", "list_assets", "get_mode", "get_log", "describe_components",
   "describe_lua_api", "get_scene_settings", "get_lua_component_state",
-  "project_world_to_screen", "screenshot", "screenshot_game_view", "perf_stats",
+  "project_world_to_screen", "screenshot_game_view", "perf_stats",
   // 同期編集
   "set_transform", "set_component", "remove_component", "set_parent",
   "rename_entity", "select_entity", "focus_camera", "set_pbr", "set_color", "set_lua_property",
@@ -38,12 +38,34 @@ for (const m of [
   "pick", "raycast_precise",
   // 地形・スカルプトの問い合わせ / 軽い編集(同期)
   "terrain_sample", "terrain_sculpt", "sculpt_brush",
+  // 地形レイヤーの円ブラシ塗り(スプラットの一部だけ触るので軽い)
+  "terrain_paint",
+  // スプラットの要約読み取り(最大 2048^2 テクセルを 1 周するだけ)
+  "terrain_splat_info",
+  // 影(PCSS)の設定 get/set は即時
+  "get_shadow_pcss", "set_shadow_pcss",
+  // DXR の設定 get/set も即時(TLAS の再構築は次フレームの描画側で走る)
+  "get_dxr", "set_dxr",
   // ライティング(同期)
   "list_lights", "set_sun", "apply_lighting_preset",
 ]) TIMEOUT_BY_METHOD[m] = 8000;
 // 地形の一発生成 / 浸食は解像度 512 だと数十万セルを何周もするので長め。
 TIMEOUT_BY_METHOD["terrain_generate"] = 30000;
 TIMEOUT_BY_METHOD["terrain_erode"]    = 60000;
+// autopaint は解像度 512 のスプラット全面を高さ/傾斜から焼き直す(terrain_generate と同じ桁)。
+TIMEOUT_BY_METHOD["terrain_autopaint"] = 30000;
+// レイヤー割当は .terrainlayers のパース + スプラット新規作成 + autopaint まで走ることがある。
+TIMEOUT_BY_METHOD["terrain_set_layers"] = 30000;
+// render_debug は最大 120 フレーム描いてからスクショを撮る遅延応答(重い可視化だと 1 フレームが伸びる)。
+TIMEOUT_BY_METHOD["render_debug"] = 60000;
+// ★screenshot / screenshot_final は【遅延同期】。
+//   - screenshot_final は素で 1 フレーム待つ(ImGui を描く前にバックバッファをコピーする)。
+//   - deterministic:true だと履歴を捨ててから settleFrames(最大 240)ぶん回してから撮る。
+//     240 フレームは重いシーンだと数十秒かかるので、render_debug(最大 120 フレームで 60s)と
+//     同じ桁を確保する。ここを 8000ms のままにすると settleFrames を上げた瞬間に
+//     「エンジンは撮り続けているのに TS 側だけタイムアウト」になる。
+TIMEOUT_BY_METHOD["screenshot"]       = 60000;
+TIMEOUT_BY_METHOD["screenshot_final"] = 60000;
 // 遅延同期(地形/スカルプトの生成。CPU メッシュ生成 + GPU アップロードをフレーム境界で行う)。
 for (const m of ["terrain_create", "sculpt_create", "sculpt_make_editable"])
   TIMEOUT_BY_METHOD[m] = 45000;

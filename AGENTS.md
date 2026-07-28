@@ -188,6 +188,145 @@ dx12_save_scene()   # 現在のシーンへ上書き
 
 ---
 
+## 品質判断系(絵を「見る」のではなく「測る」)
+
+スクショを 1 枚見て「いい感じ」と言うのは当てにならない。数値で差を出して、数値で詰める。
+
+### 参照画像に寄せる — `dx12_look_compare`
+
+`dx12_ui_compare` の 3D 版。参照(実写写真 / 参考ゲームのスクショ)と今の絵を横並びにするだけでなく、
+**何をどっちへ何倍動かせばいいか**を返す。リアル系のライティング詰めはこれが本体。
+
+```
+dx12_look_compare(referencePath:"C:/ref/forest_dusk.png", position:[0,2,-8], target:[0,1,0])
+# → 画像(左=参照 / 右=現在) +
+#   delta: {exposureEV:-0.83, contrastRatio:0.78, saturationRatio:1.31, cctDeltaK:-1200, histogramEmdEV:0.62, ...}
+#   suggestions: [
+#     "露出: 参照より平均輝度が -0.83EV 暗い。dx12_set_sun の intensity を現在値の ×1.78 に…",
+#     "コントラスト: … ×0.78 で眠い。まず光で作る: ambient を下げて影を締める…",
+#     "色温度: 参照より 1200K 暖色寄り。dx12_set_sun の kelvin を 6100 にする…" ]
+```
+
+#### ★ 何が映る絵を測っているのかを絶対に間違えないこと
+
+スクショは 3 種類あり、**撮る先が違う**。ここを間違えると「測定と目視が食い違う」。
+
+| | `dx12_screenshot`<br>(シーン RT・ポスト前) | `dx12_screenshot_final`<br>(バックバッファ・ポスト後) | `dx12_ui_screenshot`<br>(ウィンドウ全体) |
+|---|---|---|---|
+| ライト・環境光・材質・IBL・影・SSAO | ○ | ○ | ○ |
+| post の `exposure` / `tonemapper` | ○ | ○ | ○ |
+| post のグレーディング(`contrast` `brightness` `saturation` `warmth` `hueShift` `tint`) | **× 映らない** | ○ | ○ |
+| ブルーム・ゴッドレイ・ビネット・LUT・FXAA・デバンド | **× 映らない** | ○ | ○ |
+| **TAA の解決結果**(ゴースト) | **× 映らない** | ○ | ○ |
+| ImGui のパネル / ギズモ | × | × | ○ |
+
+**`dx12_look_compare` / `dx12_camera_path` / `dx12_screenshot_from` /
+`dx12_focus_and_screenshot` は既定で `screenshot_final`(ポスト後)を撮る。**
+＝人間がビューポートで見ている絵と同じものを測るので、**どのノブを動かしても数値が動く**。
+
+- 数値で追い込むノブに制限は無い。ただし**順序は変えない**: まずライト側
+  (`dx12_set_sun` の intensity / kelvin / ambient、ライトの色、材質の albedo / roughness、IBL)
+  で作り、post のグレーディングは「一律に効かせる最後の手段」。
+  ライティングの破綻をグレーディングで塗り潰すのは絵作りとして間違い。
+- `source:"sceneRT"` に切り替えると従来のポスト前を測る。**ポストの化粧を剥がして
+  幾何とライティングの素の値だけ見たいとき**に使う。このときだけ suggestions の post 案に
+  「この数値では追い込めない」の但し書きが付く。
+- 例外: `gameView:true` は `screenshot_game_view` = **常にポスト前**(エンジンに
+  「ゲームカメラ視点のバックバッファ」を撮る method が無いため)。ポスト込みのゲーム画面を
+  測りたいなら `dx12_play` してから `gameView` なしで呼ぶ(Playing 中の最終画はゲームカメラの絵そのもの)。
+
+> ⚠️ 2026-07-26 より前は `dx12_screenshot`(ポスト前)しか無く、
+> 「`saturation` を下げても数値が 1 ミリも動かない → もっと下げる」の無限ループを避けるため
+> **suggestions が post のノブを勧めないよう歪めてあった**。`screenshot_final` の追加で解消済み。
+
+#### ★ ピクセル差分で A/B を取るなら `deterministic:true`
+
+**同じ設定で 2 回撮っても絵は一致しない。** 犯人は実測で 3 つ:
+
+| 原因 | 効く先 | 実測(1920x1032・同一設定 2 枚) |
+|---|---|---|
+| deband ディザ / フィルムグレイン(`time` 依存の TPDF ノイズ) | `screenshot_final` のみ | 画面の **66%** が ±1〜2 LSB |
+| TAA のジッタ | 両方 | `screenshot` で **9.4%** / max 140 |
+| SSGI・ボリュメトリックフォグの時間ジッタ + 履歴蓄積 | 両方 | SSGI 1.5% / フォグ 5.9% |
+
+`{"deterministic": true, "settleFrames": 8}` で time を固定し、TAA/フォグ/SSGI の位相を 0 に、
+履歴を捨ててから固定フレーム数回してから撮る → **2 枚が完全一致(diff 0.00%)**。
+止まるのは**レンダラの時間依存だけ**なので、Play 中のゲームシミュレーション(移動/物理/アニメ)は
+止まらない。厳密に比べるなら `dx12_stop` してから撮ること。
+
+#### そのほかの読み方
+
+- **1 回で寄せきろうとしない。** suggestions のうち**露出 → コントラスト → 色温度 → 彩度**の順で
+  1 つずつ動かして撮り直す(同時に触ると何が効いたか分からなくなる)。
+- `exposure` / `contrast` / `saturation` の示唆は**現在値への倍率**で出る。`dx12_get_post_process` で
+  現在値を読んでから掛ける。各エフェクトは `<name>On:true` にしないと効かない。
+- `cct` が `null` で返ることがある。これは**推定できなかった**という意味で、`cctNote` に理由が入る
+  (黒体軌跡から離れすぎ = 強いカラーライトの色被り / 絵が暗すぎる)。
+  null の時に色温度をいじっても迷走するので、先に色被りか露出を外す。
+- 数値が全部許容内なら suggestions は「ほぼ一致」1 本になる。そこから先は合成画像を見て
+  構図・素材・法線マップの差を探す仕事。
+
+### 動かして初めて出るアラ — `dx12_camera_path`
+
+静止画では TAA のゴースト・LOD ポップ・影のちらつき・カリング抜けが**絶対に**分からない。
+
+```
+# 被写体のまわりを 1 周(8 枚を 4 列の格子で)
+dx12_get_bounds(name:"Boss", includeChildren:true)      # → center と size を先に測る
+dx12_camera_path(mode:"orbit", target:[0,1,0], radius:12, height:4, frames:8, columns:4)
+# → 格子画像 + frameDiffs:[3.1, 2.9, 3.4, 18.7, 3.0, 2.8, 3.2]
+#   → 4→5 だけ突出 = そこで何かがポップした。その視点を dx12_screenshot_from で撮り直して確認
+```
+
+- `frameDiffs` はカメラ移動量に比例するので、**絶対値ではなく周囲との差**を見る。
+- `settleFrames` は既定 0。**TAA のゴーストを見たいなら 0 のまま**(進めると収束して消える)。
+  逆に「収束後の最終画質」を見たい時だけ 4〜8 にする。
+- Editor 限定。撮り終わると元のカメラ位置へ戻す(`restore:false` で戻さない)。
+
+---
+
+## 大量配置はシーン JSON を直接書く — `dx12_scene_write`
+
+`dx12_create_entity` / `dx12_spawn_model` は**遅延同期＝1 体につき 1 フレーム**かかる。
+数十体以上を並べるなら JSON を書いて `open_scene` 1 回の方が桁違いに速い。
+
+```
+dx12_scene_write(
+  path: "scenes/level1.json",
+  open: true,
+  sceneJson: {
+    version: 1,
+    entities: [
+      {name:"Floor", transform:{position:[0,0,0],rotation:[0,0,0],scale:[40,1,40]}, primitive:"plane"},
+      {name:"Sun",   transform:{position:[0,20,0],rotation:[0,0,0],scale:[1,1,1]},
+       directionalLight:{color:[1,0.95,0.9], intensity:3}},
+      {name:"Tree_00", transform:{position:[3,0,5],rotation:[0,0,0],scale:[1,1,1]},
+       meshRenderer:{modelPath:"models/tree.gltf"}, parent:0}
+    ]
+  })
+```
+
+**書く前に必ず検証が走る**(エラーが 1 つでもあれば書かずに全部返す):
+
+- `entities` の有無 / `name` 欠落 / `transform` の要素型
+- `parent` は **entities 配列のインデックス**(entityId でも name でもない)。範囲外・自己参照・循環を弾く
+- `meshRenderer.modelPath` / `luaScript.scriptPath` を `dx12_list_assets` と突き合わせて実在確認
+  (**参照切れのモデルはエンティティごと消える**ので、これを黙って通すと「置いたはずの木が無い」になる)
+- **エンジンが無言で無視するキーの打ち間違い**(`meshrenderer` / `rotaton` / `shadow` …)を近い正解つきで警告
+
+上書き時は既存内容を読んでから書き、`replaced.summary`(上書き前のエンティティ数など)と
+`%TEMP%` に取った `backupPath` を返す。**何を壊したかが返り値に残る。**
+
+- `path` は assets 相対(`scenes/xxx.json`)推奨。絶対パスも可。
+- assets ディレクトリは **`dx12_ping` がエンジンの正を返す**(`protocolVersion 4` 以降。
+  `assetsDir` / `scriptsDir` / `baseDir` / `projectShaderDir` / `cwd`)。
+  解決順は `assetsDir` 引数 → 環境変数 `DX12_ASSETS_DIR` → `dx12_ping`。
+  以前あった「エンジンログの絶対パスから推定する」ハックは**撤去済み**(別プロジェクトの古いログを
+  掴む事故があった)。絶対パスが要るときはログを漁らず `dx12_ping` を引くこと。
+- 書いた後は `dx12_open_scene`(または `open:true`)で読み込む。開くまでエディタの絵は変わらない。
+
+---
+
 ## batch でまとめ作成(往復削減)
 
 複数のエンティティや設定を一気に送る場合は `dx12_batch` を使う。
@@ -231,8 +370,14 @@ dx12_set_lua_property(name:"MainCamera", key:"height", value:5.0)
 - `dx12_screenshot_game_view` は **Editor 中でも Play せずにアクティブなゲームカメラの絵**を返す
   (内部で1フレームだけゲームカメラに切り替えて撮影→編集カメラに復元)。カメラ配置・構図の確認に最適。
   アクティブな CameraComponent が無いとエラー(`camera` の `isActive=true` にする)。
-- `dx12_screenshot` は **Playing 中はゲームカメラの絵**、Editor 中はエディタのフライカメラ。
-  `dx12_focus_and_screenshot` は寄せて撮る用(エディタカメラ)。
+- `dx12_screenshot_final` は **Playing 中はゲームカメラの絵**、Editor 中はエディタのフライカメラ。
+  どちらも**ポスト適用後**なので「実際にプレイヤーが見る絵」の判断はこれで行う。
+  `dx12_screenshot`(ポスト前)は幾何/ライティングの素の値を見たいときだけ。
+  `dx12_focus_and_screenshot` は寄せて撮る用。
+- `dx12_set_editor_camera` は **Play 中も使える**(アクティブな `CameraComponent` の毎フレーム
+  同期を止めて視点を固定する = `overridden:true`)。撮り終わったら `{"release":true}` で
+  ゲームカメラへ返す(Play/Stop の遷移でも自動解除)。Play 中の絵で `dx12_look_compare` /
+  `dx12_camera_path` を回すための機能。
 - `dx12_project_world_to_screen(name:"Player")` で player のワールド座標を画面ピクセルへ投影。
   `{x, y, visible, depth, width, height}`。`x≈width/2, y≈height/2` なら画面中央。`visible=false` は画面外。
 
@@ -307,6 +452,131 @@ dx12_focus_and_screenshot(name:"MainCamera")               # 見た目を確認
 
 各エフェクトは `<name>On`(bool) を true にしないとパラメータを変えても反映されない。
 
+`dx12_set_*`(post_process / ssao / ssr / ssgi / contact_shadow / taa / volumetric_fog /
+scene_settings)は適用後に **エンジンから読み返した実値** を `current` に入れて返す。
+要求と食い違ったフィールドは `mismatched` に出て `applied:false` になる
+(＝「成功したように見えるのに何も変わっていない」が起きない)。
+
+```
+dx12_set_taa(enabled:true, sampleCount:16)
+# → {applied:true,  requestedKeys:[...], current:{enabled:true, sampleCount:16, active:true, ...}}
+# → {applied:false, mismatched:[{key:"sampleCount", requested:16, actual:8}], ...}  ← 同じ呼び出しを繰り返しても無駄
+```
+
+### 引数名を間違えると「無言で無視」ではなくエラーになる
+
+かつては zod がスキーマに無いキーを黙って捨て、それでも `{applied:true}` が返っていた
+(`tonemapper` / `godraysOn` / `dofOn` 等が長期間そうなっていた)。今は未知キーを
+**近い正解つきのエラー**で返す。`dx12_batch` の `params` も同じ検査を通る。
+
+```
+dx12_set_post_process(godrays:true)
+# → エラー(code=2): 知らない引数 godrays(→ godraysOn のことか?) が来た(このまま実行すると黙って無視される)
+```
+
+**エンジンの現物を確かめる — `dx12_describe_mcp_params`**: 「知らない引数」と弾かれた / 設定したのに
+変わらないときは、これでエンジンが**実際に受け付けるキーと型**を引ける
+（`dx12_describe_mcp_params(method:"set_dxr")` → `{methods:{set_dxr:[{key:"shadowEnabled",type:"any"},...]}}`。
+`method` は `dx12_` 接頭辞なし、省略で全件）。docs や zod スキーマが古くてもこちらが正。
+
+**メンテナ向け**: エンジン側の MCP ハンドラにフィールドを足したら `index.ts` の
+`inputSchema` にも足すこと。忘れると `npm test`(`schemaDrift.test.ts`)が
+`Application.cpp:<行> / index.ts:<行>` 付きで落ちる。
+エンジンのハンドラは `McpDefine("名前", "キー:型,...", ...)` のディスパッチ表になっており、
+`schemaDrift.ts` はその**申告表とハンドラ本文の両方**を読んで和集合を取る（どちらの書き忘れも拾う）。
+
+### 影を柔らかくする — `dx12_set_shadow_pcss`
+
+CSM の固定幅 3x3 PCF を「ブロッカー探索 → 可変ペナンブラ」に置き換える。
+接地部は鋭く、離れるほど柔らかい影になる。**OFF に戻すと従来の PCF と絵がビット一致**するので、
+「影のせいで変なのか」の切り分けにそのまま使える。
+
+```
+dx12_get_shadow_pcss()
+# → {enabled:false, lightTanAngle:0.05, maxPenumbraTexels:16, blockerSearchTexels:8,
+#    temporalDither:false, active:false, temporalDitherActive:false}
+dx12_set_shadow_pcss(enabled:true, lightTanAngle:0.02)
+```
+
+- `enabled:true` なのに **`active:false`** なら効いていない ＝ シーンの影が切れているか、
+  正射 / 2D ビューになっている（`active` はその 2 条件を見た結果）。
+- `lightTanAngle` は太陽の角半径の tan。既定 `0.05` は誇張値で、**実際の太陽は 0.0044**（ほぼ硬い影）。
+  ぼやけすぎたらここを下げる。
+- `temporalDither` は **TAA 有効時だけ**効く（無効だとチラつくだけなのでエンジンが自動で切り、
+  `temporalDitherActive:false` が返る）。設定はシーン JSON の `shadowPcss` に保存される。
+
+---
+
+## 「絵がなんか変」の切り分け — `dx12_render_debug`
+
+最終画だけ見て原因を当てにいかないこと。**中間バッファを 1 枚ずつ見るのが最短**。
+呼ぶ前と後でシーンの設定は**完全に同じ**（一時的に ON にした機能は必ず戻る）ので、
+何度撃っても副作用が残らない。可視化はポスト前の `m_sceneRT` へ描くので、
+`dx12_screenshot` でも必ず写る（この 1 点だけは `screenshot_final` でなくてよい）。
+
+```
+dx12_render_debug(mode:"normal")                       # 法線が飛んでないか
+dx12_render_debug(mode:"depth", depthRange:60)         # 手前が潰れてないか(青=近→赤=遠)
+dx12_render_debug(mode:"velocity", gain:20, frames:8)  # 静止時に一様なグレーなら正常
+dx12_render_debug(mode:"lightComplexity")              # 白いところは 128 灯で切り捨て中
+dx12_render_debug(mode:"ssr", frames:16)               # 時間蓄積があるので frames を増やす
+dx12_render_debug(mode:"rtDiff", gain:20)              # ★加速構造の検証。黒=RT とラスタが一致
+dx12_render_debug(mode:"off")                          # 撮らずに全部戻すだけ(リセット用)
+```
+
+- **`warnings` を必ず読む。** 真っ黒な絵の理由はだいたいここに出る
+  （「フォグが無効なので何も出ない」「デカールが 1 枚も無い」「TAA を一時的に ON にした」）。
+- `normal` / `roughness` / `metallic` / `velocity` は**深度+速度プリパスでしか書かれない**ので、
+  TAA も SSR も SSGI も OFF なら**エンジンが TAA を一時 ON にして**撮る（`warnings` に出る）。
+  この 4 モードが「ジオメトリだけの粗い絵」に見えるのは**仕様**。
+  なお G-Buffer は**幾何法線**なので、`normal` に法線マップは載っていない
+  （`roughness` / `metallic` も同じくスカラー値のみで ORM テクスチャは載らない）。
+- `toneMapped:false` のモードは**トーンマップ / 露出を掛けずに** 8bit へ落とすので、
+  **PNG のピクセル値がそのままバッファの値**として読める。
+- **`albedo` と `overdraw` は意図的に非対応**。撃つと「なぜ無いか + 代わりに何を見ればいいか」を
+  添えて弾かれる（`albedo` は前方レンダラなので G-Buffer が存在しない。`overdraw` は専用パスが要る）。
+  代わりに最終画は `dx12_screenshot_final`、描画負荷は `dx12_perf_stats` の `draws`/`tris`、
+  ライトの重なりは `mode:"lightComplexity"` を見ること。
+- **`rt` / `rtDiff` は DXR 用**。`rt` はプライマリレイのヒット距離（空/ミスは黒、`depthRange` で正規化）、
+  `rtDiff` は **|RT のヒット距離 − ラスタの距離|**（**黒 = 完全一致**、マゼンタ = 片方だけヒット）。
+  **加速構造（BLAS/TLAS）が正しいかの検証はこれが本命**で、行列の転置ミスやノード変換の付け忘れを一発で炙り出す。
+  `gain:20` くらいにすると 5cm でフルスケール。RT 影 / RT-AO が OFF でも TLAS を一時的に建てて撮る。
+  **スキンドと半透明は TLAS に入らない仕様なのでマゼンタになるのが正常**。BLAS は LOD0 固定なので、
+  遠くて低 LOD で描かれている物に数 cm の差が出るのも正常。
+  DXR 非対応 GPU では**真っ黒になるだけでエラーにはならない**（`warnings` に理由が出る）。
+
+---
+
+## レイトレーシング — `dx12_get_dxr` / `dx12_set_dxr`
+
+DXR 1.1 の inline raytracing（RayQuery）。**RT サン影**は既存のコンタクトシャドウ枠(t11)、
+**RT-AO** は既存の SSAO 枠(t8) へ書くので、ルートシグネチャは 1 DWORD も増えない。
+設定はシーン JSON の `raytracing` に保存される（`forceBuildTlas` だけは保存しない一時トグル）。
+
+```
+dx12_get_dxr()
+# → {supported:true, raytracingTier:"1.2", highestShaderModel:"6.8",
+#    shadowEnabled:false, shadowSunAngle:0.53, ..., shadowActive:false, tlasReady:true,
+#    stats:{instances:412, blasCount:37, blasBytes:..., skippedSkinned:3, droppedOverLimit:0, ...}}
+dx12_set_dxr(shadowEnabled:true, shadowSunAngle:0, aoEnabled:true, aoRayCount:4)
+```
+
+- **★まず `supported` を見る。** 非対応 GPU（DXR Tier 1.1 / SM 6.5 未満）では `dx12_set_dxr` は
+  適用できない。その場合は**エラーではなく** `{applied:false, supported:false, retryable:false, reason, next}`
+  が返る。**引数を変えて撃ち直しても永久に通らない**ので、`next` に従って
+  `dx12_set_shadow_pcss`（CSM + PCSS）と `dx12_set_ssao` / `dx12_set_contact_shadow` で作ること。
+  `dx12_get_dxr` の方は非対応 GPU でも**成功する**（`supported:false` が返るだけ）。
+- `shadowEnabled:true` なのに **`shadowActive:false`** なら効いていない。`tlasReady` と `supported`、
+  カメラ（正射）を疑う。
+- **PCSS と併用するときは `shadowSunAngle:0`**（ハード）にして半影は PCSS に任せるのが正しい。
+- **スキンドメッシュと半透明は加速構造に入らない**。そこは従来どおり CSM が担当し、フォワードの
+  `min()` で合成される（`stats.skippedSkinned` / `skippedTransparent` に本数が出る）。
+- `stats.droppedOverLimit > 0` なら TLAS のインスタンス上限に引っかかっている → `maxInstances` を上げる。
+- コストは `dx12_perf_stats` の `gpuPassMs.raytracing`（BLAS/TLAS の構築）と `gpuPassMs.rtScreen`
+  （RT 影 / RT-AO / RT デバッグのスクリーン空間パス）で見る。
+- 加速構造そのものの正しさは `dx12_render_debug(mode:"rtDiff", gain:20)`、
+  設定の矛盾は `dx12_diagnose(only:["dxr"])`。
+
 ---
 
 ## シーン検証パイプライン(validate)
@@ -335,12 +605,86 @@ dx12_set_texture(name:"Wall", path:"")                 # 解除(Material 既定�
 Inspector の D&D と同じインスタンス単位 override。Material は共有なので他インスタンスに波及しない。
 スプライトのテクスチャは `dx12_set_component(component:"sprite2d", data:{texturePath:...})` の方。
 
+### ★PBR マテリアルは 1 発で当てる — `dx12_material_apply`
+
+`set_texture` を 3 回叩くのは往復が多いうえ、**後述の罠を踏むと ORM が効かない**。
+素材フォルダを渡せば用途を推定して全部やってくれるこちらを既定にする。
+
+```
+dx12_material_apply(name:"Wall", dir:"textures/red_brick_03", uvScale:4)
+# → {applied:true,
+#     slots:{albedo:".../red_brick_03_diff.jpg",
+#            normal:".../red_brick_03_nor_gl.png",
+#            metalRoughness:".../red_brick_03_arm.png"},
+#     pbrRequested:{metallic:-1, roughness:-1, uvScaleU:4, uvScaleV:4},
+#     ignored:[{path:".../red_brick_03_disp.png", reason:"メッシュに高さ/変位テクスチャのスロットが無い…"}],
+#     warnings:["ORM を有効にするため metallic/roughness の数値上書きを -1 へ戻した"]}
+
+# 複数エンティティ / 個別指定 / サブメッシュ
+dx12_material_apply(entities:[12,"Floor","Wall_02"], dir:"textures/concrete_02")
+dx12_material_apply(entity:12, baseColor:"textures/a_diff.jpg", orm:"textures/a_arm.png", submesh:1)
+```
+
+**用途の推定規則**（`dir` を渡したとき。ファイル名を `_` `-` `.` で割って**最後に**当たった語を採る）:
+
+| 用途 | 拾う語 | set_texture の slot |
+|---|---|---|
+| BaseColor | `diff` `diffuse` `albedo` `basecolor` `color` `col` | `albedo` |
+| Normal | `nor` `normal` `norm` `nrm`（`nor_gl` を含む） | `normal` |
+| ORM/ARM | `arm` `orm` `rma` `mra` `metalroughness` … | `metalRoughness` |
+| Height | `disp` `displacement` `height` `bump` | **無し**（後述） |
+
+推定できなかったファイルは**黙って捨てず** `ignored:[{path, reason}]` に理由付きで返る。
+`nor_dx`（DirectX 規約の法線）は理由付きで**弾く** — このエンジンのシェーダは OpenGL 規約なので
+`nor_gl` を使うこと。`ao` / `rough` / `metal` 単体も「ORM にパックしたものを使え」と理由が出る。
+`disp`(height) はメッシュに割当先が無い（`set_texture` の slot は 3 つだけ）。変位を使えるのは
+地形の `.terrainlayers` だけ。
+
+**★踏みやすい罠: metallic/roughness の数値上書きが ORM テクスチャを殺す**
+
+エンジンは `overrideMetallic >= 0 || overrideRoughness >= 0` のときに PBR flags から
+metalRoughness テクスチャのビットを落とす（`Application.cpp` の `hasOverride`）。
+`dx12_spawn_model` で読み込んだモデルはシーン JSON の `material.metallic/roughness` から
+この上書きが入っていることが多く、**ORM を貼っても絵が変わらない**。
+
+- `dx12_material_apply` は ORM を割り当てるとき **自動で `metallic:-1 / roughness:-1`**（= 上書き解除）
+  を書くので、そのままで ORM が効く。`warnings` に何をしたか出る。
+- 逆に `metallic` / `roughness` を**明示指定すると ORM は無効になる**。指定は尊重するが警告が出る。
+  数値で金属感を作るか、テクスチャに任せるかのどちらかで、両取りはできない。
+- `dx12_set_texture` を手で叩くときは、**自分で `dx12_set_pbr(metallic:-1, roughness:-1)` を撃つこと**。
+
+適用後は `dx12_get_entity` で読み返して照合し、食い違えば `applied:false` + `mismatched` を返す。
+`.dxmat` が割り当たっているエンティティや、法線/ORM を貼ったプリミティブには
+`targets[].warning` で「割り当てても絵が変わらない理由」が付く。
+
 ### スケルタルアニメーション
 ```
 dx12_get_anim_state(name:"Player")                     # → {clips:["Idle","Walk","Run"]}
 dx12_play_anim(name:"Player", clipName:"Run", blend:0.2)
 ```
 アニメーションの時間進行は Play 中。クリップはモデルロード時に読み込まれたもののみ。
+
+#### ステートマシン(.animfsm / AnimatorController)
+```
+dx12_describe_anim_graph(entity:42)                    # → graph.layers[].states / graph.parameters
+dx12_describe_anim_graph(path:"animations/player.animfsm")   # ファイルを直接読む(エンティティ不要)
+dx12_play_anim(entity:42, state:"Run", blend:0.2)      # FSM のステート遷移(clip 経路ではなく)
+dx12_play_anim(entity:42, state:"Wave", layer:1)       # 上半身レイヤーだけ差し替える
+dx12_get_anim_state(entity:42)                         # → layers[].state / parameters(現在値)
+```
+`state` を渡さなければ従来どおりクリップ経路（完全後方互換）。ステート名は `dx12_describe_anim_graph` で確認する。
+
+#### FSM のパラメータを外から叩く — `dx12_set_anim_param`
+```
+dx12_set_anim_param(name:"Player", param:"Speed", value:4.5)   # Float
+dx12_set_anim_param(entity:42, param:"Grounded", value:true)   # Bool
+dx12_set_anim_param(entity:42, param:"Jump", trigger:true)     # Trigger
+dx12_get_anim_state(entity:42)                                 # → parameters で現在値を確認
+```
+**パラメータ名は `param`**。`name` は他ツールと同じ「エンティティ名」（`entity` と排他）。
+エンジンには「`param` を省略したときだけ `name` をパラメータ名として読む」後方互換が残っているが、
+**新しい呼び出しは必ず `param` を使うこと**（`{entity, name:"Speed"}` は動くが読む人が混乱する）。
+遷移が実際に進むのは Play 中だけ。パラメータ名の一覧は `dx12_describe_anim_graph` の `graph.parameters`。
 
 ### マルチプレイヤーのローカルテストループ
 ```
@@ -445,6 +789,22 @@ transform の変更は `dx12_set_transform` または `dx12_set_component(compon
 メッシュは `dx12_spawn_model` でモデルごとスポーンする。
 既存の meshRenderer を差し替えたい場合は `delete_entity` → `spawn_model` の手順で。
 
+### terrain / sculptMesh / gridPlane も set_component 不可（B11）
+
+`UNKNOWN_COMPONENT(6)` になるが、これは「知らない名前」ではなく**設計上そうしてある**。
+コンポーネントを作り直すと、生きている高さ配列（`.hf`）／頂点配列（`.smsh`）とメッシュ・
+コライダーの結び付きが切れるため。`dx12_describe_components` も `settable:false` と申告している。
+名前を変えて撃ち直しても通らないので、**専用ツールを使うこと**。
+
+| jsonKey | 代わりに使うもの |
+|---|---|
+| `terrain` | `dx12_terrain_create`（worldSize/maxHeight/uvScale/color の更新も兼ねる冪等ツール）/ `dx12_terrain_generate` / `dx12_terrain_sculpt` / `dx12_terrain_erode` / `dx12_terrain_paint` / `dx12_terrain_autopaint` / `dx12_terrain_sample` |
+| `sculptMesh`（JSON 上のキーは `sculpt`） | `dx12_sculpt_create` / `dx12_sculpt_make_editable` / `dx12_sculpt_brush` |
+| `gridPlane` | 触る必要が無い（読み込み時に `size` を無視して常に最新値で作り直す）。床が欲しいなら `dx12_create_entity(type:"plane")` か `dx12_terrain_create` |
+
+**どうしても JSON のフィールドを書きたい場合**（例: `terrain.layerSetPath` に `.terrainlayers` を
+割り当てる）は `dx12_scene_write` でシーン JSON を直接書いて `dx12_open_scene` で開き直す。
+
 ### tags は文字列配列で渡す
 
 jsonKey は `tags`(複数形)。`tag` は無効で `UNKNOWN_COMPONENT(6)` になる。
@@ -524,7 +884,7 @@ dx12_set_transform(name:"Player", position:[0,1,0])
 3. `dx12_set_component(component: "uiRect", data: {anchorMin:[0.5,0.5], anchorMax:[0.5,0.5], offsetMin:[-110,-32], offsetMax:[110,32]})` — 配置。
    解決式は `rectMin = parentMin + parentSize*anchorMin + offsetMin`。全面ストレッチ = anchor [0,0]-[1,1] + offset 0
 4. `dx12_ui_tree` — 全要素の解決済み矩形（キャンバス空間 px）を数値で確認。重なり/はみ出しはここで分かる
-5. `dx12_ui_screenshot` — エディタウィンドウごと撮って見た目を確認（`dx12_screenshot` には UI は写らない）
+5. `dx12_ui_screenshot` — エディタウィンドウごと撮って見た目を確認（ゲーム内 UI は `dx12_screenshot`(シーン RT) には写らない。`dx12_screenshot_final` にはゲーム内 UI 画像は写るが ImGui のパネルは写らない）
 
 - ラベル文言は子の `uiText` を `set_component`（子の id と現在の文言は `dx12_ui_tree` の `children` / `text` で分かる）
 - クリック/値変更は Lua の `events:on(イベント名, fn)` で受ける（`uiButton.onClickEvent` / `uiSlider.onChangeEvent`。`e.value` に実値）
@@ -586,7 +946,7 @@ colorGroups は近似色(RGB 1/8刻み)をまとめた代表色・使用回数�
 同じ実装（`RaycastScene`）**を通るので、AI が見たものと人が選ぶものが一致する。
 
 ```
-dx12_screenshot()                       # 1280x720 の絵が返る
+dx12_screenshot_final()                 # 1280x720 の絵が返る
 dx12_pick(x: 640, y: 400)               # そのピクセルに何があるか
 # → {hits:[{entityId:42, name:"Rock", submeshIndex:0, distance:12.3,
 #           worldPos:[3.2,1.1,-8.0], worldNormal:[0,1,0], isIcon:false}], count:1}
@@ -646,6 +1006,48 @@ dx12_save_scene()
 高さ配列は `assets/terrain/<name>.hf` に自動保存され、Jolt の当たり判定も同じ配列を読むので
 彫れば衝突も一緒に動く。
 
+### ワークフロー: 地形にテクスチャを塗る（4 層スプラット）
+
+`terrain.layerSetPath` に `.terrainlayers`（4 層の PBR 素材）が割り当たっている地形だけが対象。
+**未割当なら `INVALID_PARAM(2)`**。割当は **`dx12_terrain_set_layers` が唯一の MCP 経路**
+（`dx12_set_component(component:"terrain")` は使えない → 後述の B11）。
+
+```
+# ⓪ レイヤーセットを割り当てる（初回だけ。スプラットが無ければ作って自動で塗る）
+dx12_terrain_set_layers(name:"Terrain", layerSetPath:"terrain/alpine.terrainlayers")
+# → {layerCount:4, layerNames:["grass","dirt","rock","snow"], splatCreated:true, splatSize:512}
+#   ★ここが無いと terrain_paint / terrain_autopaint は永遠に INVALID_PARAM で弾かれる。
+#   layerSetPath:"" を渡すと割当を外して従来の頂点色の見た目へ戻る。
+#   uvScale / triplanar / pom / macro / distTiling 等のマテリアル設定もここで一緒に触れる
+#   （省略したものは触らない＝冪等）。★Editor 限定。
+
+# ① 傾斜と標高から全面を焼き直す（★冪等。手で塗った内容は消える）
+dx12_terrain_autopaint(entity:88, rockSlopeStart:0.35, rockSlopeEnd:0.6,
+                       snowHeightStart:45, snowHeightEnd:70, noiseStrength:0.25)
+# → {entityId:88, splatSize:512}
+
+# ② 道・崖・広場だけ手で上書き（★相対操作。2 回撃つと 2 回ぶん塗れる）
+dx12_terrain_paint(entity:88, layer:1, points:[[-40,-20],[-10,0],[20,25]],
+                   radius:8, strength:1, falloff:0.3)
+# → {layer:1, points:3, changed:true, splatSize:512}
+
+# ③ 絵を見ずに数値で確認する（読み取り専用。Playing 中も可）
+dx12_terrain_splat_info(entity:88, gridSize:8, point:[-10,0])
+# → {coverage:[0.42,0.31,0.19,0.08], dominantRatio:[...],
+#    grid:["00112233", ...],            # grid[z][x] = '0'..'3' の支配レイヤー
+#    samples:[{world:[-10,0], texel:[228,256], weights:[0,1,0,0], dominant:1}]}
+
+dx12_step_frames(frames:2)
+dx12_screenshot_from(position:[0,180,-260], target:[0,0,0])
+```
+
+- `layer` は `.terrainlayers` の並び順（既定は 0=草 / 1=土 / 2=岩 / 3=雪）。
+- 座標は**ワールド XZ**。`dx12_pick` の `worldPos:[x,y,z]` をそのまま渡してよい（y は無視）。
+  `point` / `points` / `worldPos` は MCP 側で `points` に畳んでから送るので**二度塗りにならない**。
+- `strength:1` を 1 回でそのレイヤー 100%。他レイヤーは合計 1 を保つよう比例縮小される。
+- **高さを彫り直したら重みは追従しない**。`terrain_generate` / `terrain_sculpt` / `terrain_erode` の
+  後は `autopaint` をやり直すこと。順序は「generate → erode → autopaint → paint」。
+
 ### ワークフロー: 洞窟・アーチ・岩みたいな異形を作る（スカルプト）
 
 地形（ハイトフィールド）は XZ グリッドなので**オーバーハングが作れない**。せり出した岩・
@@ -699,8 +1101,13 @@ dx12_set_post_process(bloomOn:true, bloom:0.45, vignetteOn:true, vignette:0.35)
 dx12_screenshot_game_view()
 ```
 
-★上限は 点 8 / スポット 8、影は spot 4 / point 2。**超えた分は無言で描画されない**
-（パーティクルの発光ライトも枠を使う）。「増やしたのに明るくならない」はほぼこれ。
+★灯数の上限はクラスタードライティング(Forward+)で **点+スポット合計 1024 灯**（点/スポットの
+個別上限は無い）。ただし画面を割ったクラスタ 1 マスあたりは **128 灯**までで、ライトが密集して
+超えた所は無言で切り捨てられる（MCP からは検出できないので、エディタの
+「ツール > ライティング > クラスタデバッグ表示 > ライト複雑度」で白く飽和する所を見るしかない）。
+**影が落ちるのは spot 4 / point 2 のまま**＝灯数の上限が消えても影の上限は消えていない。
+**超えた分は無言で描画されない**（パーティクルの発光ライトも枠を使う）。
+「増やしたのに明るくならない」はほぼこれ。
 
 ### ワークフロー: 壊れてないか 1 発で確認する
 
