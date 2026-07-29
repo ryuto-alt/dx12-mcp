@@ -599,7 +599,9 @@ console.log("\n[13] 遅延同期 method のタイムアウトが engine の待�
     /resolveAssetsDir[\s\S]{0,900}?engine\.call\("ping"/.test(indexSrc),
     "resolveAssetsDir が ping を呼んでいない");
   // エンジンが本当に ping で返しているかの裏取り(片側だけ消すと壊れる)。
-  const ping = cpp.match(/McpDefine\("ping"[\s\S]{0,1200}?\}\);/);
+  // 上限は暴走防止のためだけ。ping のハンドラにフィールドやコメントを足すと
+  // すぐ届かなくなるので、handler の実長より十分広く取る（1200 では sceneDirty 追加で切れた）。
+  const ping = cpp.match(/McpDefine\("ping"[\s\S]{0,2400}?\}\);/);
   check("engine の ping が assetsDir を返している",
     ping != null && /"assetsDir"/.test(ping[0]) && /"protocolVersion"\s*,\s*4/.test(ping[0]),
     "ApplicationMcp*.cpp(連結) の ping に assetsDir / protocolVersion 4 が無い");

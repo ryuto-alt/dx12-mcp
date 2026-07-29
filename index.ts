@@ -219,7 +219,7 @@ const entityRef = {
 reg(
   "dx12_ping",
   "疎通確認",
-  "エディタとの疎通確認。mode(Editor/Playing)・entityCount・sceneGeneration・currentScene・protocolVersion を返す。まず最初に叩いて生きてるか確認するのに使う。"
+  "エディタとの疎通確認。mode(Editor/Playing)・entityCount・sceneGeneration・currentScene・sceneDirty・protocolVersion を返す。★sceneDirty=true は未保存の変更がある状態。この状態で dx12_open_scene / dx12_new_scene / dx12_open_project を撃つとその変更は黙って消えるので、先に dx12_save_scene するか人間に確認すること。まず最初に叩いて生きてるか確認するのに使う。"
   + "★protocolVersion 4 からパス一式も返る: assetsDir / scriptsDir / baseDir / projectShaderDir / cwd(すべて絶対パス)。"
   + "assets 相対パスを絶対パスへ直したい時・シーン JSON を直接書きたい時は、ログから推測せずここを正とすること。",
   {},
