@@ -16,15 +16,22 @@ cd "$env:USERPROFILE\dx12-mcp"
 ./install.ps1        # Linux/macOS: ./install.sh
 ```
 
-`%USERPROFILE%\dx12-mcp` に置くと、エディタの「MCP / AI Bridge」窓が自動検出して
-登録コマンドをワンクリックでコピーできる。install スクリプトは Node v24+ を確認し、
-`npm install` + 自己テスト(エンジン不要)を実行して、絶対パス解決済みの登録コマンドを表示する。
+**これだけで Claude Code と Codex の両方に登録される**（手で貼るコマンドは無い）。install スクリプトは
+Node v24+ を確認 → `npm install` + 自己テスト(エンジン不要) → `claude mcp add --scope user` と
+`codex mcp add` を実行する。CLI が入っていないクライアントの分だけ手順を表示する。
+再実行しても壊れない（remove → add で冪等）。あとは Claude Code / Codex を再起動するだけ。
 
-## 接続
+`%USERPROFILE%\dx12-mcp` に置くと、エディタの「MCP / AI Bridge」窓が自動検出して
+セットアップコマンドをワンクリックでコピーできる。
+
+> `--scope user` で登録する。既定の `local` スコープはそのディレクトリでしか使えず、
+> エンジンは 1 台に 1 つなので project スコープも不適切。
+
+## 接続（自動登録が使えないとき）
 
 ### Claude Code
 ```powershell
-claude mcp add dx12-engine -- node "$env:USERPROFILE\dx12-mcp\index.ts"
+claude mcp add dx12-engine --scope user -- node "$env:USERPROFILE\dx12-mcp\index.ts"
 ```
 または `.mcp.json`（テンプレ: `.mcp.json.example`）:
 ```json
@@ -50,7 +57,7 @@ args = ["C:\\Users\\<you>\\dx12-mcp\\index.ts"]
 
 ## 構成
 - `engineClient.ts` … TCP フレーミング + id 相関の薄いクライアント（ポートは env `DX12_MCP_PORT` → `%TEMP%/dx12_mcp.port` → 8787 の順で自動解決。別マシンは `DX12_MCP_HOST`）
-- `index.ts` … MCP サーバ本体(stdio)。128 ツールを公開（全量はエンジンリポジトリの [docs/MCP.md](https://github.com/ryuto-alt/dx12/blob/main/docs/MCP.md) 参照）
+- `index.ts` … MCP サーバ本体(stdio)。141 ツールを公開（全量はエンジンリポジトリの [docs/MCP.md](https://github.com/ryuto-alt/dx12/blob/main/docs/MCP.md) 参照）
 - `sceneTools.ts` … 地形/スカルプト/診断の引数正規化と共通 zod 部品（純ロジック・エンジン非依存）
 - `materialApply.ts` … `dx12_material_apply` の純ロジック（ファイル名からのテクスチャ用途推定、`hasOverride` の罠の回避）
 - `paramGuard.ts` … 未知の引数を黙って捨てず「近い正解」を返す共通部品 + 適用後の読み返し照合

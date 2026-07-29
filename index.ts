@@ -393,10 +393,19 @@ reg(
 reg(
   "dx12_get_lua_component_state",
   "Luaプロパティ状態取得",
-  "エンティティの LuaScript の現在のプロパティ値を全部返す(スキーマ基準なので未上書きの既定値も含む。get_entity は保存済みの上書きしか出さない)。{scriptPath, enabled, started, loadError, properties:[{name,type,value,isOverride}]}。dx12_set_lua_property で変える前の確認に。entity(id) か name 指定。",
+  "エンティティの LuaScript の現在のプロパティ値を全部返す(スキーマ基準なので未上書きの既定値も含む。get_entity は保存済みの上書きしか出さない)。{scriptPath, enabled, started, loadError, errorMessage, properties:[{name,type,value,isOverride}]}。★loadError=true のとき errorMessage に Lua の traceback がそのまま入る。dx12_set_lua_property で変える前の確認に。entity(id) か name 指定。",
   { ...entityRef },
   { readOnlyHint: true },
   ({ entity, name }) => run(() => engine.call("get_lua_component_state", { entity, name })),
+);
+
+reg(
+  "dx12_get_script_errors",
+  "壊れているLuaを全部出す",
+  "いま loadError が立っている LuaScript を全部返す: {count, mode, errors:[{entityId,name,scriptPath,message}]}。message は traceback 込み。★どのエンティティが壊れたか分からない状態ではこれを使う(dx12_get_lua_component_state は entity を1個ずつ聞くので使えない)。dx12_play の結果に scriptErrors>0 が出たら次はこれ。dx12_get_log と違ってログ行を漁らなくてよい。エラーの出たスクリプトは .lua を保存し直すだけでホットリロードされ復活する(Play を止めなくてよい)。",
+  {},
+  { readOnlyHint: true },
+  () => run(() => engine.call("get_script_errors", {})),
 );
 
 reg(
@@ -880,7 +889,7 @@ reg(
 reg(
   "dx12_play",
   "再生開始",
-  "Editor → Playing へ切り替える。フレーム境界で実処理され {mode:'Playing', sceneGeneration} を同期で返す。カメラ無し等で再生不可なら error(code=3 MODE_CONFLICT)。",
+  "Editor → Playing へ切り替える。フレーム境界で実処理され {mode:'Playing', sceneGeneration, scriptErrors} を同期で返す。カメラ無し等で再生不可なら error(code=3 MODE_CONFLICT)。★scriptErrors>0 なら Lua がその数だけ死んでいる(Play 自体は成功する) — 絵を見る前に dx12_get_script_errors を叩くこと。",
   {},
   {},
   () => run(() => engine.call("play", {})),
@@ -893,6 +902,18 @@ reg(
   {},
   {},
   () => run(() => engine.call("stop", {})),
+);
+
+reg(
+  "dx12_get_play_session",
+  "人間のプレイ記録を取る",
+  "直近の Play 1 回ぶんの記録を返す。★dx12_play を押した時点で自動的に記録が始まる(開始ツールは無い)。Stop 後も次の Play まで残るので、人間に遊んでもらってから取りに来ればよい。返る形: {started, recording, durationSec, frames, fpsMin, summary:{errors,warnings,inputEvents,...}, events:[{t,kind,detail}], samples:[{t,fps,camPos,camYaw,camPitch,mouse}]}。kind は key_down/key_up/pad_down/pad_up(操作) と error/warn/lua(ログ)。detail のキー名は dx12_key_press にそのまま渡せる。samples は 10Hz。★挙動のデバッグは AI が合成入力で動かすより、人間に遊ばせてこれを読む方が正確。",
+  {
+    maxEvents: z.number().int().optional().describe("返すイベント数の上限(既定 400、最大 8000)。新しい方から残す。"),
+    maxSamples: z.number().int().optional().describe("返すサンプル数の上限(既定 200、最大 4000)。新しい方から残す。"),
+  },
+  { readOnlyHint: true },
+  ({ maxEvents, maxSamples }) => run(() => engine.call("get_play_session", { maxEvents, maxSamples })),
 );
 
 // ── 入力シミュレーション(Playing 中の挙動確認用)─────────────────
@@ -1549,7 +1570,7 @@ reg(
 reg(
   "dx12_eval_lua",
   "Lua即時実行",
-  "任意の Lua コードをエンジンの Lua state でその場実行する(強力なデバッグ機能)。globals フォールバック環境なので scene/physics/camera/audio/events 等の既存グローバルバインディング(dx12_describe_lua_api 参照)がそのまま使える。例: `local e = scene:findEntity(\"Player\"); e.transform.position.y = e.transform.position.y + 1; return e.transform.position.y`。code が値を return していれば result にその tostring() 文字列が入る(無ければ空文字)。★print() は捕捉されない — デバッグ出力は log(msg) を使うと dx12_get_log に出る。副作用のある操作(位置変更・物理力印加等)は Editor/Playing 両方で実行できるが、bodies は Play 中のみ登録されているため物理系は Playing 中でないと効果が無い。localhost 限定・認証なしという既存のセキュリティモデルと同水準。",
+  "任意の Lua コードをエンジンの Lua state でその場実行する(強力なデバッグ機能)。globals フォールバック環境なので scene/physics/camera/audio/events 等の既存グローバルバインディング(dx12_describe_lua_api 参照)がそのまま使える。例: `local e = scene:findEntity(\"Player\"); e.transform.position.y = e.transform.position.y + 1; return e.transform.position.y`。code が値を return していれば result にその tostring() 文字列が入る(無ければ空文字)。★print() も log(msg) も dx12_get_log に出る(print は Logger へ差し替え済み)。副作用のある操作(位置変更・物理力印加等)は Editor/Playing 両方で実行できるが、bodies は Play 中のみ登録されているため物理系は Playing 中でないと効果が無い。localhost 限定・認証なしという既存のセキュリティモデルと同水準。",
   { code: z.string().describe("実行する Lua コード(複数行可)。") },
   {},
   ({ code }) => run(() => engine.call("eval_lua", { code })),
@@ -2961,6 +2982,9 @@ reg(
   "『いま何か壊れてないか？』を 1 回で聞くツール。シェーダーの作り忘れ・壊れたテクスチャ・法線マップが sRGB・"
   + "参照切れアセット・ライトの上限超過・地形の .hf 不整合・ピッキングが破綻する条件・インスタンシングの不適格理由・"
   + "Lua の閉じ忘れ・DXR(dxr: ケーパビリティと加速構造、RT 影/RT-AO の設定矛盾)、を検査して JSON で返す。"
+  + "★シーンビューやゲームビューが真っ暗 / カメラが何も映さないときは only:[\"render_health\"] を撃つこと"
+  + "(render_debug の出しっぱなし・露出0・ティント黒・光源ゼロ・シーン矩形の潰れ・SRV ヒープ枯渇・"
+  + "カメラの NaN や極端な座標・MCP のカメラ乗っ取り残り、を名指しする。速い)。"
   + "★判定は summary.errors > 0 だけを見ればよい(注意/情報は失敗ではない)。各 issue は日本語 1 行で次の一手が書いてある。"
   + "fast:true か only で重い検査(textures/models = assets 全走査で数十秒)を外せる。"
   + "instancing は 1 度も描画していないと測れない(skipped に理由が入る)。",
@@ -3183,6 +3207,13 @@ regRaw(
         await engine.call("set_editor_camera", {
           position: before.position, yawDeg: before.yawDeg, pitchDeg: before.pitchDeg,
         }).catch(() => { /* 戻せなくても撮影結果は返す */ });
+      }
+      // Play 中に set_editor_camera を撃つとゲームカメラの追従が止まる(override)。
+      // 上の復元自体が override を立て直すので、最後に必ず返す。
+      // 忘れるとカメラが最後のポーズに固定され「ゲームが何も映さない」になる。
+      if (before && before.overridden === false) {
+        await engine.call("set_editor_camera", { release: true })
+          .catch(() => { /* 返せなくても撮影結果は返す */ });
       }
 
       const sheet = buildContactSheet(shots, {

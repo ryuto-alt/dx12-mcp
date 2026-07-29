@@ -59,6 +59,9 @@ export const DIAG_CHECKS = [
   "lighting", "terrain", "picking", "instancing", "scripts",
   // DXR（計画09）。ケーパビリティ / 加速構造 / RT 影・RT-AO の設定矛盾を見る。
   "dxr",
+  // 「シーンビューが真っ暗 / カメラが何も映さない」の原因を名指しする。
+  // render_debug の出しっぱなし・露出0・光源ゼロ・矩形潰れ・SRVヒープ枯渇・カメラ異常。
+  "render_health",
 ] as const;
 /** 重い検査（assets 全走査）。速く回したいときはこれを外す。 */
 export const DIAG_SLOW_CHECKS = ["textures", "models"] as const;
