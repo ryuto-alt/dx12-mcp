@@ -56,6 +56,10 @@ export const LIGHTING_PRESETS = ["day", "dusk", "night", "indoor", "horror", "st
 /** DeepDiag::AllCheckIds() と同じ並び（src/gui/DeepDiagnostics.h）。 */
 export const DIAG_CHECKS = [
   "shaders", "textures", "models", "gamma", "scene_assets",
+  // エンティティを名前で指す参照（Lua の entity プロパティ / Trigger の絞り込み・相手）。
+  // 指し先を消してもファイルは何も欠けないので scene_assets では捕まらない。
+  // 同名が複数あって「どちらを指すか決まらない」状態もここで出す。
+  "entity_refs",
   "lighting", "terrain", "picking", "instancing", "scripts",
   // DXR（計画09）。ケーパビリティ / 加速構造 / RT 影・RT-AO の設定矛盾を見る。
   "dxr",

@@ -409,6 +409,15 @@ reg(
 );
 
 reg(
+  "dx12_reload_scripts",
+  "Luaを強制リロード",
+  "LuaScript を作り直して loadError を落とす: {reloaded, cleared}。★実行時エラーで死んだスクリプトを Play を止めずに復帰させる用。OnUpdate で 1 回でもエラーが出たスクリプトはそのフレーム以降まるごとスキップされるので、原因を直しても自動では戻らない場合にこれを叩く。path を渡すとその .lua を使うものだけ、省略で全部。ファイルを書き換えた場合は 0.5 秒で自動リロードされるのでこれは不要 — これが要るのは「外から状態を戻したい」「ファイルは変えずにやり直したい」ケース。Editor モードで呼ぶと env を捨てるだけで、実際の作り直しは次の Play。",
+  { path: z.string().optional().describe("assets 相対の .lua パス。省略で全 LuaScript が対象") },
+  {},
+  ({ path }) => run(() => engine.call("reload_scripts", path ? { path } : {})),
+);
+
+reg(
   "dx12_set_lua_property",
   "Luaプロパティ設定",
   "LuaScript のプロパティを1つ書き換える(スクリプトの properties 宣言にあるものだけ)。type に応じて value は number/bool/string/[x,y,z]。Playing 中なら即再注入(スクリプト再ロード=OnStart 再実行)、Editor 中は保存だけで次 Play から反映。entity(id) か name 指定。型が不安なら先に dx12_get_lua_component_state で確認。",
@@ -997,7 +1006,7 @@ reg(
 reg(
   "dx12_raycast",
   "レイキャスト",
-  "origin から direction 方向へ物理レイを飛ばし、最初にヒットしたボディを調べる。★Playing 中のみ意味のある結果(Editor 中は body 未登録なので hit=false)。{hit, distance?, point?, normal?, entityId?, name?}。normal は現状 常に up 方向の近似値(エンジンの既知の制約)。当たり判定確認・地面/壁の検出・ラインオブサイトの確認に。",
+  "origin から direction 方向へ物理レイを飛ばし、最初にヒットしたボディを調べる。★Playing 中のみ意味のある結果(Editor 中は body 未登録なので hit=false)。{hit, distance?, point?, normal?, entityId?, name?}。normal はヒット面の真の法線(Jolt の GetWorldSpaceSurfaceNormal)。当たり判定確認・地面/壁の検出・ラインオブサイトの確認に。",
   {
     origin: v3().describe("[x,y,z] レイの始点。"),
     direction: v3().describe("[x,y,z] レイの方向(正規化不要。エンジン側で正規化される)。"),
@@ -2013,11 +2022,12 @@ reg(
 reg(
   "dx12_move_asset",
   "アセット移動/リネーム",
-  "assets 内のファイル/フォルダを移動・リネームする。★シーン/プレハブ内の参照パスは自動更新されない(参照済みアセットを動かすとロードが壊れる。dx12_list_entities → get_entity で modelPath 等を確認してから)。",
+  "assets 内のファイル/フォルダを移動・リネームする。★参照パスは自動で追従する: 開いているシーンはメモリ上で更新され(refsUpdated)、ディスク上の他シーン/.prefab/.dxmat/.animfsm/.spranim/.terrainlayers/.uianim も書き換わる(filesChanged / changedFiles)。★開いているシーンの分はメモリ上の更新なので dx12_save_scene で保存すること(保存しないとそのシーンだけ古いパスのまま残る)。ディレクトリを動かした場合は配下の相対部分を保って付け替える。",
   {
     from: z.string().describe("assets 相対の移動元。"),
     to: z.string().describe("assets 相対の移動先。"),
     overwrite: z.boolean().optional().describe("true で既存ファイルを上書き(ディレクトリは不可)。既定 false。"),
+    updateFiles: z.boolean().optional().describe("ディスク上の他ファイル内の参照も書き換える。既定 true。false にすると開いているシーンのメモリ上だけ更新する。"),
   },
   {},
   ({ from, to, overwrite }) => run(() => engine.call("move_asset", { from, to, overwrite })),
@@ -2980,7 +2990,11 @@ reg(
   "dx12_diagnose",
   "エンジン診断(機械可読)",
   "『いま何か壊れてないか？』を 1 回で聞くツール。シェーダーの作り忘れ・壊れたテクスチャ・法線マップが sRGB・"
-  + "参照切れアセット・ライトの上限超過・地形の .hf 不整合・ピッキングが破綻する条件・インスタンシングの不適格理由・"
+  + "参照切れアセット(scene_assets: モデル/テクスチャ/マテリアル/シェーダに加えて音声・UI画像・フォント・パーティクル・.uianim/.spranim/.animfsm/.prefab・環境マップ・LUT・デカールアトラスまで見る。アセットを移動/削除しても参照は自動更新されないので、その後は必ずこれを撃つこと)・ライトの上限超過・地形の .hf 不整合・ピッキングが破綻する条件・インスタンシングの不適格理由・"
+  + "エンティティ名参照の切れ(entity_refs: Lua の entity プロパティ / Trigger の絞り込み・相手。"
+  + "これらは名前の文字列で相手を指すので、指し先を消すとファイルは何も欠けないまま黙って切れる＝"
+  + "scene_assets では捕まらない。同名が複数あって『どちらを指すか決まらない』状態も出す。"
+  + "エンティティを消した/リネームした後はこれを撃つこと)・"
   + "Lua の閉じ忘れ・DXR(dxr: ケーパビリティと加速構造、RT 影/RT-AO の設定矛盾)、を検査して JSON で返す。"
   + "★シーンビューやゲームビューが真っ暗 / カメラが何も映さないときは only:[\"render_health\"] を撃つこと"
   + "(render_debug の出しっぱなし・露出0・ティント黒・光源ゼロ・シーン矩形の潰れ・SRV ヒープ枯渇・"

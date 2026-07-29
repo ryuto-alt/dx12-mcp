@@ -40,11 +40,19 @@ export const REFLECTED_COMPONENT_KEYS = [
   "uiCanvas", "uiRect", "uiImage", "uiText", "uiButton", "uiSlider", "uiToggle",
   "uiScrollView", "uiLayout", "uiAnimator", "uiAnimPlayer", "spriteAnimator",
   "prefabLink", "camera",
+  // ★この2つが抜けていて、dx12_scene_write が「未知キー(エンジンに無視される)」という
+  //   嘘の警告を出していた。エンジンは SceneSerializer.cpp:267/269 で両方シリアライズしている。
+  //   schemaDrift はルートキーしか照合していないので検出できていなかった。
+  "animatorController", "footIK",
 ] as const;
 
 /** SerializeEntityJson が直接書くキー。 */
 export const ENTITY_OWN_KEYS = [
   "name", "transform", "parent",
+  // 安定 ID（16 桁の hex 文字列）。parentGuid が親参照の正で、parent(index) は
+  // 旧エンジン互換のために残っている冗長情報。手書きするなら parentGuid を優先すること。
+  // ★数値ではなく文字列。u64 を JSON 数値で書くと JS 側が double へ丸めて下位ビットを失う。
+  "guid", "parentGuid",
   "primitive", "meshRenderer",
   "shader", "shaderAlphaBlend", "shaderEffectValue", "shaderParams",
   "materialTextureOverrides", "materialAssets",
