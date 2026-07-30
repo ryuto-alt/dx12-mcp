@@ -651,9 +651,11 @@ reg(
   "dx12_undo",
   "Undo",
   "エディタの Undo スタックを 1 つ戻す。フレーム境界で適用され {queuedUndo, undoable, willUndo} を返す。" +
-    "★MCP の編集ツールはほぼ Undo に積まれない(積むのは dx12_group_entities のみ)。" +
-    "set_transform / set_component 等を取り消すつもりで呼ぶと、スタックの一番上にある" +
-    "別の操作(エディタでの編集や entity 生成)が戻る。戻す前に willUndo を見て、" +
+    "★Undo に積まれる MCP 編集は dx12_group_entities / dx12_spawn_prefab / 地形とスカルプトの編集" +
+    "(dx12_terrain_generate・dx12_terrain_sculpt・dx12_terrain_erode・dx12_terrain_paint・" +
+    "dx12_terrain_autopaint・dx12_sculpt_brush)だけ。" +
+    "set_transform / set_component 等は積まれないので、それらを取り消すつもりで呼ぶと" +
+    "スタックの一番上にある別の操作(エディタでの編集や entity 生成)が戻る。戻す前に willUndo を見て、" +
     "自分の操作でなければ呼ばないこと。MCP の変更を戻したいなら反対の値を set し直す。",
   {},
   {},
