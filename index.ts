@@ -2035,7 +2035,10 @@ reg(
     updateFiles: z.boolean().optional().describe("ディスク上の他ファイル内の参照も書き換える。既定 true。false にすると開いているシーンのメモリ上だけ更新する。"),
   },
   {},
-  ({ from, to, overwrite }) => run(() => engine.call("move_asset", { from, to, overwrite })),
+  // ★updateFiles を落とすと engine 側の既定 true が効いて、false を渡したのに
+  //   ディスク上の他ファイルが書き換わる（成功が返るので気づけない）。
+  ({ from, to, overwrite, updateFiles }) =>
+    run(() => engine.call("move_asset", { from, to, overwrite, updateFiles })),
 );
 
 reg(

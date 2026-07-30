@@ -1223,7 +1223,7 @@ issue は日本語 1 行で「次の一手」まで書いてある。`instancing
 | 1 | NOT_FOUND | entityId / path / jsonKey を確認 |
 | 2 | INVALID_PARAM | describe_components でフィールド型を確認 |
 | 3 | MODE_CONFLICT | dx12_stop → 再試行 |
-| 4 | STALE_SCENE | dx12_ping → dx12_list_entities で引き直し |
+| 4 | STALE_SCENE | **予約のみ・現状は送出されない**（実際は NOT_FOUND(1) が返る）。§ の説明を見ること |
 | 6 | UNKNOWN_COMPONENT | dx12_describe_components で jsonKey を確認 |
 | 7 | INTERNAL | dx12_get_log でエンジンログを確認 |
 
