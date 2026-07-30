@@ -70,7 +70,12 @@ export function unknownKeyError(where: string, unknown: readonly string[], decla
     const near = nearestKey(k, declared);
     return near ? `${k}(→ ${near} のことか?)` : k;
   });
-  const hint = declared.length > MAX_LISTED_KEYS
+  // ★declared が空のとき「下の有効な値のどれかに直して」と言ってはいけない。
+  //   valid_values は declared.length > 0 の時しか付かないので、指す先が無い案内になる
+  //   (実際 dx12_describe_lua_api に object= を渡すと、存在しない一覧を見ろと言われた)。
+  const hint = declared.length === 0
+    ? "このツールは引数を取らない。args は空 {} で呼ぶ"
+    : declared.length > MAX_LISTED_KEYS
     ? `使えるキーは ${declared.length} 個ある。対になる dx12_get_* を呼ぶと現在値つきで全部返る`
     : "下の有効な値のどれかに直して呼び直してくれ";
   return argError(

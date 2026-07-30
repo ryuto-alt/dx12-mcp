@@ -40,6 +40,12 @@ console.log("\n[2] 近い正解の提示");
   const e2 = unknownKeyError("dx12_set_post_process", ["fieldX"], many);
   check("長い一覧は valid_values を出さず get_* を案内する",
     e2.valid_values === undefined && e2.hint!.includes("dx12_get_"), e2.hint);
+  // ★引数ゼロのツール(dx12_describe_lua_api 等)。valid_values が付かないので
+  //   「下の有効な値」と書くと存在しない一覧を指すことになる。
+  const e3 = unknownKeyError("dx12_describe_lua_api", ["object"], []);
+  check("引数ゼロのツールは「下の有効な値」と言わない",
+    e3.valid_values === undefined && !e3.hint!.includes("下の"), e3.hint);
+  check("引数ゼロのツールは引数を取らないと言う", e3.hint!.includes("引数を取らない"), e3.hint);
 }
 
 console.log("\n[3] 適用後の読み返し照合");
