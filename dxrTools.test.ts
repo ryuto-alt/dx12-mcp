@@ -138,7 +138,7 @@ const DXR_DEFAULTS = {
   // DDGI（計画09 Step 6 / 段階1）。既定は DdgiSettings（src/renderer/DdgiVolume.h）と同じ。
   ddgiEnabled: false, ddgiSpacing: 2, ddgiProbeCountX: 8, ddgiProbeCountY: 4, ddgiProbeCountZ: 8,
   ddgiOriginX: -8, ddgiOriginY: 0.5, ddgiOriginZ: -8,
-  ddgiRayLength: 30, ddgiHysteresis: 0.97, ddgiIntensity: 1, ddgiNormalBias: 0.02,
+  ddgiRayLength: 30, ddgiHysteresis: 0.97, ddgiIntensity: 1, ddgiNormalBias: 0.02, ddgiBounceIntensity: 0,
 };
 
 /** エンジンと同じクランプ(Application.cpp を写したもの)。 */

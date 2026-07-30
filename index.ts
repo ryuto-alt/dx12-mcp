@@ -1378,7 +1378,7 @@ reg(
   + "aoEnabled, aoRadius, aoRayCount, aoIntensity, aoPower, aoCombineWithSsao, aoDenoise, aoDenoiseRadius, "
   + "maxInstances, forceBuildTlas。"
   + "\n■ DDGI: ddgiEnabled, ddgiSpacing, ddgiProbeCountX/Y/Z, ddgiOriginX/Y/Z, ddgiRayLength, "
-  + "ddgiHysteresis, ddgiIntensity, ddgiNormalBias。"
+  + "ddgiHysteresis, ddgiIntensity, ddgiNormalBias, ddgiBounceIntensity。"
   + "実測は stats.ddgiReady(PSO が建ったか) / ddgiEnabled / ddgiProbes / ddgiRaysCast / ddgiBytes。"
   + "★ddgiEnabled:true なのに ddgiProbes:0 なら TLAS が無い(tlasReady を見ること)。"
   + "\n■ 実際に走ったか: shadowActive(ON でも本当に RT 影パスが走ったフレームか) / tlasReady(TLAS が建っているか)。"
@@ -1472,6 +1472,11 @@ reg(
       "サンプル位置を法線方向へ押し出す量(m)。0..1 にクランプ。既定 0.02。"
       + "壁際で裏側のプローブを引いてしまう(ライトリーク)なら上げる。"
       + "★段階2 の Chebyshev 可視性テストが入るまでは、これがリーク対策の主な手段。"),
+    ddgiBounceIntensity: z.number().optional().describe(
+      "多重バウンスの強さ。0..1 にクランプ。既定 0 = 1 バウンスのみ(段階2 までと同じ絵)。"
+      + "プローブレイのヒット点で【前フレームのプローブ】を引いて足す量。1 フレームに 1 段ずつ"
+      + "積み上がるので、変更は ddgiHysteresis ぶんの時間をかけて絵に出る(120 フレームは見ること)。"
+      + "★1 を超えられないのは、収束値が E/(1-アルベド×これ) の幾何級数だから。"),
   },
   { idempotentHint: true },
   (a) => run(async () => {
