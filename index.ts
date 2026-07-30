@@ -1883,7 +1883,7 @@ reg(
 reg(
   "dx12_net_status",
   "ネットワーク状態取得",
-  "マルチプレイヤーの現在状態を返す。{available, role(Offline/Host/Client), isConnected, localClientId, tick, syncedEntityCount, players:[{id, rttMs, bytesSent, bytesReceived}], config:{tickRate, snapshotRate, maxPlayers, defaultPort}, testRole, testJoinAddress}。接続確認・RTT/帯域の観測・複製エンティティ数の検証に。",
+  "マルチプレイヤーの現在状態を返す。{available, role(Offline/Host/Client), isConnected, localClientId, tick, syncedEntityCount, players:[{id, rttMs, bytesSent, bytesReceived}], config:{tickRate, snapshotRate, maxPlayers, defaultPort}, testRole, testJoinAddress}。接続確認・RTT/帯域の観測・複製エンティティ数の検証に。★players はホスト側にしか出ない(ピア表は接続を受理した側だけが持つ)。クライアント側のプロセスで撃つと常に空配列になるので、接続確認は isConnected / localClientId を見ること。",
   {},
   { readOnlyHint: true },
   () => run(() => engine.call("net_status", {})),
