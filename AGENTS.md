@@ -500,10 +500,12 @@ dx12_stop()
 値を確認・書き換えできる。`dx12_describe_lua_api` にある全バインディングがそのまま使える。
 
 ```
-dx12_eval_lua(code:"local e = scene:findEntity('Player'); return e.transform.position.y")
+# ★scene:findEntity は見つからなくても nil を返さない(無効な Entity)。
+#   そのまま .transform を触ると例外になるので :isValid() で確かめる。
+dx12_eval_lua(code:"local e = scene:findEntity('Player'); if not e:isValid() then return 'no Player' end; return e.transform.position.y")
 # → {result: "3.5"}
 
-dx12_eval_lua(code:"local e = scene:findEntity('Player'); e.transform.position.y = 10")
+dx12_eval_lua(code:"local e = scene:findEntity('Player'); if e:isValid() then e.transform.position.y = 10 end")
 # → {result: ""}  (return してないので result は空)
 ```
 

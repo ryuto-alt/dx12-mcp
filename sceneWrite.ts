@@ -53,7 +53,9 @@ export const ENTITY_OWN_KEYS = [
   // 旧エンジン互換のために残っている冗長情報。手書きするなら parentGuid を優先すること。
   // ★数値ではなく文字列。u64 を JSON 数値で書くと JS 側が double へ丸めて下位ビットを失う。
   "guid", "parentGuid",
-  "primitive", "meshRenderer",
+  // primitiveSize: 球の半径 / 平面の一辺。無ければ読み込み側の既定（0.5 / 50）になる。
+  // これが無かったせいで、既定シーンの Ground が保存→再読込で 20m から 50m へ広がっていた。
+  "primitive", "primitiveSize", "meshRenderer",
   "shader", "shaderAlphaBlend", "shaderEffectValue", "shaderParams",
   "materialTextureOverrides", "materialAssets",
   "color", "material", "uvTiling", "uvScroll", "flipbook",
