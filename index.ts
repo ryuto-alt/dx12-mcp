@@ -650,7 +650,11 @@ reg(
 reg(
   "dx12_undo",
   "Undo",
-  "直前の編集操作を取り消す。フレーム境界で適用され {queuedUndo} を返す(取り消し自体は次フレームで反映)。",
+  "エディタの Undo スタックを 1 つ戻す。フレーム境界で適用され {queuedUndo, undoable, willUndo} を返す。" +
+    "★MCP の編集ツールはほぼ Undo に積まれない(積むのは dx12_group_entities のみ)。" +
+    "set_transform / set_component 等を取り消すつもりで呼ぶと、スタックの一番上にある" +
+    "別の操作(エディタでの編集や entity 生成)が戻る。戻す前に willUndo を見て、" +
+    "自分の操作でなければ呼ばないこと。MCP の変更を戻したいなら反対の値を set し直す。",
   {},
   {},
   () => run(() => engine.call("undo", {})),
@@ -659,7 +663,7 @@ reg(
 reg(
   "dx12_redo",
   "Redo",
-  "取り消した操作をやり直す。フレーム境界で適用され {queuedRedo} を返す。",
+  "取り消した操作をやり直す。フレーム境界で適用され {queuedRedo, redoable, willRedo} を返す。",
   {},
   {},
   () => run(() => engine.call("redo", {})),
