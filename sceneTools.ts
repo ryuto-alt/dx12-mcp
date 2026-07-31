@@ -66,6 +66,9 @@ export const DIAG_CHECKS = [
   // 「シーンビューが真っ暗 / カメラが何も映さない」の原因を名指しする。
   // render_debug の出しっぱなし・露出0・光源ゼロ・矩形潰れ・SRVヒープ枯渇・カメラ異常。
   "render_health",
+  // Hi-Z オクルージョンカリング。「ON にしたのに効いていない」「ON にしたせいで遅くなっている」
+  // を名指しする。特に「プリパスを要求しているのがオクルージョンだけ」＝損をしている状態。
+  "hiz_occlusion",
 ] as const;
 /** 重い検査（assets 全走査）。速く回したいときはこれを外す。 */
 export const DIAG_SLOW_CHECKS = ["textures", "models"] as const;
