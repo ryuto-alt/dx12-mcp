@@ -55,7 +55,8 @@ import {
   type SequenceSpec,
 } from "./sequence.ts";
 import {
-  auditScene, imageFacts, polishScore, verdict, type SceneFacts,
+  auditScene, imageFacts, polishScore, verdict,
+  lightFactsFrom, entityHasNormalMap, entityHasDefaultPbr, type SceneFacts,
 } from "./polish.ts";
 import {
   DECAL_IDS, buildAtlasPng, describeDecals, findDecal, planDecal,
@@ -5248,15 +5249,9 @@ regRaw(
 
       // ── ライト ──
       const lights = await engine.call("list_lights", { limit: 200 }).catch(() => null) as any;
-      if (lights?.lights ?? lights?.entries) {
-        const arr: any[] = lights.lights ?? lights.entries;
-        facts.lights = arr.map((l) => ({
-          type: String(l.type ?? ""),
-          intensity: Number(l.intensity ?? 0),
-          castShadow: l.castShadow ?? l.shadow ?? false,
-          overBudget: l.overBudget === true,
-        }));
-      }
+      // ★抽出は polish.ts の純関数へ。index.ts に直書きしていた頃はキー名のズレを
+      //   どのテストも検出できず、誤検出が何ヶ月も残った（polish.ts の解説参照）。
+      if (lights?.lights ?? lights?.entries) facts.lights = lightFactsFrom(lights);
 
       // ── 空気・ポスト・接地 ──
       facts.fog = await engine.call("get_volumetric_fog", {}).catch(() => undefined) as any;
@@ -5282,15 +5277,8 @@ regRaw(
           const info = await engine.call("get_entity", { entity: m.entityId }).catch(() => null) as any;
           if (!info) continue;
           seen++;
-          const mr = info.meshRenderer ?? info;
-          const tex = mr?.textures ?? mr;
-          const hasNormal = !!(tex?.normal || mr?.normalTexture || mr?.normalPath);
-          if (hasNormal) normals++;
-          const rough = mr?.roughness ?? info?.pbr?.roughness;
-          const metal = mr?.metallic ?? info?.pbr?.metallic;
-          const isDefault = (rough === undefined || Math.abs(Number(rough) - 0.5) < 0.001)
-            && (metal === undefined || Math.abs(Number(metal)) < 0.001);
-          if (isDefault) defaults++;
+          if (entityHasNormalMap(info)) normals++;
+          if (entityHasDefaultPbr(info)) defaults++;
         }
         if (seen > 0) {
           // 抽出した割合をシーン全体へ引き伸ばす(件数ではなく比率で判定するので問題ない)

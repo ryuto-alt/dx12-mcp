@@ -5,7 +5,8 @@
 //   3) 指摘に必ず【なぜ】と【次に撃つコマンド】が入っている
 
 import {
-  CATEGORIES, PROCEDURAL_SKY, auditScene, imageFacts, polishScore, verdict, type SceneFacts,
+  CATEGORIES, PROCEDURAL_SKY, auditScene, imageFacts, polishScore, verdict,
+  lightFactsFrom, entityHasNormalMap, entityHasDefaultPbr, type SceneFacts,
 } from "./polish.ts";
 import { PNG } from "pngjs";
 
@@ -157,6 +158,63 @@ console.log("[6] 最終画の統計");
   // 外れ画素 1 個でレンジが満点にならないこと(上位/下位 1% を落としている)
   const oneDot = imageFacts(make((x, y) => (x === 0 && y === 0 ? [255, 255, 255] : [40, 40, 40])));
   check("外れ画素 1 個ではレンジが伸びない", oneDot.dynamicRange < 0.1, `${oneDot.dynamicRange}`);
+}
+
+// ---------------------------------------------------------------------------
+console.log("\n[7] エンジンの返り値からの抽出（実際の生 JSON 形状で守る）");
+// ★ここが無かったせいで、抽出側のキー名が engine とズレていても
+//   auditScene のテストは全部 green のままだった。以下の 2 つのリテラルは
+//   **動いているエディタに dx12_list_lights / dx12_get_entity を撃って得た実物**。
+//   engine 側が返り値の形を変えたらこのテストが落ちる＝ドリフトを検出できる。
+{
+  // 実物: dx12_list_lights（影付きポイント 2 灯 + 消灯した平行光）
+  const LIST_LIGHTS_REAL = {
+    count: 3,
+    lights: [
+      { type: "directional", name: "TitleAmbient", intensity: 0, effective: true, overBudget: false },
+      { type: "point", name: "TitleLight_3", intensity: 0, castShadows: true, effective: false, overBudget: false },
+      { type: "point", name: "TitleLight_2", intensity: 7.2, castShadows: true, effective: true, overBudget: false },
+    ],
+  };
+  const lf = lightFactsFrom(LIST_LIGHTS_REAL)!;
+  check("ライトを 3 灯とも拾う", lf.length === 3);
+  check("castShadows(複数形) を影ありとして読む",
+        lf.filter((l) => l.castShadow).length === 2,
+        JSON.stringify(lf.map((l) => l.castShadow)));
+  check("影を落とすライトがあるので『影が無い』とは言わない",
+        !auditScene({ ...GOOD, lights: lf }).some((f) => f.what.includes("影")),
+        JSON.stringify(auditScene({ ...GOOD, lights: lf }).map((x) => x.what)));
+
+  // 実物: dx12_get_entity（サブメッシュ 0 に法線マップ、roughness は 0.88 に設定済み）
+  const GET_ENTITY_REAL = {
+    componentTypes: ["transform", "meshRenderer"],
+    entityId: 5,
+    material: { metallic: 0, roughness: 0.88 },
+    meshRenderer: { modelPath: "models/arch/wall/wall.gltf" },
+    bakedTextures: [
+      { albedo: true, metalRoughness: false, normal: true },
+      { albedo: true, metalRoughness: false, normal: false },
+    ],
+    name: "TitleWall_Left",
+  };
+  check("モデル焼き込みの法線マップを見つける", entityHasNormalMap(GET_ENTITY_REAL));
+  check("設定済みの roughness を『既定のまま』と誤判定しない", !entityHasDefaultPbr(GET_ENTITY_REAL));
+
+  // エンティティ側オーバーライドでも拾う
+  check("materialTextureOverrides の法線も拾う",
+        entityHasNormalMap({ materialTextureOverrides: [{ normal: "textures/brick_n.png" }] }));
+  check(".dxmat 割り当ても手つかず扱いにしない",
+        entityHasNormalMap({ materials: ["materials/brick.dxmat"] }));
+
+  // 本当に手つかずのものは、ちゃんと手つかずと言う（誤検知の逆＝見逃しも防ぐ）
+  const UNTOUCHED = { meshRenderer: { modelPath: "__primitive_box__" },
+                      material: { metallic: 0, roughness: 0.5 } };
+  check("素のプリミティブは『PBR 既定のまま』と言う", entityHasDefaultPbr(UNTOUCHED));
+  check("素のプリミティブに法線マップは無い", !entityHasNormalMap(UNTOUCHED));
+
+  // material ブロックそのものが無い場合も既定扱い（get_entity は未設定なら省く）
+  check("material が無いものも既定扱い", entityHasDefaultPbr({ meshRenderer: {} }));
+  check("空の返り値で落ちない", lightFactsFrom({})?.length === 0 && !entityHasNormalMap(null));
 }
 
 console.log(failed === 0 ? "\nOK: polish テストすべて通過" : `\nNG: ${failed} 件失敗`);

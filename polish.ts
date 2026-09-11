@@ -74,6 +74,55 @@ const numOf = (post: Record<string, unknown> | undefined, key: string, d = 0): n
   return typeof v === "number" ? v : d;
 };
 
+// ---------------------------------------------------------------------------
+// エンジンの返り値 → SceneFacts の抽出（純関数）
+//
+// ★ここを index.ts の中に直書きしていたせいで、**キー名を間違えても誰も気づけなかった**。
+//   auditScene のテストは「正しく抽出できた facts」から始まるので、抽出側が
+//   engine の実際のキーとズレていても全部 green になる。実際に
+//     ・list_lights は castShadows(複数形) を返すのに castShadow を読んでいた
+//     ・get_entity は material:{metallic,roughness} をトップレベルに返すのに
+//       meshRenderer.roughness / pbr.roughness を読んでいた
+//   という 2 つのズレがあり、「影を落とすライトが無い」「PBR 既定値のまま 100%」
+//   「法線マップが無い」を**直した後も永久に言い続ける**状態だった。
+//   ＝ AI が自分の成果物を測れず、改善ループが原理的に閉じない。
+//   純関数として切り出し、下の polish.test.ts で**実エンジンの生 JSON 形状**を食わせて守る。
+// ---------------------------------------------------------------------------
+
+/** dx12_list_lights の返り値 → SceneFacts["lights"]。 */
+export function lightFactsFrom(lightsResult: any): SceneFacts["lights"] {
+  const arr: any[] = lightsResult?.lights ?? lightsResult?.entries ?? [];
+  if (!Array.isArray(arr)) return undefined;
+  return arr.map((l) => ({
+    type: String(l?.type ?? ""),
+    intensity: Number(l?.intensity ?? 0),
+    // engine の正は castShadows。旧名も一応受ける（古い engine と併用されうるため）。
+    castShadow: Boolean(l?.castShadows ?? l?.castShadow ?? l?.shadow ?? false),
+    overBudget: l?.overBudget === true,
+  }));
+}
+
+/** dx12_get_entity 1 件 → 「法線マップが載っているか」。 */
+export function entityHasNormalMap(info: any): boolean {
+  if (!info) return false;
+  const overrides: any[] = Array.isArray(info.materialTextureOverrides) ? info.materialTextureOverrides : [];
+  if (overrides.some((o) => !!o?.normal)) return true;
+  // モデル焼き込み側（engine が bakedTextures で有無だけ返す）。
+  const baked: any[] = Array.isArray(info.bakedTextures) ? info.bakedTextures : [];
+  if (baked.some((b) => !!b?.normal)) return true;
+  // .dxmat を割り当てているなら中身までは見られないが、素の既定よりは手が入っている。
+  if (Array.isArray(info.materials) && info.materials.some((p: any) => !!p)) return true;
+  return false;
+}
+
+/** dx12_get_entity 1 件 → 「roughness/metallic が既定のまま（＝手つかず）か」。 */
+export function entityHasDefaultPbr(info: any): boolean {
+  const rough = info?.material?.roughness;
+  const metal = info?.material?.metallic;
+  return (rough === undefined || Math.abs(Number(rough) - 0.5) < 0.001)
+      && (metal === undefined || Math.abs(Number(metal)) < 0.001);
+}
+
 /**
  * 事実 → 指摘。順番は「効く順」(光 → 空気 → 階調 → 動き → 素材 → 接地)。
  * ★1 つの指摘に必ず【why】と【次に撃つコマンド】を付ける。
