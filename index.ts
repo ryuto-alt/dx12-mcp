@@ -54,6 +54,9 @@ import {
   SEQUENCE_EXAMPLE, generateLua, referencedEntities, referencedVfx, validateSpec,
   type SequenceSpec,
 } from "./sequence.ts";
+import {
+  auditScene, imageFacts, polishScore, verdict, type SceneFacts,
+} from "./polish.ts";
 
 // DX12 ゲームエンジン用 MCP サーバ。Codex / Claude Code から接続し、
 // 起動中のエディタ(TCP 127.0.0.1:<port>)を叩いてゲームを作っていくための入口。
@@ -5188,6 +5191,139 @@ regRaw(
     } finally {
       await engine.call("step_frames", { frames: 1, deterministic: true, hold: false }).catch(() => {});
       if (playing) await engine.call("stop", {}).catch(() => {});
+    }
+  },
+);
+
+// 「まだ安っぽいのはなぜか」を測って言う。壊れているかを見る dx12_diagnose とは別物。
+regRaw(
+  "dx12_polish_audit",
+  {
+    title: "絵の仕上がりを検査する",
+    description:
+      "今のシーンに【高品質な絵に必ず入っている要素】が揃っているかを測り、足りないものを"
+      + "効く順(光 → 空気 → 階調 → 動き → 素材 → 接地)に並べて返す。"
+      + "各指摘には『なぜそれで安っぽく見えるか』と『次に撃つコマンド』が必ず付く。"
+      + "★dx12_diagnose は【壊れているか】、dx12_look_compare は【参照画像との差】を見る。"
+      + "こちらは参照画像が無い状態で『作りかけに見える理由』を言うためのもの。"
+      + "screenshot:true(既定)で最終画も撮って、眠い絵・白飛び・真っ黒・彩度ゼロを画素で判定する。"
+      + "返り値 {score, verdict, findings:[{category, severity, what, why, fix}], facts}。",
+    inputSchema: {
+      screenshot: z.boolean().optional().describe("false で絵を撮らずシーン設定だけ見る(速い)。既定 true。"),
+      only: z.array(z.enum(["light", "air", "grade", "motion", "material", "contact", "image"])).optional()
+        .describe("見るカテゴリを絞る。省略で全部。"),
+      sampleMeshes: z.number().int().optional().describe("マテリアルを調べるメッシュの上限(既定 24)。大きいシーンで遅いとき下げる。"),
+    },
+    annotations: { title: "絵の仕上がりを検査する", openWorldHint: false, readOnlyHint: true },
+  },
+  async ({ screenshot, only, sampleMeshes }) => {
+    try {
+      const facts: SceneFacts = {};
+
+      // ── シーン設定(環境光) ──
+      const settings = await engine.call("get_scene_settings", {}).catch(() => null) as any;
+      const sky = settings?.skybox ?? settings;
+      if (sky) {
+        facts.envMapPath = String(sky.envMapPath ?? "");
+        facts.iblIntensity = typeof sky.iblIntensity === "number" ? sky.iblIntensity : undefined;
+        if (typeof sky.drawSkybox === "boolean") facts.outdoor = sky.drawSkybox;
+      }
+
+      // ── ライト ──
+      const lights = await engine.call("list_lights", { limit: 200 }).catch(() => null) as any;
+      if (lights?.lights ?? lights?.entries) {
+        const arr: any[] = lights.lights ?? lights.entries;
+        facts.lights = arr.map((l) => ({
+          type: String(l.type ?? ""),
+          intensity: Number(l.intensity ?? 0),
+          castShadow: l.castShadow ?? l.shadow ?? false,
+          overBudget: l.overBudget === true,
+        }));
+      }
+
+      // ── 空気・ポスト・接地 ──
+      facts.fog = await engine.call("get_volumetric_fog", {}).catch(() => undefined) as any;
+      facts.post = await engine.call("get_post_process", {}).catch(() => undefined) as any;
+      facts.ssao = await engine.call("get_ssao", {}).catch(() => undefined) as any;
+      facts.contactShadow = await engine.call("get_contact_shadow", {}).catch(() => undefined) as any;
+
+      // ── 動くもの / メッシュとマテリアル ──
+      const ents = await engine.call("list_entities", { verbose: true }).catch(() => null) as any;
+      const list: any[] = ents?.entities ?? [];
+      facts.entityCount = list.length;
+      facts.emitterCount = list.filter((e) =>
+        (e.componentTypes ?? []).includes("particleEmitter")).length;
+      const meshes = list.filter((e) => (e.componentTypes ?? []).includes("meshRenderer"));
+      facts.meshCount = meshes.length;
+      if (meshes.length > 0) {
+        const cap = Math.max(1, Math.min(64, sampleMeshes ?? 24));
+        // 全部見ると往復が増えるので先頭 N 件だけ(偏らないよう等間隔で拾う)
+        const step = Math.max(1, Math.floor(meshes.length / cap));
+        const picked = meshes.filter((_, i) => i % step === 0).slice(0, cap);
+        let normals = 0, defaults = 0, seen = 0;
+        for (const m of picked) {
+          const info = await engine.call("get_entity", { entity: m.entityId }).catch(() => null) as any;
+          if (!info) continue;
+          seen++;
+          const mr = info.meshRenderer ?? info;
+          const tex = mr?.textures ?? mr;
+          const hasNormal = !!(tex?.normal || mr?.normalTexture || mr?.normalPath);
+          if (hasNormal) normals++;
+          const rough = mr?.roughness ?? info?.pbr?.roughness;
+          const metal = mr?.metallic ?? info?.pbr?.metallic;
+          const isDefault = (rough === undefined || Math.abs(Number(rough) - 0.5) < 0.001)
+            && (metal === undefined || Math.abs(Number(metal)) < 0.001);
+          if (isDefault) defaults++;
+        }
+        if (seen > 0) {
+          // 抽出した割合をシーン全体へ引き伸ばす(件数ではなく比率で判定するので問題ない)
+          facts.normalMapCount = Math.round((normals / seen) * meshes.length);
+          facts.defaultPbrCount = Math.round((defaults / seen) * meshes.length);
+        }
+      }
+
+      // ── 最終画 ──
+      let shotPath: string | null = null;
+      if (screenshot !== false) {
+        const out = path.join(os.tmpdir(), `dx12_polish_${Date.now()}.png`);
+        const shot = await engine.call("screenshot_final", { gizmos: false, path: out }).catch(() => null) as any;
+        const got = shot?.path ?? out;
+        if (fs.existsSync(got)) {
+          shotPath = got;
+          facts.image = imageFacts(fs.readFileSync(got));
+        }
+      }
+
+      let findings = auditScene(facts);
+      if (only && only.length > 0) findings = findings.filter((f) => only.includes(f.category));
+      const score = polishScore(findings);
+
+      const text = JSON.stringify({
+        score, verdict: verdict(score, findings),
+        findings,
+        facts: {
+          envMapPath: facts.envMapPath, lights: facts.lights?.length ?? null,
+          fogEnabled: facts.fog?.enabled ?? null,
+          emitters: facts.emitterCount ?? null, meshes: facts.meshCount ?? null,
+          normalMapped: facts.normalMapCount ?? null, defaultPbr: facts.defaultPbrCount ?? null,
+          image: facts.image ?? null,
+        },
+        next: findings.length === 0
+          ? "必須要素は揃っている。dx12_look_compare で参照写真と比べるか、構図を詰める段階"
+          : "findings の上から順に fix をそのまま撃つ(効く順に並んでいる)",
+      }, null, 2);
+
+      if (shotPath) {
+        return {
+          content: [
+            { type: "image", data: fs.readFileSync(shotPath).toString("base64"), mimeType: "image/png" },
+            { type: "text", text },
+          ],
+        };
+      }
+      return { content: [{ type: "text", text }] };
+    } catch (e: any) {
+      return errResult(e);
     }
   },
 );

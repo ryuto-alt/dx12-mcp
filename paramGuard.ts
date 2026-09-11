@@ -180,6 +180,9 @@ export const COMPOSITE_TOOLS: ReadonlySet<string> = new Set([
   // 演出: 台本(sequence.ts)から Lua を生成して create_lua_component /
   // attach_lua_component / play / step_frames / screenshot_final として届く。
   "dx12_sequence_author", "dx12_sequence_preview",
+  // 仕上がり検査: get_scene_settings / list_lights / get_* / list_entities /
+  // screenshot_final を集めて polish.ts で判定する読み取り専用の合成ツール。
+  "dx12_polish_audit",
 ]);
 
 /**
