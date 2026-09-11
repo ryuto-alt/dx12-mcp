@@ -27,6 +27,10 @@ export type Track =
   | { t: number; type: "timeScale"; value: number; dur?: number }
   | { t: number; type: "shake"; amp?: number; freq?: number; dur?: number }
   | { t: number; type: "vfx"; preset: string; at?: Vec3; atName?: string; scale?: number }
+  | { t: number; type: "vfxPlay"; target: string; layer?: string }
+  | { t: number; type: "vfxStop"; target: string; layer?: string }
+  | { t: number; type: "shaderParam"; target: string; param: string; to: number; from?: number;
+      dur?: number; ease?: Ease }
   | { t: number; type: "sound"; path: string; volume?: number; bgm?: boolean; loop?: boolean }
   | { t: number; type: "move"; target: string; to: Vec3; from?: Vec3; dur?: number; ease?: Ease }
   | { t: number; type: "rotate"; target: string; to: Vec3; dur?: number; ease?: Ease }
@@ -49,13 +53,16 @@ export type SequenceSpec = {
 };
 
 export const TRACK_TYPES = [
-  "camera", "fade", "post", "timeScale", "shake", "vfx", "sound",
-  "move", "rotate", "light", "event", "scene", "log",
+  "camera", "fade", "post", "timeScale", "shake", "vfx", "vfxPlay", "vfxStop", "shaderParam",
+  "sound", "move", "rotate", "light", "event", "scene", "log",
 ] as const;
+
+/** shaderParam で指せる枠。engine の MeshRenderer の自由枠と 1:1(shader.set のキー)。 */
+export const SHADER_PARAMS = ["effect", "p1", "p2", "p3", "p4", "b1", "b2", "b3"] as const;
 
 const DEFAULT_DUR: Record<string, number> = {
   camera: 2.0, fade: 0.6, post: 1.0, timeScale: 0.0, shake: 0.4,
-  move: 1.0, rotate: 1.0, light: 0.5,
+  move: 1.0, rotate: 1.0, light: 0.5, shaderParam: 1.0,
 };
 
 const num = (v: unknown, d: number): number => (typeof v === "number" && Number.isFinite(v) ? v : d);
@@ -151,6 +158,18 @@ export function validateSpec(spec: SequenceSpec): ValidationResult {
           errors.push(`${at}: 知らない VFX プリセット "${tr.preset}"。dx12_vfx_library で一覧。`);
         }
         if (!tr.at && !tr.atName) errors.push(`${at}: at([x,y,z]) か atName(エンティティ名)のどちらかが要る。`);
+        break;
+      }
+      case "vfxPlay":
+      case "vfxStop":
+        if (!tr.target) errors.push(`${at}: target(放出器を持つエンティティ名)が要る。`);
+        break;
+      case "shaderParam": {
+        if (!tr.target) errors.push(`${at}: target(カスタムシェーダーを貼ったエンティティ名)が要る。`);
+        if (!SHADER_PARAMS.includes(tr.param as any)) {
+          errors.push(`${at}: param は ${SHADER_PARAMS.join(" / ")} のどれか(shader.set のキーと同じ)。`);
+        }
+        if (typeof tr.to !== "number") errors.push(`${at}: to(目標値)は数値。`);
         break;
       }
       case "sound":
@@ -363,6 +382,33 @@ export function generateLua(spec: SequenceSpec): string {
         cues.push(
           `  { t = ${t0}, fire = function(self)\n`
           + `      ${posExpr}\n${bursts}\n`
+          + `    end },`,
+        );
+        break;
+      }
+      case "vfxPlay":
+      case "vfxStop": {
+        // ★置いてある放出器を鳴らす/止める(engine v1.18.0+ の fx:play / fx:stop)。
+        //   fx:burst と違い、Inspector や dx12_vfx_apply で組んだ多層構成をそのまま使える。
+        const fn = tr.type === "vfxPlay" ? "play" : "stop";
+        const layerArg = tr.layer ? `, ${luaValue(tr.layer)}` : "";
+        cues.push(
+          `  { t = ${t0}, fire = function(self) fx:${fn}(${luaValue(tr.target)}${layerArg}) end },`,
+        );
+        break;
+      }
+      case "shaderParam": {
+        tracks.push(
+          `  { t0 = ${t0}, t1 = ${t1}, ease = ${easeOf(tr)}, apply = function(self, k)
+`
+          + `      local from = grab(self, ${id}, function()
+`
+          + `        ${tr.from !== undefined ? `return ${round4(tr.from)}` : `local s = shader.get(${luaValue(tr.target)}); return s and s.${tr.param} or 0`}
+`
+          + `      end)
+`
+          + `      shader.set(${luaValue(tr.target)}, { ${tr.param} = from + (${round4(tr.to)} - from) * k })
+`
           + `    end },`,
         );
         break;
@@ -609,6 +655,7 @@ export const SEQUENCE_EXAMPLE: SequenceSpec = {
     { t: 0.0, type: "camera", from: [0, 6, 14], to: [0, 2.2, 6], lookAtName: "Boss", dur: 3.2, ease: "inOut" },
     { t: 0.4, type: "sound", path: "audio/boss_theme.wav", bgm: true },
     { t: 2.6, type: "vfx", preset: "explosion", atName: "Boss", scale: 1.4 },
+    { t: 2.8, type: "vfxPlay", target: "FX_BossAura" },
     { t: 2.6, type: "shake", amp: 0.35, freq: 26, dur: 0.7 },
     { t: 2.6, type: "timeScale", value: 0.25 },
     { t: 3.1, type: "timeScale", value: 1.0, dur: 0.4 },

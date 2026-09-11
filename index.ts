@@ -4598,8 +4598,8 @@ regRaw(
       + "(フレーム間の差だけで測ると、止まって見える効果を『出ていない』と誤判定する)。"
       + "退けた放出器は必ず元の位置へ戻す(失敗しても戻す)。"
       + "★deterministic ステップで進めるので、往復の遅さに関係なく毎回同じ間隔で撮れる(撮り終わりに解除する)。"
-      + "★ワンショット(looping=false)は置いただけでは鳴らない。fire:true を渡すと、"
-      + "そのレイヤーを一時的に playOnStart=true にして Play→撮影→Stop し、元に戻す。"
+      + "★ワンショット(looping=false)は置いただけでは鳴らない。fire:true を渡すと "
+      + "fx:play で鳴らしてから撮る(Editor のまま鳴らせるので Play/Stop は不要)。"
       + "image ブロック + text(計測値と助言)を返す。",
     inputSchema: {
       ...entityRef,
@@ -4621,6 +4621,7 @@ regRaw(
     let restorePos: number[] | null = null;   // 退けた放出器を戻すための元位置
     let firedLayers: number[] = [];
     let playing = false;
+    const preNotes: string[] = [];
     try {
       if (entity === undefined && !name) {
         throw argError("entity か name のどちらかが要る", "放出器のエンティティを指定する");
@@ -4684,19 +4685,25 @@ regRaw(
       }
 
       // ── ワンショットを鳴らす ──
-      // ★Play 中の変更は Stop で巻き戻るが、Play【前】の変更は残るので自分で戻す。
+      // ★engine v1.18.0+ の fx:play を使う。Editor のまま鳴らせるので Play/Stop が要らない
+      //   （以前は playOnStart を立てて Play→Stop→戻す、という往復をしていた。
+      //     シーンが作り直されるぶん遅く、戻し損ねると playOnStart が残る危険もあった）。
       if (fire) {
-        for (const l of layers) if (l.looping === false) firedLayers.push(layers.indexOf(l));
-        for (const idx of firedLayers) {
-          await engine.call("set_component", {
-            ...ref, component: "particleEmitter", layer: idx, data: { playOnStart: true },
-          });
-        }
-        if (firedLayers.length > 0) {
-          await engine.call("play", {});
-          playing = true;
-          // Play はシーンを作り直す＝エディタカメラの固定を張り直す
-          await engine.call("set_editor_camera", { position: camPos, target: camTarget });
+        const nm = (info?.name ?? name) as string | undefined;
+        if (!nm) {
+          preNotes.push("fire:true だが名前が引けなかったので鳴らせなかった(name 指定で呼ぶこと)。");
+        } else {
+          for (const l of layers) if (l.looping === false) firedLayers.push(layers.indexOf(l));
+          const r = await engine.call("eval_lua", {
+            code: `return tostring(fx:play(${JSON.stringify(nm)}))`,
+          }).catch(() => null) as any;
+          const okFire = typeof r?.result === "string" ? r.result.includes("true") : false;
+          if (!okFire) {
+            preNotes.push(
+              "fx:play が false を返した(エンジンが v1.18.0 より古いか、放出器が無い)。"
+              + "古いエンジンなら Trigger の PlayEffect で鳴らすこと。",
+            );
+          }
         }
       }
 
@@ -4736,6 +4743,7 @@ regRaw(
               secondsPerFrame: Number((stepFrames / 60).toFixed(4)),
               camera: { position: camPos, target: camTarget },
               firedOneShotLayers: firedLayers,
+              ...(preNotes.length > 0 ? { notes: preNotes } : {}),
               backgroundFrom: measure.backgroundFrom,
               visible: measure.visible,
               sceneLuma: measure.sceneLuma,

@@ -497,8 +497,10 @@ dx12_set_mesh_shader_params(name:"Sea_Plane", effect:1.0, params:[0.6, 1.2, 0.35
 # → 現在値が全部返る。意味は各シェーダーのヘッダコメント(dx12_read_shader で読める)
 ```
 
-時間で動かす(溶ける・波が高くなる)なら Trigger の `AnimShaderParam`(actions の type:12)を使う。
-★Lua からシェーダーパラメーターを動かす口はまだ無いので、演出(`dx12_sequence_author`)からは触れない。
+時間で動かす(溶ける・波が高くなる)口は 3 つ:
+- Lua: **`shader.set("Sea", { effect = 0.4, p1 = 0.6 })`** / `shader.get(target)`(v1.18.0+。渡した項目だけ書く)
+- 演出: `dx12_sequence_author` の `shaderParam` トラック(現在値から目標値へイージングで動かす)
+- 配線: Trigger の `AnimShaderParam`(actions の type:12)
 
 自分で全部書く場合:
 
@@ -1656,9 +1658,12 @@ dx12_vfx_preview(name:"FX_explosion", fire:true, seconds:1, frames:8)   # ワン
   並べるなら `light:false` で置いて代表 1 個だけ点ける（`dx12_list_lights` で確認）。
 - CPU パーティクルの上限は**シーン全体で 8000 粒**。`dx12_vfx_apply` の返り値
   `estimatedLiveParticles` で 1 個あたりの目安が分かる。大量に撒く雨/雪は `gpu:true`（別枠 131072）。
-- **ワンショット(explosion / impact_sparks / dust_puff …)は置いただけでは鳴らない**。
-  Trigger の `PlayEffect`(type:4, target:放出器の名前) で配線するか、確認だけなら
-  `dx12_vfx_preview(fire:true)`。
+- **ワンショット(explosion / impact_sparks / dust_puff …)は置いただけでは鳴らない**。鳴らす口は 3 つ:
+  - Lua: **`fx:play("FX_Boom")`**(v1.18.0+。レイヤー名を渡せば 1 枚だけ。`fx:stop` で止める)
+  - 演出: `dx12_sequence_author` の `vfxPlay` / `vfxStop` トラック
+  - 配線: Trigger の `PlayEffect`(type:4, target:放出器の名前)
+
+  確認だけなら `dx12_vfx_preview(fire:true)`（内部で `fx:play` を撃つので **Editor のまま鳴る**）。
 
 #### レシピから外れた微調整（生のレイヤー操作）
 
@@ -1712,10 +1717,19 @@ dx12_sequence_preview(name:"BossReveal", seconds:5, frames:6)
 ```
 
 **track の type**: `camera`(移動+注視) / `fade`(black|white|clear) / `post`(グレーディングを時間で) /
-`timeScale`(スローモ・ヒットストップ) / `shake`(画面揺れ) / `vfx`(VFX レシピを撃つ) /
+`timeScale`(スローモ・ヒットストップ) / `shake`(画面揺れ) / `vfx`(VFX レシピをその場で撃つ) /
+`vfxPlay`・`vfxStop`(**置いてある放出器**を鳴らす/止める) / `shaderParam`(カスタムシェーダーの値を時間で動かす) /
 `sound`(SFX/BGM) / `move`・`rotate`(物を動かす) / `light`(明るさ・色) / `event`(Lua イベント) /
 `scene`(フェードして遷移) / `log`。共通で `t`(開始秒) `dur`(長さ)
 `ease`(linear/in/out/inOut/outBack/outBounce)。
+
+```
+# 置いた多層エフェクトを鳴らす(fx:burst と違い Inspector で組んだ構成をそのまま使う)
+{ t:2.6, type:"vfxPlay", target:"FX_BossAura" }
+{ t:5.0, type:"vfxStop", target:"FX_Rain", layer:"Drops" }
+# カスタムシェーダーを時間で動かす(param: effect / p1..p4 / b1..b3)
+{ t:0.2, type:"shaderParam", target:"Sea", param:"effect", from:0, to:1, dur:2.5, ease:"inOut" }
+```
 
 生成された Lua は**読める・手で直せる**。ただし同じ `name` で撃ち直すと上書きされる。
 他のスクリプトからは `events:emit("<name>:play")` / `("<name>:stop")` で操作でき、

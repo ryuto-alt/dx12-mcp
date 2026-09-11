@@ -7,7 +7,7 @@
 //   4) VFX レシピと地続き(preset 名から fx:burst が出る)
 
 import {
-  EASES, SEQUENCE_EXAMPLE, TRACK_TYPES,
+  EASES, SEQUENCE_EXAMPLE, SHADER_PARAMS, TRACK_TYPES,
   generateLua, layerToBurst, luaValue, referencedEntities, referencedVfx,
   trackDuration, unknownVfxPresets, validateSpec, type SequenceSpec,
 } from "./sequence.ts";
@@ -67,8 +67,22 @@ console.log("[1] 台本の検証");
   check("空の台本はエラー", validateSpec({ name: "E", tracks: [] }).errors.length > 0);
   check("既定の長さが型ごとに入る", trackDuration({ t: 0, type: "camera", to: [0, 0, 0] }) === 2.0);
   check("dur 指定が優先", trackDuration({ t: 0, type: "camera", to: [0, 0, 0], dur: 5 }) === 5);
-  check("種類が 13 種ある", TRACK_TYPES.length === 13, `${TRACK_TYPES.length}`);
+  check("種類が 16 種ある", TRACK_TYPES.length === 16, `${TRACK_TYPES.length}`);
+
+  // 置いてある放出器を鳴らす / シェーダーを動かす(engine v1.18.0+ の fx:play / shader.set)
+  const bad2 = validateSpec({
+    name: "B2",
+    tracks: [
+      { t: 0, type: "vfxPlay", target: "" } as any,
+      { t: 1, type: "shaderParam", target: "Sea", param: "nope", to: 1 } as any,
+      { t: 2, type: "shaderParam", target: "Sea", param: "p1" } as any,
+    ],
+  });
+  check("vfxPlay の target 無しを言う", bad2.errors.some((e) => e.includes("放出器")));
+  check("shaderParam の知らない枠を言う", bad2.errors.some((e) => e.includes("p1")));
+  check("shaderParam の to 無しを言う", bad2.errors.some((e) => e.includes("目標値")));
   check("ease が 6 種ある", EASES.length === 6);
+  check("シェーダーの枠が 8 個(engine の自由枠と 1:1)", SHADER_PARAMS.length === 8);
 }
 
 console.log("[2] 生成される Lua の流儀");
@@ -102,6 +116,18 @@ console.log("[2] 生成される Lua の流儀");
   check("ポストは開始値を捕まえてから動かす", lua.includes('post.set("saturationOn", true)'));
   check("最初の fade to clear は黒から明ける", lua.includes('post.set("exposure", 0.0)'));
 
+  check("置いた放出器は fx:play で鳴らす", lua.includes('fx:play("FX_BossAura")'));
+
+  const shaderLua = generateLua({
+    name: "S", tracks: [{ t: 0, type: "shaderParam", target: "Sea", param: "effect", to: 1, dur: 2 }],
+  });
+  check("shaderParam は現在値から動かす", shaderLua.includes('shader.get("Sea")'));
+  check("shaderParam は部分更新で書く", shaderLua.includes('shader.set("Sea", { effect ='));
+  const shaderFrom = generateLua({
+    name: "S2", tracks: [{ t: 0, type: "shaderParam", target: "Sea", param: "p1", to: 1, from: 0.25, dur: 2 }],
+  });
+  check("from 指定はその値から始める", shaderFrom.includes("return 0.25"));
+
   // VFX(レシピ 5 レイヤーぶんの burst が出る)
   const bursts = (lua.match(/fx:burst\{/g) ?? []).length;
   check("VFX はレイヤー数ぶん burst する", bursts === findVfxPreset("explosion")!.layers.length,
@@ -132,8 +158,9 @@ console.log("[4] VFX との地続き");
   check("kind と blend が出る", burst.includes(`kind = ${l.kind}`) && burst.includes("blend = 0"));
   check("ライト化も引き継ぐ", burst.includes("light = true"));
 
+  // camera / lookAtName / target / atName を全部拾う(存在チェックに使うので取りこぼしは事故になる)
   check("参照エンティティを列挙できる",
-    referencedEntities(SEQUENCE_EXAMPLE).sort().join(",") === "Boss,CutsceneCam",
+    referencedEntities(SEQUENCE_EXAMPLE).sort().join(",") === "Boss,CutsceneCam,FX_BossAura",
     JSON.stringify(referencedEntities(SEQUENCE_EXAMPLE)));
   check("使っている VFX を列挙できる",
     referencedVfx(SEQUENCE_EXAMPLE).join(",") === "explosion");
