@@ -432,8 +432,38 @@ export function objectKeys(body: string | null): string[] | null {
 }
 
 /** オブジェクトリテラルから 1 プロパティの値部分だけ取り出す(regRaw の inputSchema 用)。 */
+/**
+ * 行コメント(// …)を落とす。文字列の中の "//"(URL 等)は残す。
+ *
+ * ★なぜ要るか: コメントの中に `skybox:{envMapPath:...}` のような【例】を書くと、
+ *   下の extractProperty がそれを本物の宣言だと思って掴む。実際
+ *   dx12_set_scene_settings の入れ子検査は「コメントを掴んだが、たまたまその後ろに
+ *   本物が続いていたので通っていた」という危うい状態だった（キーを 1 つ足した瞬間に壊れた）。
+ */
+export function stripLineComments(src: string): string {
+  let out = "", inStr: string | null = null, esc = false;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (inStr) {
+      out += c;
+      if (esc) { esc = false; continue; }
+      if (c === "\\") { esc = true; continue; }
+      if (c === inStr) inStr = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") { inStr = c; out += c; continue; }
+    if (c === "/" && src[i + 1] === "/") {
+      while (i < src.length && src[i] !== "\n") i++;
+      out += "\n";
+      continue;
+    }
+    out += c;
+  }
+  return out;
+}
+
 export function extractProperty(objectLiteral: string, prop: string): string | null {
-  const t = objectLiteral.trim();
+  const t = stripLineComments(objectLiteral).trim();
   if (!t.startsWith("{")) return null;
   const inner = t.slice(1, t.lastIndexOf("}"));
   const re = new RegExp(`(^|[,{\\s])${prop}\\s*:`);

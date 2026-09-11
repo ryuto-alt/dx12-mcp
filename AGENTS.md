@@ -62,6 +62,7 @@ DX12Engine.exe --headless --project <dir> --mcp-port 8850 --scene scenes/main.js
 | `--scene <rel>` | プロジェクトを開いた直後にこのシーンを開く（assets 相対） |
 | `--allow-autosave` | ヘッドレスでもディスクへ書く。**既定は読み取り専用** |
 
+- ★**撮影系は `path` を明示する**: `dx12_screenshot` / `dx12_screenshot_final` / `dx12_render_debug` / `dx12_screenshot_game_view` は省略するとエンジンの CWD へ書くので、書けない場所（`C:\Windows\System32` 等）で起動していると `WIC stream open failed` で撮影ごと失敗する。
 - **ヘッドレスは既定でディスクへ書かない。** 検証しただけでプロジェクトが書き換わるのは事故なので、
   MCP の自動保存を止めてある（`navmesh_build` は編集扱いなので、これが無いと検証を回すだけで
   シーンが書き直される）。背景でエージェントに作らせるときだけ `--allow-autosave` を付ける。
@@ -1752,6 +1753,38 @@ dx12_sequence_preview(name:"BossReveal", seconds:5, frames:6)
   `ApplyCameraTransformToGlobal` が上書きするので、**カメラ役エンティティの transform** を動かす。
   生成コードはそうなっている（pitch の符号反転も込み）。
 - `scene` トラックの後ろに置いたトラックは実行されない（遷移でスクリプトごと消える）。検査が警告する。
+
+### ワークフロー: 汚れ・傷を入れる（デカール）
+
+弾痕・焦げ・血・水たまり・苔・汚れは「そこで何かが起きた」を語る。1 つも無い床は、
+どれだけ光を凝っても**出荷前のショールーム**に見える。
+
+```
+dx12_decal_library()                 # 14 種。床専用か壁にも貼れるかが surface に出る
+dx12_decal_apply(preset:"dirt",   position:[0,0,0], size:2.4, opacity:0.4)
+dx12_decal_apply(preset:"bullet_hole", position:[1,1.2,-3], normal:[0,0,1], count:6, spread:0.5)
+dx12_decal_apply(preset:"puddle", position:[2,0,1], size:2)     # roughness を落とすので SSR で映る
+dx12_decal_apply(preset:"scorch", position:[0,0,0], dryRun:true) # 姿勢と値だけ見る
+```
+
+- **面の座標と法線は `dx12_raycast_precise` / `dx12_pick` の `worldPos` / `worldNormal` をそのまま渡す**のが正確。
+  `normal` 省略は「床(真上)」扱い。
+- `count` を渡すと**大きさ・向き・位置を散らして**複数枚貼る（同じ判が並ぶと一発で嘘に見える）。
+- 初回に **アトラス画像を手続き生成**して `assets/textures/decals/atlas.png` に置き、
+  シーンの `decalAtlasPath` に設定する（**アトラスが無いとデカールは無言で何も出ない**ため）。
+
+#### デカールで踏む罠
+
+- ★**エディタのグリッド平面と床が同じ高さだと、グリッドが上に描かれてデカールが見えない**
+  （グリッドはデカールを受けない）。「貼ったのに出ない」ときは床を少し上げるか Grid を消して確認する。
+- ★**箱は面をまたぐように置く**（中心＝面）。法線方向へずらすと面が箱の底面に来て、
+  縁フェードで 0 になり何も描かれない。`dx12_decal_apply` はそう置いている。
+- **`puddle` / `blood_pool` / `oil` / `snow` は角度フェードが小さい＝ほぼ水平面専用**。
+  壁に貼ると薄くなって消える（ツールが先に警告する）。壁には `dirt` / `leak` / `blood_splatter`。
+- **投影軸はデカールのローカル +Y**。面内で回したいときは `rotationDeg`（法線まわりの回転として扱う）。
+  euler の roll に直接入れると投影軸ごと傾いて薄くなる。
+- 上限は**シーン全体で 256 枚 / クラスタ 1 マスあたり 16 枚**。密集させると切り捨てられる
+  （`dx12_render_debug(mode:"decalCount")` で白くなる所が切り捨て中）。
 
 ### ワークフロー: 「まだ安っぽい」を潰す — `dx12_polish_audit`
 

@@ -183,6 +183,9 @@ export const COMPOSITE_TOOLS: ReadonlySet<string> = new Set([
   // 仕上がり検査: get_scene_settings / list_lights / get_* / list_entities /
   // screenshot_final を集めて polish.ts で判定する読み取り専用の合成ツール。
   "dx12_polish_audit",
+  // デカール: アトラス PNG の手続き生成 + create_entity / set_transform /
+  // set_component / set_scene_settings を畳んだ合成ツール。
+  "dx12_decal_library", "dx12_decal_apply",
 ]);
 
 /**
