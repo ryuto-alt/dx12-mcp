@@ -268,10 +268,18 @@ await mcp.init();
   const shot = tools.find((t: any) => t.name === "dx12_screenshot");
   const final = tools.find((t: any) => t.name === "dx12_screenshot_final");
   assert.ok(final, "dx12_screenshot_final が登録されていない");
-  const want = ["deterministic", "path", "settleFrames"];
+  const want = ["deterministic", "gizmos", "path", "settleFrames"];
   assert.deepEqual(Object.keys(final.inputSchema?.properties ?? {}).sort(), want);
   assert.deepEqual(Object.keys(shot.inputSchema?.properties ?? {}).sort(), want);
-  pass("dx12_screenshot / dx12_screenshot_final が {path, deterministic, settleFrames} を宣言");
+  pass("dx12_screenshot / dx12_screenshot_final が {path, deterministic, settleFrames, gizmos} を宣言");
+
+  // gizmos:false は「この 1 枚だけ」= 撮り終われば必ず元へ戻る、が説明に書かれていること。
+  // (戻し方を探して余計な呼び出しをされると、それこそ元の痛みが残る)
+  for (const t of [final, shot, tools.find((x: any) => x.name === "dx12_screenshot_from")]) {
+    assert.match(JSON.stringify(t.inputSchema?.properties?.gizmos ?? {}), /1 枚/,
+      `${t.name} の gizmos の説明が「この 1 枚だけ」を明示していない`);
+  }
+  pass("gizmos:false が『1 枚だけ・自動で戻る』と説明されている");
 
   // 「どっちを使うのか」が説明から読み取れること(AI はここだけ見て選ぶ)。
   assert.match(final.description, /ポスト適用後|最終画/);

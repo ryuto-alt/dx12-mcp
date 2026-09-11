@@ -58,7 +58,15 @@ const tools = parseTsTools(indexSrc);
 const SPREADS: Record<string, string[]> = {
   "...entityRef": ["entity", "name"],
   // dx12_screenshot / dx12_screenshot_final の共通引数($ref 回避でファクトリにしてある)。
-  "...captureParams()": ["path", "deterministic", "settleFrames"],
+  "...captureParams()": ["path", "deterministic", "settleFrames", "gizmos"],
+  // ナビメッシュ: 生成パラメータ(build / settings が共有)と探索の許容ずれ(path / sample / raycast)。
+  "...navConfigParams": [
+    "cellSize", "cellHeight", "agentHeight", "agentRadius", "agentMaxClimb", "agentMaxSlope",
+    "minRegionArea", "mergeRegionArea", "maxEdgeLen", "maxSimplificationErr", "maxVertsPerPoly",
+    "monotonePartition", "filterLedgeSpans", "filterLowHanging", "useBounds",
+    "boundsMin", "boundsMax",
+  ],
+  "...navSearchParams": ["searchRadius", "searchHeight"],
 };
 
 /**
@@ -227,10 +235,22 @@ console.log("\n[3] PostProcessSettings.h の名前表(X マクロ)と突き合�
 
   // 名前表 ⊆ engine ハンドラ (C++ 側の取りこぼし検出。ここが落ちたらエンジンの set_post_process が
   // フィールドを 1 つ読み忘れている＝MCP からは永遠に触れない)
+  // ★set_post_process は名前表そのもの（X マクロ）を展開して生成する形になった。
+  //   その場合 params.value("key",…) のリテラルが本文から消えるので、
+  //   「マクロを展開している」＝全フィールドを読んでいる、と扱う（取りこぼしが構造的に起きない）。
   const em = engine.get("set_post_process")!;
-  const notHandled = postFields.filter((f) => !em.keys.includes(f));
+  const viaMacro = em.fieldMacros.includes("DX12E_POST_FIELDS");
+  const notHandled = viaMacro ? [] : postFields.filter((f) => !em.keys.includes(f));
   check("engine の set_post_process が名前表の全フィールドを読んでいる", notHandled.length === 0,
-    `ApplicationMcp*.cpp(連結) が読んでいない: ${notHandled.join(", ")}`);
+    viaMacro ? "DX12E_POST_FIELDS を展開（手書きの並びなし）"
+             : `ApplicationMcp*.cpp(連結) が読んでいない: ${notHandled.join(", ")}`);
+
+  // get 側も同じ名前表から生成されているか。片方だけ手書きに戻ると
+  // 「書けるのに読み返せない」＝applyAndVerify が毎回 mismatched を出す状態になる。
+  const emGet = engine.get("get_post_process")!;
+  check("engine の get_post_process も名前表から生成している",
+    emGet.fieldMacros.includes("DX12E_POST_FIELDS"),
+    `fieldMacros: ${emGet.fieldMacros.join(", ") || "(なし)"}`);
 }
 
 console.log("\n[4] {applied:true} を鵜呑みにせず get_* で読み返している");

@@ -46,6 +46,366 @@ dx12_get_lua_component_state(name:"MainCamera")
 
 ---
 
+## ★ ヘッドレス実行と CI — 検査は「思い出したらやる」から「必ず回る」へ
+
+窓を出さずにエンジンを起動して MCP だけ開ける。人が作業している画面を奪わないし、
+複数インスタンスを並べられるし、CI でシーンを検証できる。
+
+```
+DX12Engine.exe --headless --project <dir> --mcp-port 8850 --scene scenes/main.json
+```
+
+| 引数 | 意味 |
+|---|---|
+| `--headless` | 窓もスプラッシュも出さない。**`--project` が必須**（ランチャーは人が押す前提の UI なので） |
+| `--mcp-port N` | 待受ポートを固定。**指定すると `%TEMP%/dx12_mcp.port` を書き換えない**＝人が開いているエディタの接続を奪わない |
+| `--scene <rel>` | プロジェクトを開いた直後にこのシーンを開く（assets 相対） |
+| `--allow-autosave` | ヘッドレスでもディスクへ書く。**既定は読み取り専用** |
+
+- **ヘッドレスは既定でディスクへ書かない。** 検証しただけでプロジェクトが書き換わるのは事故なので、
+  MCP の自動保存を止めてある（`navmesh_build` は編集扱いなので、これが無いと検証を回すだけで
+  シーンが書き直される）。背景でエージェントに作らせるときだけ `--allow-autosave` を付ける。
+- 窓は作るが `Show` しない（隠し窓）。D3D12 のスワップチェーンは可視性を要求しないので、
+  描画・物理・Lua・スクショまで全部そのまま動く。
+
+### 1 コマンドで検証する — `ciClient.ts`
+
+```
+node tools/mcp-server/ciClient.ts --launch <projectDir> \
+     --scenes scenes/main.json,scenes/title.json --goals GP_Goal,GP_Key
+```
+
+空きポートを自分で探してヘッドレス起動 → 各シーンで `validate_layout` と到達性を見る →
+**終了コード 0/1** を返してエンジンを落とす。出力例:
+
+```
+FAIL scenes/main.json  検査15 エラー1 注意6
+       [Z_FIGHT] Crate_1 と Crate_2 の面が Y 軸で 0.00mm しか離れていない…
+ok   scenes/title.json  検査5 エラー0 注意2
+```
+
+- **落とすのは error と到達不能だけ。** 警告で落とすと誰も直さなくなる。
+- 目標（`--goals`）は**そのシーンに存在するものだけ**を見る。タイトル画面にゴールもプレイヤーも
+  無いのは正しいので、無いことを不合格にしない。
+- 既に動いているエンジンに繋ぐなら `--port 8850`（対話中のエディタでもよい）。
+- 並列に回せる。`findFreePort` が衝突しないポートを選ぶ。
+- **`--playtests` を足すと、保存済みの `.playtest`（人が遊んだ記録）も再生して突き合わせる。**
+  配置の破綻と遊びの破綻を 1 コマンドで見られる。
+
+---
+
+## ★ 置いたら必ず検査する — `dx12_validate_layout`
+
+**AI が作ったシーンが壊れる原因の大半は「見れば分かるが AI は見ない」たぐいの破綻**
+（モデルが地面に埋まっている / 面が重なってちらつく / 同じ物を 2 回置いた / 当たり判定が無い）。
+測る道具は前からあったが、AI が自分で思いつかないと検査されなかった。だから
+**`dx12_play` と `dx12_save_scene` の返り値に `layout` が必ず載る**ようにしてある。
+
+```
+dx12_save_scene()
+# → {"path": "...", "layout": {"checked": 9, "errors": 4, "warnings": 1,
+#      "top": ["COLLIDER_WITHOUT_BODY: LVL_Wall_01: コライダーはあるが rigidBody が無い…",
+#              "Z_FIGHT: ENV_Rug_01 と LVL_Floor_01 の面が Y 軸で 0.50mm しか離れていない…"],
+#      "next": "dx12_validate_layout(fix:\"safe\") で自動修正できるものを直してから続けること"}}
+```
+
+**`layout.errors > 0` のまま先へ進まないこと。** 直し方は 1 行で書いてある。
+
+| kind | 意味 | `fix:"safe"` で直る |
+|---|---|---|
+| `BURIED` | 地面へ 25% 以上 / 50cm 以上 沈んでいる | ○ 接地させる |
+| `FLOATING` | 地面から浮いている | ○ 接地させる |
+| `Z_FIGHT` | 2 つの面が 1mm 以内で重なっている＝**描画がちらつく正体** | ○ 小さい方を 5mm 逃がす |
+| `OVERLAP` | 体積比 30% 以上めり込んでいる | × 設計判断なので人/AI が決める |
+| `DUPLICATE` | 同じ大きさの物が同じ場所に 2 つ（**リトライで 2 回撃った**） | × `dx12_delete_entity` で片方を消す |
+| `COLLIDER_WITHOUT_BODY` | コライダーはあるが `rigidBody` が無い | ○ 静的 rigidBody を付ける |
+| `NO_COLLIDER` | 人がぶつかる大きさなのに当たり判定が無い | × 飾りなら無視してよい |
+| `SCALE_ANOMALY` / `NAN_TRANSFORM` | 一辺 1km 超 / 5mm 未満 / 負スケール / NaN | × 単位の取り違えを疑う |
+
+- **★`COLLIDER_WITHOUT_BODY` はこのエンジン固有の罠**。`boxCollider` を付けただけでは Jolt に
+  載らない＝当たり判定は効いていない。`rigidBody{motionType:0, mass:0}` を足して初めて効く。
+  付け忘れるとプレイヤーは床をすり抜けて落ち続ける（y=-2400 になった実例がある）。
+- **Editor 限定**。Playing 中は物理が動かした後の位置を測ることになるので `MODE_CONFLICT` で弾かれる。
+- `NO_COLLIDER` は**シーンが物理を使っているときだけ**出る（当たり判定を 1 つも使っていない
+  見せ物シーンで全オブジェクトに「すり抜ける」と言い続けても意味が無いため）。
+- 検出内容はエンジンログにも `配置検査 [KIND] …` として残る（後から共同開発者が追える）。
+
+---
+
+## ★ グループ分けと命名規則 — 共同開発者が読めるシーンにする
+
+ルート直下は **7 つの空グループだけ**。全エンティティはそのどれかにぶら下げる。
+名前は **`<PREFIX>_<Kind>_<NN>`**（例 `ENV_Rock_03` / `LVL_Platform_07` / `GP_Enemy_Slime_01`）。
+
+| ルート | 接頭辞 | 入れるもの |
+|---|---|---|
+| `LVL` | `LVL_` | 床・壁・足場・階段・坂。**当たり判定を持つ**のが原則 |
+| `ENV` | `ENV_` | 背景・装飾。当たり判定が要らない見せ物（岩・草・家具・小物） |
+| `LIGHT` | `LGT_` | ライト（directional / point / spot） |
+| `GAMEPLAY` | `GP_` | プレイヤー・敵・アイテム・トリガー・スポーン地点 |
+| `FX` | `FX_` | パーティクル・トレイル・デカール |
+| `UI` | `UI_` | ゲーム内 UI（uiCanvas 以下） |
+| `CAMERA` | `CAM_` | カメラ |
+
+- Kind は**英数字のみ**（空白・日本語・ドットは使わない）。`grep` と Lua の `findEntity` が効かなくなる。
+- `NN` は 2 桁ゼロ埋めの通し番号。唯一のものは省略してよい（`GP_Player`）。
+
+```
+# ① シーンを作り始める前に骨格を作る（既にあるものは作らない＝何度撃っても安全）
+dx12_scene_scaffold()
+# → {groups:[{key:"LVL", root:"LVL", entityId:12, created:true}, ...], convention:"..."}
+
+# ② 生成時に group を渡す（これが一番安い。後から整理しなくて済む）
+dx12_spawn_box(name:"LVL_Platform_01", position:[0,0,0], scale:[4,0.5,4], group:"LVL")
+dx12_spawn_sphere(name:"ENV_Rock_01", position:[3,0,2], group:"ENV")
+
+# ③ 既存の散らかったシーンは一括整理（★既定は計画を返すだけ）
+dx12_organize_scene()                 # dryRun。moves[] を読んで内容を確認する
+dx12_organize_scene(dryRun:false)     # 適用
+
+# ④ 崩れ具合を数える
+dx12_validate_naming()
+# → {pass:false, counts:{DEFAULT_NAME:7, NOT_IN_GROUP:12, DUPLICATE_NAME:1}, issues:[...]}
+```
+
+- **分類はコンポーネントを名前より優先する**（名前は嘘をつくがコンポーネントは嘘をつかない）。
+  `pointLight` が付いていれば名前が `Floor` でも `LGT` になる。
+- **`dx12_organize_scene` は冪等**。既に規約どおりのものは触らないので、撃ち直しても名前が伸びない。
+  連番は既存の規約名を見て衝突しないよう採番する。
+- 子（グループ以外の親を持つもの）は**親ごと動く**ので触らない。
+- **グループのルートは必ず原点・無回転・スケール 1 の空エンティティ**。`set_parent` はワールド座標を
+  保持しない（子はローカルとして解釈される）ので、単位変換でないルートにぶら下げると物がワープする。
+  `dx12_scene_scaffold` / `group` 引数が作るルートは原点なので安全（実測で位置が動かないことを確認済み）。
+- `DUPLICATE_NAME` は実害がある: `name` 指定の MCP 操作も Lua の `scene:findEntity` も
+  どちらに当たるか不定になる。
+
+---
+
+## ★ テストプレイ — 台本で流す。1 手ずつ動かさない
+
+`key_down` → `step_frames` → `get_entity` を数十往復するやり方は**遅いうえ再現しない**。
+各フレームの dt が実時間なので、同じ入力を同じフレーム数だけ与えても進む距離が毎回変わる
+（ジャンプが届いたり届かなかったりする）。3 段構えで置き換える。
+
+### ⓪ 向きはマウス注入で変える — `dx12_mouse_move`
+
+★**`camera:setYaw()` では向きを変えられない。** エンジン標準の `FpsController` は yaw を
+**Lua のローカル変数**で持っていて、毎フレーム `cam.transform.rotation` をその値で上書きする
+（外から書いても次のフレームで戻される。2026-09-10 に実測で確認）。
+視点はどのゲームでも `input:getMouseDeltaX()` から作るので、そこへ生の移動量を注入するのが唯一の道。
+
+```
+dx12_mouse_move(dx:200)            # 次の 1 フレームぶんだけ乗る
+dx12_step_frames(frames:1, deterministic:true)
+# 実測: 200px で 24 度 回った（感度はゲームごとに違う）
+```
+
+感度は外から読めないので、**目標角度へ向けたいなら `dx12_play_script` の `yaw` か
+`dx12_autoplay` を使う**こと。そちらは「少し回して測って比例で詰める」閉ループになっていて、
+実測では 1〜2 フレームで目標 yaw に合う。
+
+### ① 決定論ステップ — `dx12_step_frames(deterministic:true)`
+
+```
+dx12_step_frames(frames:60, deterministic:true)   # dt=1/60 固定 → 必ず 1.00 秒ぶん進む
+# → {stepped:true, deterministic:true, dt:0.016667, simulatedSec:1.0, held:true}
+```
+物理はもともと 60Hz 固定ステップなので `dt=1/60` なら端数が出ない（1 フレーム = 1 物理ステップ）。
+
+★**`deterministic:true` は進めた後に時間を止める**（次の `step_frames` まで進まない）。
+これが無いと、応答を待つ **MCP の往復の間もエンジンが回り続けて**不定な数のフレームが
+余計に進み、dt を固定しても再生が毎回 1〜2m ずれる。**実測: 止めるようにしたら
+再生のゆらぎが 1.6m → 0.002m になった**（800 倍）。止まるのはシミュレーションだけなので、
+この間にスクショも設定の読み書きもできる。`hold:false` で従来どおり走らせ続けられる。
+`dx12_play` / `dx12_stop` で必ず解除されるので、止まったままになることはない。
+
+### ② 台本 + 断言 — `dx12_play_script`
+
+入力タイムラインと合否条件を **1 コール**で流す。
+
+```
+dx12_play_script(
+  steps: [{t:0, yaw:0, down:"W"}, {t:1.2, press:"SPACE"}, {t:2.5, up:"W"}],
+  expect: [{by:4.0, near:[0,2,18], radius:2, label:"ゴールへ着く"},
+           {by:2.0, yAbove:1.5, label:"ジャンプで 1.5m 以上上がる"}],
+  until: 5)
+# → {pass:false, results:[{label:"ゴールへ着く", pass:false,
+#      detail:"最接近は t=3.10s で 4.62m"}, ...], trace:[...]}
+```
+
+- **落ちたときに「どれだけ足りなかったか」が返る**（最接近距離 / 最高到達 y / 最大移動距離）。
+  そこから足場を足すのか台本のタイミングを直すのかが決まる。
+- `at` は「その時刻ちょうど」、`by` は「その時刻までのどこか」。省略すると走行全体。
+- **向きは `yaw`（度）で指定する**。マウス注入が無いので、内部で `camera:setYaw` を撃っている
+  （このエンジンのテンプレートはカメラ相対 WASD）。+Z が前、右回りが正。
+- 走行後は押しっぱなしのキーを**必ず離す**（次のテストに入力を漏らさない）。
+
+### ③ 移動能力の実測 → 到達性の判定
+
+```
+dx12_measure_player()
+# → {walkSpeed:6.47, jumpHeight:2.07, jumpDistance:7.50, stepHeight:0.3, maxSlopeDeg:50}
+#   （FPS テンプレートでの実測値。同じ入力を 2 回流して 6.469m / 6.514m ＝再現する）
+#   実測値は <project>/.dx12/movement.json に保存され、以後 check_reachable が読む
+
+dx12_navmesh_build()
+dx12_check_reachable(fromName:"GP_Player", toName:"GP_Goal")
+# → {reachable:false,
+#    issues:[{fromIndex:3, gap:6.2, rise:0.4,
+#             reason:"水平 6.2m の跳び越しが要る。実測のジャンプ距離 4.05m
+#                     (安全率込み 3.44m) では届かない"}]}
+```
+
+- **宣言値ではなく実測**なのが肝。移動そのものは Lua が実装していて、
+  `characterController` の値とは一致しない。
+- `analyzePath` は「登れない段差」「届かない隙間」に加えて
+  **「落ちたら自力で戻れない区間」**（＝詰み）も拾う。
+- Play 不要なので何度でも撃てる。まずこれで潰してから実走に行くのが速い。
+
+### ★ 人のプレイを回帰テストにする — `dx12_record_playtest` / `dx12_run_playtests`
+
+**コードは ctest 49/49 で守られているのに、遊びは誰も守っていない。** ジャンプ力を変えた、
+コライダーをずらした、Lua を直した——それでステージがクリアできなくなっても誰も気づかない。
+材料は揃っていた（`dx12_play` を押した時点から入力が時刻付きで記録されている＋決定論ステップ）ので、
+**人が 1 回遊べばテストが 1 本増える**形にした。
+
+```
+dx12_play()                       # ここから記録が始まる
+（人に遊んでもらう。AI は何もしない）
+dx12_stop()
+dx12_record_playtest(name:"boss_route")
+# → {saved:"…/.dx12/playtests/boss_route.json", inputs:42, humanDrift:2.07}
+
+dx12_run_playtests()              # 保存済みを全部再生して突き合わせる
+# → {ran:3, passed:2, failed:1,
+#    results:[{name:"boss_route", pass:false,
+#              reasons:["t=4.20s で経路が 6.10m ずれた（許容 2m）。そこで引っかかったか落ちた可能性"]}]}
+```
+
+**★基準は「人の軌跡」ではなく「初回再生の軌跡」（ゴールデンラン）。**
+人のプレイは実時間、再生は固定 dt なので、入力のタイミングが同じでも軌跡は構造的にずれる
+（実測 2m。記録は空中でジャンプ中、再生は着地後、といった差が出る）。
+人のプレイからは**入力だけ**を受け取り、期待する軌跡は同じ仕組みで 1 回走らせた結果にする。
+人の軌跡は `humanReference` に参考として残り、離れすぎたら warning が出る。
+
+判定はこの 3 つだけ（経路をピクセル単位で一致させようとすると毎回落ちて誰も見なくなる）:
+
+| 見るもの | 既定 | 実測のゆらぎ |
+|---|---|---|
+| 終点が基準からどれだけ離れたか | 1.0m | **0.002m** |
+| 途中の経路の最大ずれ | 2.0m | 0.003m |
+| 再生中に Lua が死んだ数 | 0 | — |
+
+- **記録中に `deterministic:true` を使ってはいけない。** 記録の時刻は実時間なので、
+  1 秒の実時間で何秒ぶんもシミュレーションが進むと時刻が意味を失う。
+  変換のときにフレーム/秒が現実離れしていたら弾くようにしてある。
+- 向きは記録した yaw をマウス注入の閉ループで追いかける（記録にあるのは 10Hz の**角度**で、
+  毎フレームのマウス移動量ではない。感度もゲームごとに違うので移動量の流し直しはできない）。
+- 入力が 1 つも無い記録、リング上限でこぼれた記録は保存を拒否する
+  （常に合格する無意味なテストを増やさないため）。
+- CI からは `node ciClient.ts --launch <projectDir> --playtests` で回る。
+
+### ④ 実際に走破させる — `dx12_autoplay`
+
+```
+dx12_autoplay(goalName:"GP_Goal")
+# → {cleared:false, stuckAt:[3.2,0.1,11.8], stuckAtWaypoint:4,
+#    reason:"[3.2,0.1,11.8] で 3 秒進めなくなった",
+#    next:"その座標を dx12_screenshot_from で見る…"}
+```
+
+ナビメッシュの経路を**実際の入力**でなぞる。詰まったら少し跳んでみて、
+それでも進まなければ座標付きで諦める。★静的に通っても実際は詰まる
+（見えない当たり判定・傾斜・キャラの幅）ことがあるので、
+**「クリアできる」と言う前にこれを通すこと**。
+
+### ⑤ 人間のプレイを読む（従来どおり）
+
+「操作感がおかしい」「たまに変になる」の類は合成入力では再現しない。
+`dx12_play` を押して人間に遊んでもらい、`dx12_get_play_session` で読む（この文書の別項）。
+
+---
+
+## ★ モデルが足りない — Blender を自分で起動して作る
+
+```
+# ① 何が足りないか
+dx12_asset_gap()
+
+# ② 規約を読む（作り始める前に必ず）
+dx12_model_brief(kind:"prop")
+
+# ③ Blender を起こす（人に開いてもらう必要は無い。PolyHaven も自動で有効になる）
+dx12_blender_ensure()
+
+# ④ 形を作る（mcp__blender__execute_blender_code 等）
+
+# ⑤ ★仕上げる ← ここを飛ばすと「うすぺらい」物ができる
+dx12_blender_polish(objects:["Barrel"])
+
+# ⑥ ★素材を貼る ← ここを飛ばすと【真っ白】になる
+dx12_blender_material(objects:["Barrel"], keyword:"wood")
+
+# ⑦ 規約どおりに書き出して取り込む
+dx12_blender_export(objects:["Barrel"], destPath:"models/barrel/barrel.gltf")
+
+# ⑧ 置いて検査（見栄えを判断する前に環境光を入れる）
+dx12_scene_env(keyword:"studio")
+dx12_spawn_model(path:"models/barrel/barrel.gltf", group:"ENV")
+dx12_validate_layout(fix:"safe")
+```
+
+### なぜ「うすぺらい」「安っぽい」のか（2026-09-11 に実物で確かめた）
+
+| 症状 | 原因 | 直し方 |
+|---|---|---|
+| 紙細工に見える | **角にベベルが無い**。完全に鋭い角は光を一切拾わない | `dx12_blender_polish`（3〜4mm / 2 段 / harden normals） |
+| 模様の大きさが物と合わない | **プリミティブの既定 UV は面ごとに 0..1**。60cm の箱にも 6m の壁にもテクスチャが 1 枚 | polish が実寸で切り直す（1 UV = 1m） |
+| 板が紙に見える / ちらつく | 厚みゼロの面 | polish が Solidify を掛ける |
+| **真っ白な物が出る** | エンジンは glTF の `baseColorFactor` を読まない。テクスチャ無しは白 | `dx12_blender_material`（PolyHaven の CC0 素材） |
+| 木や布が金属に見える | `rough` 単体を metallicRoughness として出すと **B（= metallic）に粗さが入る** | material が `arm` を優先、無ければ B=0 で合成 |
+| 全部に青が乗って彩度が低い | 環境光が既定の**手続き空** | `dx12_scene_env`（PolyHaven の HDRI） |
+| 仕上げてもシルエットが角ばる | **分割が足りない**。ベベルは角を丸めるだけ | 作る時点で 24〜32 分割にする（polish が面数を警告する） |
+
+★**素材の入手先は既定で全部 OFF だった**（PolyHaven / Hyper3D / Sketchfab / Hunyuan3D）。
+その状態だと AI は素材を一切持たずにプリミティブだけで組むことになる。
+`dx12_blender_ensure` が **PolyHaven（CC0・API キー不要・テクスチャ 859 種 + HDRI）を自動で有効にする**。
+Hyper3D と Sketchfab は API キーが要るので状態だけ報告する。
+
+**`dx12_blender_export` に埋めてある罠**（全部実際に踏んだもの。手で書き出すと再発する）:
+
+- `use_selection=False` は **.blend 内の全シーン**を書き出す（glTF の `scenes` は配列なので合法）。
+- **`export_format` を渡さないと既定の GLB になる**。`models/rock.gltf` を頼んだのに `rock.glb` ができて、
+  参照が全部切れる（`spawn_model` が "model not found" で落ちる）。拡張子から決めて必ず渡し、
+  書き出し後に**頼んだパスに本当にできたか**を確かめる。
+- Blender 5.2 の glTF エクスポータは画像を **`tmpXXXX.jpg`** という一時名で出す。
+  再書き出しで名前が変わり、**前に出したモデルの参照が切れる**（額縁が白・絨毯が黒になった）。
+- **エンジンは `baseColorFactor` を読まない**。画像テクスチャの無いマテリアルは**真っ白**になる
+  → 書き出し時に警告が出る。
+- シェイプキーが `.bin` の大半を占めることがある（実例: 75MB のうち 70MB）→ 既定で捨てる。
+- **アルファ抜きが無い**。葉・枝カード・角膜のような α 前提の面は Blender で消してから出す。
+- 取り込み後に `dx12_asset_info` で実寸を読み返すので、**cm/m の取り違えはその場で分かる**。
+
+---
+
+## 未保存の確認モーダルはもう出ない（自動保存）
+
+MCP クライアントが繋がっている間、エンジンは**最後の書き込みから 2 秒アイドルしたら
+現在シーンをディスクへ本保存する**。だから:
+
+- 「保存していない変更があります」「保存されていない自動保存が見つかりました」は**出ない**
+  （AI はモーダルを押せないので、出るとツール呼び出しが 8 秒でタイムアウトしてハングと区別が付かなかった）。
+- `dx12_ping` の `sceneDirty` は一瞬しか true にならない。`aiAutoSave:true` がこの機構が
+  効いていることの印で、`savePending:true` は「この後 2 秒以内に書かれる」の意味。
+- **保存先が未設定の新規シーンには `scenes/_mcp_untitled_<時刻>.json` が自動で割り当たる。**
+  人が後から本来の名前で `dx12_save_scene(path:...)` し直してよい。
+- **AI が最初に上書きする前のシーンは `<project>/.dx12/backups/<名前>_<時刻>.json` に 1 本残る**
+  （直近 20 世代）。壊した時はここから戻す。
+- 副作用: 古い形式で保存されていたシーンは、最初の自動保存で**現在の形式に書き直される**
+  （新しいキーが増える）。中身は同じだが git の差分は出る。
+
+---
+
 ## 典型ワークフロー
 
 ### 1. コンポーネントを設定する前に describe_components で確認
@@ -118,6 +478,29 @@ dx12_attach_lua_component(entity: 88, script:"components/Rotate.lua")
 ```
 
 ### 4b. カスタムシェーダーを作ってメッシュに割り当てる
+
+**書き始める前に 2 つ読む**（白紙から 200 行を書くのは失敗率が高い）:
+
+```
+dx12_list_shader_templates()                     # 動く雛形(water / ocean / particle_ember)
+dx12_describe_shader_contract(kind:"mesh")       # b0/b1 の中身・テクスチャ・入出力・落とし穴
+# kind: mesh(既定) / particle / sprite / screen。★契約が全部違うので取り違えないこと
+dx12_create_shader(name:"Sea", template:"ocean") # 雛形から起こす(code 省略可)
+```
+
+★**割り当てただけでは動かない**。b0 の自由枠(effectValue / shaderParams / shaderParamsB)は
+最初 0 なので、波の高さ 0・流速 0 の水面のように「貼ったのに何も起きない」状態になる。
+
+```
+dx12_set_mesh_shader(name:"Sea_Plane", shaderPath:"Sea.hlsl")
+dx12_set_mesh_shader_params(name:"Sea_Plane", effect:1.0, params:[0.6, 1.2, 0.35, 0], paramsB:[0.2, 0, 0])
+# → 現在値が全部返る。意味は各シェーダーのヘッダコメント(dx12_read_shader で読める)
+```
+
+時間で動かす(溶ける・波が高くなる)なら Trigger の `AnimShaderParam`(actions の type:12)を使う。
+★Lua からシェーダーパラメーターを動かす口はまだ無いので、演出(`dx12_sequence_author`)からは触れない。
+
+自分で全部書く場合:
 
 ```
 dx12_create_shader(name:"ToonShade", code:[[
@@ -1182,6 +1565,180 @@ dx12_screenshot_game_view()
 **超えた分は無言で描画されない**（パーティクルの発光ライトも枠を使う）。
 「増やしたのに明るくならない」はほぼこれ。
 
+### ワークフロー: ルック(絵作り)を決める — 光・空気・グレーディングを 1 セットで
+
+ポストは約 90 フィールドある。1 つずつ触っても「それっぽい絵」にはならない
+（bloom と exposure だけ上げて終わる、が典型）。映画的な絵は
+**光 → 空気(フォグ) → グレーディング** の 3 段が噛み合って初めて出る。
+
+```
+dx12_look_library()                        # 13 種。tag で絞る(night / stylized / indoor …)
+dx12_look_library(id:"neon_noir")          # 1 つの全フィールドの実値と注意書き
+
+dx12_look_apply(preset:"golden_hour")                    # 太陽 + フォグ + 空 + ポストを全部
+dx12_look_apply(preset:"horror_candle", strength:0.6)    # ポストだけ 6 割の効き
+dx12_look_apply(preset:"neon_noir", parts:["post"])      # 今の光は壊さずグレーディングだけ乗せる
+dx12_look_apply(preset:"clean_studio", dryRun:true)      # 何も変えずに適用値を見る
+```
+
+- `strength`(0..1) は**ポストにだけ**効き、0 に向かって **無味無臭の値**へ寄る
+  （0 になるのではない。contrast を 0 にしたら灰色になってしまう）。太陽とフォグは常に指定どおり。
+- 当てた後は **必ずエンジンから読み返して** `currentPost` を返す。
+  食い違いは `mismatched` に出る（＝「当てたのに変わらない」を AI 自身が検知できる）。
+- `dx12_apply_lighting_preset`(エンジンの 6 種)は**土台**（エディタのライティング窓と同じ実装）。
+  `dx12_look_apply` はその上に乗せる**仕上げ**。両方使ってよい。
+
+**ルック一覧**: golden_hour / blue_hour / moonlit_night / overcast_gloom / neon_noir /
+horror_candle / clean_studio / anime_daylight / desert_heat / underwater / film_noir /
+dreamy_soft / retro_vhs。それぞれ `pairsWith` に相性の良い VFX が入っている
+（neon_noir なら rain + steam_vent、horror_candle なら candle + ground_mist）。
+
+#### 絵作りで踏む罠
+
+- **暗いルックは「光源を置いてから」当てる**。真っ暗なシーンに horror を当てても真っ黒なだけ。
+  `dx12_look_apply` は、太陽を消すルックなのにライトが 1 つも無いと警告を返す。
+- **envMap(HDRI)があると `DirectionalLight.ambient` は無視される**。暗くならないときはこれ。
+  `dx12_set_scene_settings` で `iblIntensity` を下げるか、`parts` に `sky` を含めること。
+- **フォグとゴッドレイを両方強くすると太陽の散乱が二重に乗る**。どちらかを主役にする。
+- **`<name>On` を立てないと数値は効かない**。ルックは必ずスイッチ込みで当てる（テストで担保）。
+- **彩度の高い光源(ネオン/魔法)が ACES で色割れする**ときは `tonemapper:1`(AgX)。
+  neon_noir / anime_daylight / dreamy_soft は既にそうしてある。
+
+### ワークフロー: エフェクト(VFX)を置く — レシピ → 置く → 時間で見る
+
+炎・煙・魔法・爆発・雨のようなパーティクルは **1 レイヤーでは絶対にそれらしくならない**
+（本物の炎は「炎＋煙＋火の粉」）。レシピ集から複数レイヤーごと置くのが速い。
+
+```
+# ① 何が作れるか（33 レシピ。tag で絞れる: fire/smoke/magic/impact/weather/water/electric/trail/ambient）
+dx12_vfx_library(tag:"fire")
+# → presets:[{id:"torch", title:"松明の炎", layers:3, layerNames:["Flame","Smoke","Sparks"], ...}]
+dx12_vfx_library(id:"campfire")        # 1 つの全レイヤーの実値と注意書きまで見る
+
+# ② 置く（新規エンティティを作るか、既存へ付ける。倍率で調整）
+dx12_vfx_apply(preset:"torch", position:[3, 2.1, -4], parentName:"FX")
+dx12_vfx_apply(preset:"magic_circle", position:[0,0.05,0], scale:1.5, color:[0.9,0.2,0.2])
+dx12_vfx_apply(preset:"explosion", name:"Boss_DeathFX")     # 既存エンティティに付ける
+dx12_vfx_apply(preset:"torch", dryRun:true)                  # 何も変えずに適用値だけ見る
+
+# ③ ★時間で見る（静止画 1 枚では「出ていない」のか「たまたま写っていない」のか分からない）
+dx12_vfx_preview(name:"FX_torch", seconds:2, frames:6, distance:3)
+# → 格子画像 + {visible, sceneLuma, stats:[{changedPct, effectPeak, blownAreaPct, motionPct}], suggestions}
+dx12_vfx_preview(name:"FX_explosion", fire:true, seconds:1, frames:8)   # ワンショットを試し撃ち
+```
+
+`dx12_vfx_preview` は **先に放出器を一時的に遠くへ退けて「効果が無いときの絵」を 1 枚撮り**、
+それとの差で効果の面積・明るさ・白飛びを数える（撮り終わったら必ず元へ戻す）。
+フレーム間の差だけで測ると、**同じ場所で燃え続ける炎を「出ていない」と誤判定する**ため。
+
+**倍率**: `scale`(大きさ。size/speed/offset/lightRange) / `rate`(密度) / `intensity`(HDR 強度) /
+`color`(加算レイヤーの主色だけ。煙は元の色のまま・終了色は明度比を保って追従) / `oneShot` / `life` / `light`。
+
+#### ★パーティクルで「安っぽく」なる 3 つの原因（実測して分かった）
+
+1. **密度 × 強度の掛けすぎ**。加算ブレンドは重なった枚数だけ足し算になるので、
+   `rate` を上げたまま `intensity` を上げると **芯が真っ白に潰れて色も形も消える**
+   （松明を intensity 4.0 で置くと、暗い部屋でもただの白い球にしかならなかった）。
+   粒が重なる層は **rate × intensity ≒ 50** が目安（rate 34 → 1.6 / rate 55 → 1.0 / rate 80 → 0.9）。
+   逆に**火の粉・星屑のような細かくて重ならない粒は intensity 6〜8 で構わない**。
+   「点が光っている」ように見せる唯一の作り方で、炎の中の粒立ちもこれで出す。
+2. **大きい Glow を強くする**。`kind:0`(Glow) は 1 枚でも画面を覆うので、size 0.5 以上なら
+   intensity は 1.2 まで。魔法陣の中心を size 0.9 / intensity 2.0 にしたら、
+   リングが見えない **白いドーム** になった。
+3. **色が淡い**。加算＋ブルームは色を白へ流すので、`[0.6,0.9,1.0]` のような淡い青は画面では
+   **ただの白**になる。狙った色相を残すなら `[0.25,0.65,1.0]` くらいまで濃くして指定する。
+
+その他の定石:
+- **煙・埃・血・雪・灰は `blend:1`(前乗算アルファ)**。加算にすると白く光って煙に見えない。
+- **暗いアルファの粒は暗い背景では文字通り見えない**。煙や血の確認は明るい床/空を背にして撮ること。
+- **上へ立ち上る物は `gravity` を正**にする（浮力）。落ちる物は負。
+- `light:true` は明るい粒を実ポイントライト化する。**ライト予算を食う**ので、同じ効果を 4 個以上
+  並べるなら `light:false` で置いて代表 1 個だけ点ける（`dx12_list_lights` で確認）。
+- CPU パーティクルの上限は**シーン全体で 8000 粒**。`dx12_vfx_apply` の返り値
+  `estimatedLiveParticles` で 1 個あたりの目安が分かる。大量に撒く雨/雪は `gpu:true`（別枠 131072）。
+- **ワンショット(explosion / impact_sparks / dust_puff …)は置いただけでは鳴らない**。
+  Trigger の `PlayEffect`(type:4, target:放出器の名前) で配線するか、確認だけなら
+  `dx12_vfx_preview(fire:true)`。
+
+#### レシピから外れた微調整（生のレイヤー操作）
+
+```
+dx12_list_particle_layers(name:"FX_torch")                  # index / name を見る
+dx12_set_component(name:"FX_torch", component:"particleEmitter", layer:1,
+                   data:{ rate: 4, size: 0.3 })              # layer 指定で 2 枚目を触る
+dx12_add_particle_layer(name:"FX_torch", layerName:"Ash")    # 4 枚目を足す（上限 16）
+dx12_remove_particle_layer(name:"FX_torch", layer:"Ash")     # 最後の 1 枚は消せない
+```
+
+`layer` を省いた `set_component` は **1 枚目だけ**を書き換える（レイヤーは追加されない）。
+2 枚目以降を触るには必ず `layer`(index か名前)を渡すこと。
+
+#### 粒に自作シェーダーを貼る
+
+```
+dx12_describe_shader_contract(kind:"particle")   # ★書く前に必ず読む(mesh とは別契約)
+dx12_list_shader_templates()                      # 動く雛形から始める
+dx12_create_shader(name:"Ember", template:"particle_ember")
+dx12_set_component(name:"FX_torch", component:"particleEmitter", layer:0,
+                   data:{ shaderPath:"Ember.hlsl" })
+```
+
+### ワークフロー: 演出(カットシーン)を作る — 台本 → 生成 → 流して見る
+
+カメラ・ポスト・時間・エフェクト・音が【同じ時間軸で噛み合って】初めて演出になる。
+Lua を手書きすると毎回ちがう自己流の状態機械が生えて、スローモを入れた瞬間に台本が壊れる。
+
+```
+dx12_sequence_author(
+  name: "BossReveal",
+  camera: "CutsceneCam",        # ★CameraComponent を持つエンティティ名
+  activateCamera: true,          # そのカメラを「映るカメラ」にする
+  tracks: [
+    { t:0.0, type:"fade",   to:"clear", dur:0.8 },
+    { t:0.0, type:"camera", from:[0,6,14], to:[0,2.2,6], lookAtName:"Boss", dur:3.2, ease:"inOut" },
+    { t:0.4, type:"sound",  path:"audio/boss_theme.wav", bgm:true },
+    { t:2.6, type:"vfx",    preset:"explosion", atName:"Boss", scale:1.4 },
+    { t:2.6, type:"shake",  amp:0.35, freq:26, dur:0.7 },
+    { t:2.6, type:"timeScale", value:0.25 },
+    { t:3.1, type:"timeScale", value:1.0, dur:0.4 },
+    { t:3.2, type:"post",   set:{ saturation:1.35, contrast:1.2 }, dur:1.0 },
+    { t:4.4, type:"event",  name:"bossFightStart" },
+  ])
+# → components/BossReveal.lua を生成して SEQ_BossReveal に貼る
+#   {duration, trackCount, playEvent, stopEvent, doneEvent, referenced, warnings}
+
+dx12_sequence_preview(name:"BossReveal", seconds:5, frames:6)
+# → ゲーム画面の連写(格子画像) + frameDiffs + recentLog
+```
+
+**track の type**: `camera`(移動+注視) / `fade`(black|white|clear) / `post`(グレーディングを時間で) /
+`timeScale`(スローモ・ヒットストップ) / `shake`(画面揺れ) / `vfx`(VFX レシピを撃つ) /
+`sound`(SFX/BGM) / `move`・`rotate`(物を動かす) / `light`(明るさ・色) / `event`(Lua イベント) /
+`scene`(フェードして遷移) / `log`。共通で `t`(開始秒) `dur`(長さ)
+`ease`(linear/in/out/inOut/outBack/outBounce)。
+
+生成された Lua は**読める・手で直せる**。ただし同じ `name` で撃ち直すと上書きされる。
+他のスクリプトからは `events:emit("<name>:play")` / `("<name>:stop")` で操作でき、
+終わると `"<name>:done"` が飛ぶ。
+
+#### 演出で踏む罠（全部ツール側で先回りしてある）
+
+- **★動かすカメラが「映るカメラ」でないと画面は 1mm も変わらない**。
+  CameraComponent は `isActive` が立っている 1 つだけが使われる。
+  `dx12_sequence_author` は今アクティブなカメラを調べ、食い違っていれば警告する
+  （`activateCamera:true` で切り替える。`camera` 省略時はアクティブなカメラを自動で使う）。
+- **★`dx12_set_editor_camera` の固定が残っているとゲーム画面が撮れない**。
+  固定中はゲームカメラの同期が止まるので、演出が動いても静止画が並ぶだけになる。
+  `dx12_sequence_preview` は撮る前に必ず `release` する（VFX プレビューも後始末で外す）。
+- **時計はタイムスケール非適用(`time.realDt()`)**。スローモを掛けても台本は実時間で流れる
+  （スケール適用だと「0.25 倍速の 3 秒後」が実時間 12 秒になって台本が壊れる）。
+- **終了時にタイムスケールを 1.0 へ戻す**。演出がスローモのまま終わるとゲームが壊れるため。
+- **画面揺れは前フレームぶんを引いてから足す**。足しっぱなしだとカメラが少しずつ漂う。
+- **グローバルの `camera` を Lua から動かしても無駄**。毎フレーム
+  `ApplyCameraTransformToGlobal` が上書きするので、**カメラ役エンティティの transform** を動かす。
+  生成コードはそうなっている（pitch の符号反転も込み）。
+- `scene` トラックの後ろに置いたトラックは実行されない（遷移でスクリプトごと消える）。検査が警告する。
+
 ### ワークフロー: 壊れてないか 1 発で確認する
 
 ```
@@ -1241,3 +1798,14 @@ issue は日本語 1 行で「次の一手」まで書いてある。`instancing
 - **meshRenderer を set_component で差し替える** → 不可。delete → spawn_model で。
 - **`entity.boxCollider` 等を Lua で読もうとする** → nil。Lua から entity 直読みできるのは transform だけ
   (`dx12_describe_lua_api` で確認。collider/rigidBody は `physics:getVelocity(e)` 等の別 API 経由)。
+- **`layout.errors > 0` を無視して次の作業へ進む** → 埋まり・ちらつき・すり抜けがそのまま残る。
+  play / save の返り値に出ているものは必ず片付けてから進むこと。
+- **ルート直下にエンティティを置きっぱなしにする / `Box` `Sphere` のまま放置する** → 共同開発者が読めない。
+  生成時に `group` を渡すか、最後に `dx12_organize_scene(dryRun:false)` を通すこと。
+- **`boxCollider` を付けただけで当たり判定が効いたと思う** → `rigidBody` が無いと Jolt に載らない。
+- **`key_down` → `step_frames` → `get_entity` を何十回も往復する** → 遅いうえ dt が実時間で再現しない。
+  `dx12_play_script` に台本ごと渡すこと。
+- **`dx12_check_reachable` が通っただけで「クリアできる」と言う** → 静的判定にすぎない。
+  `dx12_autoplay` で実際に走破させてから言うこと。
+- **Blender から手で `export_scene.gltf` を呼ぶ** → 全シーン書き出し・tmp 画像名・真っ白マテリアルの
+  どれかを必ず踏む。`dx12_blender_export` を使うこと。

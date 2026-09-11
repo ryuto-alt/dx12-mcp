@@ -162,6 +162,24 @@ export const COMPOSITE_TOOLS: ReadonlySet<string> = new Set([
   "dx12_preview_model", "dx12_look_compare", "dx12_camera_path", "dx12_scene_write",
   // set_texture ×3 + set_pbr + get_entity を畳んだ合成ツール(engine に material_apply は無い)
   "dx12_material_apply",
+  // グループ分けと命名規約。判定は TS 側(sceneOrganize.ts)にあり、エンジンへは
+  // create_entity / set_parent / rename_entity / list_entities / get_hierarchy として届く。
+  "dx12_scene_scaffold", "dx12_organize_scene", "dx12_validate_naming",
+  // テストプレイ: engine へは key_* / step_frames / get_entity / navmesh_path として届く合成ツール。
+  "dx12_play_script", "dx12_measure_player", "dx12_check_reachable", "dx12_autoplay",
+  "dx12_record_playtest", "dx12_run_playtests",
+  // Blender 連携: engine method ではなく Blender のソケットとファイル操作。
+  "dx12_blender_ensure", "dx12_model_brief", "dx12_blender_export", "dx12_asset_gap",
+  "dx12_blender_polish", "dx12_blender_material", "dx12_scene_env",
+  // VFX: レシピ(vfx.ts)を TS 側で解決してから create_entity / add_particle_layer /
+  // set_component / step_frames / screenshot_final として届く合成ツール。
+  "dx12_vfx_library", "dx12_vfx_apply", "dx12_vfx_preview",
+  // ルック: lookDev.ts のプリセットを set_sun / set_volumetric_fog /
+  // set_scene_settings / set_post_process へ分解して撃つ合成ツール。
+  "dx12_look_library", "dx12_look_apply",
+  // 演出: 台本(sequence.ts)から Lua を生成して create_lua_component /
+  // attach_lua_component / play / step_frames / screenshot_final として届く。
+  "dx12_sequence_author", "dx12_sequence_preview",
 ]);
 
 /**

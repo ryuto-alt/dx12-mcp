@@ -60,6 +60,14 @@ export type EngineMethod = {
    *   そちらへ移れるように、ここでも申告表を素通しで持っておく。
    */
   declared: Record<string, string> | null;
+  /**
+   * ハンドラ本文が展開している X マクロ名（例 "DX12E_POST_FIELDS"）。
+   * ★set_post_process / get_post_process は params.value("key", ...) を手書きで並べるのをやめ、
+   *   唯一の名前表（PostProcessSettings.h の X マクロ）から生成するようになった。
+   *   その結果 PARAM_READ_PATTERNS が拾えるリテラルが本文から消えるので、
+   *   「マクロを展開している＝その名前表の全フィールドを読んでいる」と解釈できるよう記録する。
+   */
+  fieldMacros: string[];
 };
 
 /**
@@ -127,6 +135,10 @@ function scanHandlerBody(body: string) {
   for (const key of lambdaParamKeys(body)) keys.add(key);
   return {
     keys,
+    // 「本文で X マクロを展開している」= その名前表の全フィールドを読んでいる、と解釈するための記録。
+    fieldMacros: [...new Set(
+      [...body.matchAll(/\bDX12E_[A-Z0-9_]*_FIELDS\s*\(/g)].map((m) => m[0].replace(/\s*\($/, "")),
+    )],
     nested: nestedParamKeys(body),
     returnsAppliedTrue: /\{\s*"applied"\s*,\s*true\s*\}/.test(body),
   };
@@ -196,7 +208,7 @@ function parseMcpDefineTable(cppSource: string): Map<string, EngineMethod> | nul
     for (const name of names.split("|").map((s) => s.trim()).filter(Boolean)) {
       out.set(name, {
         keys: [...keys].sort(), line,
-        returnsAppliedTrue: scanned.returnsAppliedTrue, nested, declared,
+        returnsAppliedTrue: scanned.returnsAppliedTrue, nested, declared, fieldMacros: scanned.fieldMacros,
       });
     }
   }
@@ -256,6 +268,7 @@ export function parseEngineMethods(cppSource: string): Map<string, EngineMethod>
       out.set(n, {
         keys: [...scanned.keys].sort(), line: from + 1,
         returnsAppliedTrue: scanned.returnsAppliedTrue, nested: scanned.nested, declared: null,
+        fieldMacros: scanned.fieldMacros,
       });
     }
   }

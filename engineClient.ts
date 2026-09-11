@@ -48,6 +48,10 @@ for (const m of [
   "get_dxr", "set_dxr",
   // ライティング(同期)
   "list_lights", "set_sun", "apply_lighting_preset",
+  // Git / GitHub(同期)。git のプロセス起動 1〜2 回ぶんで、どれも数百 ms 以内に返る。
+  // ★push / pull はネットワークに出るので下で個別に長めのタイムアウトを張る。
+  "git_status", "git_branches", "git_checkout", "git_merge", "git_merge_abort",
+  "git_commit", "git_fetch",
 ]) TIMEOUT_BY_METHOD[m] = 8000;
 // 地形の一発生成 / 浸食は解像度 512 だと数十万セルを何周もするので長め。
 TIMEOUT_BY_METHOD["terrain_generate"] = 30000;
@@ -58,6 +62,10 @@ TIMEOUT_BY_METHOD["terrain_autopaint"] = 30000;
 TIMEOUT_BY_METHOD["terrain_set_layers"] = 30000;
 // render_debug は最大 120 フレーム描いてからスクショを撮る遅延応答(重い可視化だと 1 フレームが伸びる)。
 TIMEOUT_BY_METHOD["render_debug"] = 60000;
+// push / pull / fetch はネットワーク越し。認証待ちや大きめの転送で数十秒かかることがある。
+TIMEOUT_BY_METHOD["git_push"]  = 120000;
+TIMEOUT_BY_METHOD["git_pull"]  = 120000;
+TIMEOUT_BY_METHOD["git_fetch"] = 120000;
 // ★screenshot / screenshot_final は【遅延同期】。
 //   - screenshot_final は素で 1 フレーム待つ(ImGui を描く前にバックバッファをコピーする)。
 //   - deterministic:true だと履歴を捨ててから settleFrames(最大 240)ぶん回してから撮る。
