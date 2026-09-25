@@ -48,6 +48,8 @@ export const REFLECTED_COMPONENT_KEYS = [
   //   嘘の警告を出していた。エンジンは SceneSerializer.cpp:267/269 で両方シリアライズしている。
   //   schemaDrift はルートキーしか照合していないので検出できていなかった。
   "animatorController", "footIK",
+  // ゲーム AI の Brain と音のリバーブ域(どちらも SceneSerializer の反射登録)。
+  "brain", "audioReverbZone",
 ] as const;
 
 /** SerializeEntityJson が直接書くキー。 */
