@@ -1,0 +1,27 @@
+{
+  "id": "play.cause",
+  "version": 3,
+  "type": "choice",
+  "instructions": {
+    "what": "Pick the single main reason the player has trouble in this play session, judged against the creator's intent. state.brief is the creative brief. state.facts.play describes the session in words, section by section: standing still, pushing forward without moving, coming back to places already left, falls, being sent back to a checkpoint after a fall or without one, swinging the camera around while standing still, repeated jumps in one spot, progress toward the goal, and any static check of the route. state.facts.play.player says who played: a machine that follows the navigation path or replays recorded inputs never gets lost and never misreads the goal.",
+    "not_for": "Pick none when the session flows as intended or when the only trouble is behavior the brief calls for (for example repeated falls in a brief that wants hard, punishing jumps, or getting lost in a brief that wants the player lost). Never pick lost_way or unclear_goal for a machine player. Do not guess a reason that none of the facts show: leaving the recorded route alone, with no falls, no pushing without moving and no being sent back, is none."
+  },
+  "criteria": {
+    "none": "No problem: the session flows as the brief intends, or the only trouble is behavior the brief calls for.",
+    "lost_way": "The player does not know which way to go: they stand around, swing the camera and come back to places already visited, without falling.",
+    "unclear_goal": "The player does not know what to do: from the start they wander or stand around and never get closer to the goal.",
+    "jump_too_hard": "A jump is too hard: the facts show falls (for a machine replay a single fall is enough), repeated jumps in one spot, or the static check reports a gap or ledge beyond the measured jump.",
+    "stuck_geometry": "The player is caught on the level: they keep pushing forward but do not move, without falling (an invisible wall, a step or a narrow gap).",
+    "unfair_hazard": "Something keeps knocking the player out: they are sent back to a checkpoint without having fallen (enemies or traps)."
+  },
+  "state": [
+    "brief",
+    "facts.play"
+  ],
+  "threshold": {
+    "minConfidence": 0.5
+  },
+  "fallback": "play.causeRules",
+  "notes": "選択肢は jev/playJudge.ts の CAUSES と一致させる(テストで突き合わせ)。軌跡から数えた事実で区別できるものだけ(カメラ・操作の良し悪しは 10Hz の角度では見回しと区別できないので入れていない)。 2026-09-25 実測(ケース 16 件・Brief 4 種 + 機械の軌跡 4 件、claude-draft): v1 は 0.8125(ルールだけなら 0.625)。外れは (1) 軽快なアクションで止まって見回したがゴールに着いた人(期待 lost_way に none・confidence 0.85)、(2) 高難度 Brief の落下(期待 none に jump_too_hard)、(3) 再生で 1 回落ちた(期待 jump_too_hard に stuck_geometry)。(1) は迷いが軽くゴールにも着いているので none も正解に広げた(★Jev の答えを見て広げたラベル。人の確認待ち)。v2 で「Brief が求める振る舞いだけなら none」の例と「再生は 1 回の落下でも跳躍」を足した → 0.9375(再生のずれだけで落下の無い軌跡を jump_too_hard・0.53)。v3 で「記録の経路から外れただけで、落下・押しても動けない・戻されるが無ければ none」を足し、跳躍の説明を「事実に落下がある」に絞った → 1.0 / 1.0 / 1.0 / 0.938 / 1.0(5 回。外れは高難度 Brief の落下が confidence 0.45 で揺れるだけ)、自信満々の誤り 0。ルールだけなら 0.688。誤りの confidence は 0.53 以下なので minConfidence 0.5。 和集合 state(品質ゲートの bundle:\"one\" と同じく他の検査の事実も入った state)でも測った: 0.875 / 0.875(再生の落下・再生の戻りを取り違え)に落ちる。→ 品質ゲートの既定は検査ごとの state。",
+  "cases": "play.cause.cases.json"
+}

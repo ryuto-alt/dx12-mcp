@@ -1,0 +1,34 @@
+{
+  "id": "layout.intended",
+  "version": 2,
+  "type": "noul",
+  "instructions": {
+    "what": "An automatic layout checker flagged issue {{ref}} in a 3D game scene: {{kind}} = {{gloss}}. The checker assumes every object should rest cleanly on the surface below it without touching other objects. Read state.brief (the creator's intent) and the entry with ref {{ref}} in state.facts.layout.issues: the object's name, its scene group and parent, its size, the other object involved and how strong the condition is, all in words. Is this placement a deliberate part of the scene, something the object names, the groups or the brief make clear is intended (for example books inside a bookshelf, a chair tucked under a table, a lamp hanging in the air, a rock half sunk into the ground), so it should be kept?",
+    "not_for": "Answer no when it looks like an accidental placement: a crate or prop sinking into the floor, a character or item stuck inside a wall, two unrelated objects interpenetrating, an ordinary object hovering in the air. Objects the player must reach or use (the GAMEPLAY group: characters, enemies, items, chests, switches) must stay usable, so answer no when one of them is sunk, stuck or floating unless the brief explicitly calls for exactly that. Answer no when nothing in the names, groups or brief suggests the placement is intended. Judge only issue {{ref}}; the other issues are context."
+  },
+  "criteria": {
+    "true": "Keep it: the names, groups or brief make this placement clearly intended.",
+    "false": "Fix it: this looks like an accidental placement, or nothing suggests it is intended."
+  },
+  "state": [
+    "brief",
+    "facts.layout"
+  ],
+  "threshold": {
+    "yes": 0.58,
+    "band": 0.1
+  },
+  "fallback": "no",
+  "lookup": {
+    "gloss": {
+      "by": "kind",
+      "map": {
+        "OVERLAP": "two objects' volumes interpenetrate",
+        "FLOATING": "the object hangs in the air above the surface below it",
+        "BURIED": "the object is sunk into the floor or ground"
+      }
+    }
+  },
+  "notes": "配置の指摘 1 件ごとに 1 質問。state は layout.no_collider_ok と共通(brief + facts.layout)で、どの指摘かは {{ref}}(英字)で名指しする。 2026-09-25 実測(ケース 15 件・Brief 5 種、claude-draft): v1 は正解率 0.933・margin +0.01(yes 最小 0.76 / no 最大 0.75)。外れは浮遊遺跡の Brief で地面に埋まった宝箱(期待 false に 0.75): Brief の「柱や岩は半分埋もれている」に引っ張られた。v2 で「GAMEPLAY の物(キャラ・敵・アイテム・宝箱・スイッチ)は使えないといけないので、埋まり・めり込み・浮きは Brief が名指ししない限り no」を足した → 正解率 1.0(3 回とも)、margin +0.28 / +0.42 / +0.36、合わせた境界 0.72 / 0.44 → 閾値 0.58(中点)。ルールだけ(全部直す)なら 0.467。 和集合 state(品質ゲートの bundle:\"one\" と同じく他の検査の事実も入った state)でも測った: 正解率 0.93〜1.0・margin +0.36(0.69 / 0.33)で劣化なし。",
+  "cases": "layout.intended.cases.json"
+}

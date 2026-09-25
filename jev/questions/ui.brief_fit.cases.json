@@ -1,0 +1,846 @@
+{
+  "question": "ui.brief_fit",
+  "cases": [
+    {
+      "name": "T1_aurora",
+      "expect": 4,
+      "labelSource": "claude-draft",
+      "note": "中央ロゴ + 縦のメニューの静かなタイトル。Brief そのもの",
+      "context": {
+        "brief": {
+          "title": "Aurora",
+          "genre": "物語重視のアドベンチャー",
+          "mood": [
+            "静か",
+            "荘厳"
+          ],
+          "player_should_feel": "物語の始まりに立ち会う",
+          "avoid": [
+            "ごちゃごちゃした画面",
+            "派手な光沢"
+          ],
+          "ui": "中央に大きなロゴ、その下に少数のメニューを縦に並べる古典的なタイトル"
+        },
+        "facts": {
+          "ui": {
+            "screen": "タイトル画面",
+            "interactiveElements": "いくつも",
+            "textElements": "いくつも",
+            "labels": [
+              "AURORA",
+              "はじめから",
+              "つづきから",
+              "設定",
+              "終了"
+            ],
+            "horizontalLayout": "中央に集まっている",
+            "verticalLayout": "上下に散っている",
+            "centeredShare": "ほぼ全部",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": [
+              {
+                "code": "CENTERED_MONOTONY",
+                "issue": "ほとんどのボタンと文字が画面の水平中央に並んでいる(左右対称の中央構図)",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T1_persona",
+      "expect": 1,
+      "labelSource": "claude-draft",
+      "note": "整った左右対称は avoid。別の作品の文法",
+      "context": {
+        "brief": {
+          "title": "NEON RIOT",
+          "genre": "スタイリッシュな RPG",
+          "mood": [
+            "大胆",
+            "反抗的",
+            "ポップ"
+          ],
+          "player_should_feel": "メニューを開くだけで気分が上がる",
+          "avoid": [
+            "無難で整いすぎた画面",
+            "左右対称の退屈な構図"
+          ],
+          "ui": "斜めの帯が画面の端からはみ出す、極端なサイズ差の文字、ビビッドな配色"
+        },
+        "facts": {
+          "ui": {
+            "screen": "タイトル画面",
+            "interactiveElements": "いくつも",
+            "textElements": "いくつも",
+            "labels": [
+              "AURORA",
+              "はじめから",
+              "つづきから",
+              "設定",
+              "終了"
+            ],
+            "horizontalLayout": "中央に集まっている",
+            "verticalLayout": "上下に散っている",
+            "centeredShare": "ほぼ全部",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": [
+              {
+                "code": "CENTERED_MONOTONY",
+                "issue": "ほとんどのボタンと文字が画面の水平中央に並んでいる(左右対称の中央構図)",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T2_gacha",
+      "expect": 4,
+      "labelSource": "claude-draft",
+      "note": "光沢・装飾・色・文字の煽りがガチャ画面の狙いどおり",
+      "context": {
+        "brief": {
+          "title": "スターリンク・ガチャ",
+          "genre": "ソーシャルゲームのガチャ画面",
+          "mood": [
+            "にぎやか",
+            "きらきら",
+            "お祭り"
+          ],
+          "player_should_feel": "引く瞬間にわくわくする",
+          "avoid": [
+            "地味で静かな画面",
+            "情報が少なくて寂しい画面"
+          ],
+          "ui": "光って動くボタン、色とりどりの装飾、大小さまざまな文字で煽る"
+        },
+        "facts": {
+          "ui": {
+            "screen": "その他の画面",
+            "interactiveElements": "少し",
+            "textElements": "いくつも",
+            "labels": [
+              "超・フェス限定ガチャ!!",
+              "SSR 排出率 #倍",
+              "#連ガチャ",
+              "単発ガチャ",
+              "石 #",
+              "残り #:#:#"
+            ],
+            "horizontalLayout": "中央に集まっている",
+            "verticalLayout": "上下に散っている",
+            "centeredShare": "半分くらい",
+            "fontSizeKinds": "多い",
+            "colorFamilies": "多い",
+            "heavilyDecoratedPanels": "たくさん",
+            "animatedGloss": "少し",
+            "textEffects": "少し",
+            "issues": [
+              {
+                "code": "EFFECT_STACKING",
+                "issue": "一文字ずつの演出に縁取りや影まで重ねた文字がある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Title"
+                ]
+              },
+              {
+                "code": "OVER_DECORATED",
+                "issue": "グラデーション・枠線・影・特殊な形を同時に重ねたパネルがある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "BUSY_GLOSS",
+                "issue": "光沢が速く流れるアニメーションが付いた要素がある",
+                "severity": "注意",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "FONT_SIZE_SPRAWL",
+                "issue": "文字の大きさの種類が多く、見出し・本文・補助の段が絞られていない",
+                "severity": "提案"
+              },
+              {
+                "code": "PALETTE_SPRAWL",
+                "issue": "パネルや画像の面の色の系統が多く、配色が絞られていない",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T2_cozy",
+      "expect": 0,
+      "labelSource": "claude-draft",
+      "note": "派手な演出と強い色は avoid そのもの",
+      "context": {
+        "brief": {
+          "title": "こもれび農園",
+          "genre": "のんびり農業シミュレーション",
+          "mood": [
+            "やさしい",
+            "穏やか"
+          ],
+          "player_should_feel": "ほっとする",
+          "avoid": [
+            "派手な演出",
+            "強い色",
+            "急かされる感じ"
+          ],
+          "ui": "柔らかい角、落ち着いた暖色、控えめな動き"
+        },
+        "facts": {
+          "ui": {
+            "screen": "その他の画面",
+            "interactiveElements": "少し",
+            "textElements": "いくつも",
+            "labels": [
+              "超・フェス限定ガチャ!!",
+              "SSR 排出率 #倍",
+              "#連ガチャ",
+              "単発ガチャ",
+              "石 #",
+              "残り #:#:#"
+            ],
+            "horizontalLayout": "中央に集まっている",
+            "verticalLayout": "上下に散っている",
+            "centeredShare": "半分くらい",
+            "fontSizeKinds": "多い",
+            "colorFamilies": "多い",
+            "heavilyDecoratedPanels": "たくさん",
+            "animatedGloss": "少し",
+            "textEffects": "少し",
+            "issues": [
+              {
+                "code": "EFFECT_STACKING",
+                "issue": "一文字ずつの演出に縁取りや影まで重ねた文字がある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Title"
+                ]
+              },
+              {
+                "code": "OVER_DECORATED",
+                "issue": "グラデーション・枠線・影・特殊な形を同時に重ねたパネルがある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "BUSY_GLOSS",
+                "issue": "光沢が速く流れるアニメーションが付いた要素がある",
+                "severity": "注意",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "FONT_SIZE_SPRAWL",
+                "issue": "文字の大きさの種類が多く、見出し・本文・補助の段が絞られていない",
+                "severity": "提案"
+              },
+              {
+                "code": "PALETTE_SPRAWL",
+                "issue": "パネルや画像の面の色の系統が多く、配色が絞られていない",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T2_horror",
+      "expect": 0,
+      "labelSource": "claude-draft",
+      "note": "静かな最小限の UI と正反対",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "avoid": [
+            "明るく均一な照明",
+            "鮮やかな色",
+            "派手な UI 演出"
+          ],
+          "ui": "UI は最小限。画面の端に小さく、静かに"
+        },
+        "facts": {
+          "ui": {
+            "screen": "その他の画面",
+            "interactiveElements": "少し",
+            "textElements": "いくつも",
+            "labels": [
+              "超・フェス限定ガチャ!!",
+              "SSR 排出率 #倍",
+              "#連ガチャ",
+              "単発ガチャ",
+              "石 #",
+              "残り #:#:#"
+            ],
+            "horizontalLayout": "中央に集まっている",
+            "verticalLayout": "上下に散っている",
+            "centeredShare": "半分くらい",
+            "fontSizeKinds": "多い",
+            "colorFamilies": "多い",
+            "heavilyDecoratedPanels": "たくさん",
+            "animatedGloss": "少し",
+            "textEffects": "少し",
+            "issues": [
+              {
+                "code": "EFFECT_STACKING",
+                "issue": "一文字ずつの演出に縁取りや影まで重ねた文字がある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Title"
+                ]
+              },
+              {
+                "code": "OVER_DECORATED",
+                "issue": "グラデーション・枠線・影・特殊な形を同時に重ねたパネルがある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "BUSY_GLOSS",
+                "issue": "光沢が速く流れるアニメーションが付いた要素がある",
+                "severity": "注意",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "FONT_SIZE_SPRAWL",
+                "issue": "文字の大きさの種類が多く、見出し・本文・補助の段が絞られていない",
+                "severity": "提案"
+              },
+              {
+                "code": "PALETTE_SPRAWL",
+                "issue": "パネルや画像の面の色の系統が多く、配色が絞られていない",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T2_tactical",
+      "expect": 0,
+      "labelSource": "claude-draft",
+      "note": "装飾的で読みにくい。avoid が画面を支配",
+      "context": {
+        "brief": {
+          "title": "STEEL LINE",
+          "genre": "タクティカルシューター",
+          "mood": [
+            "冷静",
+            "緊張"
+          ],
+          "player_should_feel": "情報を一瞬で読み取って判断できる",
+          "avoid": [
+            "装飾的な UI",
+            "読みにくい文字",
+            "画面の端からはみ出す要素"
+          ],
+          "ui": "整然とした情報レール、少ない書体サイズ、低彩度に警告色 1 色"
+        },
+        "facts": {
+          "ui": {
+            "screen": "その他の画面",
+            "interactiveElements": "少し",
+            "textElements": "いくつも",
+            "labels": [
+              "超・フェス限定ガチャ!!",
+              "SSR 排出率 #倍",
+              "#連ガチャ",
+              "単発ガチャ",
+              "石 #",
+              "残り #:#:#"
+            ],
+            "horizontalLayout": "中央に集まっている",
+            "verticalLayout": "上下に散っている",
+            "centeredShare": "半分くらい",
+            "fontSizeKinds": "多い",
+            "colorFamilies": "多い",
+            "heavilyDecoratedPanels": "たくさん",
+            "animatedGloss": "少し",
+            "textEffects": "少し",
+            "issues": [
+              {
+                "code": "EFFECT_STACKING",
+                "issue": "一文字ずつの演出に縁取りや影まで重ねた文字がある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Title"
+                ]
+              },
+              {
+                "code": "OVER_DECORATED",
+                "issue": "グラデーション・枠線・影・特殊な形を同時に重ねたパネルがある",
+                "severity": "提案",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "BUSY_GLOSS",
+                "issue": "光沢が速く流れるアニメーションが付いた要素がある",
+                "severity": "注意",
+                "targets": [
+                  "UI_Pull"
+                ]
+              },
+              {
+                "code": "FONT_SIZE_SPRAWL",
+                "issue": "文字の大きさの種類が多く、見出し・本文・補助の段が絞られていない",
+                "severity": "提案"
+              },
+              {
+                "code": "PALETTE_SPRAWL",
+                "issue": "パネルや画像の面の色の系統が多く、配色が絞られていない",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T3_persona",
+      "expect": 4,
+      "labelSource": "claude-draft",
+      "note": "はみ出す斜めの帯と極端な文字サイズが狙いどおり",
+      "context": {
+        "brief": {
+          "title": "NEON RIOT",
+          "genre": "スタイリッシュな RPG",
+          "mood": [
+            "大胆",
+            "反抗的",
+            "ポップ"
+          ],
+          "player_should_feel": "メニューを開くだけで気分が上がる",
+          "avoid": [
+            "無難で整いすぎた画面",
+            "左右対称の退屈な構図"
+          ],
+          "ui": "斜めの帯が画面の端からはみ出す、極端なサイズ差の文字、ビビッドな配色"
+        },
+        "facts": {
+          "ui": {
+            "screen": "その他の画面",
+            "interactiveElements": "いくつも",
+            "textElements": "いくつも",
+            "labels": [
+              "MENU",
+              "ITEM",
+              "SKILL",
+              "EQUIP",
+              "SYSTEM",
+              "B: もどる"
+            ],
+            "horizontalLayout": "左に寄っている",
+            "verticalLayout": "中段に集まっている",
+            "centeredShare": "ほぼ無い",
+            "fontSizeKinds": "多い",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": [
+              {
+                "code": "OUT_OF_CANVAS",
+                "issue": "画面の端からはみ出している要素がある",
+                "severity": "注意",
+                "targets": [
+                  "UI_Band_Main",
+                  "UI_Band_Sub"
+                ]
+              },
+              {
+                "code": "FONT_SIZE_SPRAWL",
+                "issue": "文字の大きさの種類が多く、見出し・本文・補助の段が絞られていない",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T3_tactical",
+      "expect": 1,
+      "labelSource": "claude-draft",
+      "note": "はみ出す要素は avoid",
+      "context": {
+        "brief": {
+          "title": "STEEL LINE",
+          "genre": "タクティカルシューター",
+          "mood": [
+            "冷静",
+            "緊張"
+          ],
+          "player_should_feel": "情報を一瞬で読み取って判断できる",
+          "avoid": [
+            "装飾的な UI",
+            "読みにくい文字",
+            "画面の端からはみ出す要素"
+          ],
+          "ui": "整然とした情報レール、少ない書体サイズ、低彩度に警告色 1 色"
+        },
+        "facts": {
+          "ui": {
+            "screen": "その他の画面",
+            "interactiveElements": "いくつも",
+            "textElements": "いくつも",
+            "labels": [
+              "MENU",
+              "ITEM",
+              "SKILL",
+              "EQUIP",
+              "SYSTEM",
+              "B: もどる"
+            ],
+            "horizontalLayout": "左に寄っている",
+            "verticalLayout": "中段に集まっている",
+            "centeredShare": "ほぼ無い",
+            "fontSizeKinds": "多い",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": [
+              {
+                "code": "OUT_OF_CANVAS",
+                "issue": "画面の端からはみ出している要素がある",
+                "severity": "注意",
+                "targets": [
+                  "UI_Band_Main",
+                  "UI_Band_Sub"
+                ]
+              },
+              {
+                "code": "FONT_SIZE_SPRAWL",
+                "issue": "文字の大きさの種類が多く、見出し・本文・補助の段が絞られていない",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "T4_tactical",
+      "expect": 4,
+      "labelSource": "claude-draft",
+      "note": "整然とした情報レール・少ない書体・警告色 1 色",
+      "context": {
+        "brief": {
+          "title": "STEEL LINE",
+          "genre": "タクティカルシューター",
+          "mood": [
+            "冷静",
+            "緊張"
+          ],
+          "player_should_feel": "情報を一瞬で読み取って判断できる",
+          "avoid": [
+            "装飾的な UI",
+            "読みにくい文字",
+            "画面の端からはみ出す要素"
+          ],
+          "ui": "整然とした情報レール、少ない書体サイズ、低彩度に警告色 1 色"
+        },
+        "facts": {
+          "ui": {
+            "screen": "プレイ中の HUD",
+            "interactiveElements": "なし",
+            "textElements": "いくつも",
+            "labels": [
+              "SQUAD ALPHA",
+              "HP #",
+              "AMMO #",
+              "ARMOR #",
+              "OBJ #",
+              "敵影 北東",
+              "TAB: 詳細"
+            ],
+            "horizontalLayout": "左に寄っている",
+            "verticalLayout": "上に寄っている",
+            "centeredShare": "ほぼ無い",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": []
+          }
+        }
+      }
+    },
+    {
+      "name": "T4_gacha",
+      "expect": 1,
+      "labelSource": "claude-draft",
+      "note": "地味で静か(avoid)",
+      "context": {
+        "brief": {
+          "title": "スターリンク・ガチャ",
+          "genre": "ソーシャルゲームのガチャ画面",
+          "mood": [
+            "にぎやか",
+            "きらきら",
+            "お祭り"
+          ],
+          "player_should_feel": "引く瞬間にわくわくする",
+          "avoid": [
+            "地味で静かな画面",
+            "情報が少なくて寂しい画面"
+          ],
+          "ui": "光って動くボタン、色とりどりの装飾、大小さまざまな文字で煽る"
+        },
+        "facts": {
+          "ui": {
+            "screen": "プレイ中の HUD",
+            "interactiveElements": "なし",
+            "textElements": "いくつも",
+            "labels": [
+              "SQUAD ALPHA",
+              "HP #",
+              "AMMO #",
+              "ARMOR #",
+              "OBJ #",
+              "敵影 北東",
+              "TAB: 詳細"
+            ],
+            "horizontalLayout": "左に寄っている",
+            "verticalLayout": "上に寄っている",
+            "centeredShare": "ほぼ無い",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": []
+          }
+        }
+      }
+    },
+    {
+      "name": "T4_horror",
+      "expect": 2,
+      "labelSource": "claude-draft",
+      "note": "端に寄せた情報は悪くないが文字が多く、最小限ではない",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "avoid": [
+            "明るく均一な照明",
+            "鮮やかな色",
+            "派手な UI 演出"
+          ],
+          "ui": "UI は最小限。画面の端に小さく、静かに"
+        },
+        "facts": {
+          "ui": {
+            "screen": "プレイ中の HUD",
+            "interactiveElements": "なし",
+            "textElements": "いくつも",
+            "labels": [
+              "SQUAD ALPHA",
+              "HP #",
+              "AMMO #",
+              "ARMOR #",
+              "OBJ #",
+              "敵影 北東",
+              "TAB: 詳細"
+            ],
+            "horizontalLayout": "左に寄っている",
+            "verticalLayout": "上に寄っている",
+            "centeredShare": "ほぼ無い",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": []
+          }
+        }
+      }
+    },
+    {
+      "name": "T5_cozy",
+      "expect": 4,
+      "labelSource": "claude-draft",
+      "note": "暖色・柔らかい角・少ない要素",
+      "context": {
+        "brief": {
+          "title": "こもれび農園",
+          "genre": "のんびり農業シミュレーション",
+          "mood": [
+            "やさしい",
+            "穏やか"
+          ],
+          "player_should_feel": "ほっとする",
+          "avoid": [
+            "派手な演出",
+            "強い色",
+            "急かされる感じ"
+          ],
+          "ui": "柔らかい角、落ち着いた暖色、控えめな動き"
+        },
+        "facts": {
+          "ui": {
+            "screen": "プレイ中の HUD",
+            "interactiveElements": "ひとつ",
+            "textElements": "少し",
+            "labels": [
+              "春 # 日目 はれ",
+              "# ゴールド",
+              "かばん"
+            ],
+            "horizontalLayout": "左右に分かれている",
+            "verticalLayout": "下に寄っている",
+            "centeredShare": "ほぼ無い",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": []
+          }
+        }
+      }
+    },
+    {
+      "name": "T5_persona",
+      "expect": 1,
+      "labelSource": "claude-draft",
+      "note": "無難で整いすぎ(avoid)",
+      "context": {
+        "brief": {
+          "title": "NEON RIOT",
+          "genre": "スタイリッシュな RPG",
+          "mood": [
+            "大胆",
+            "反抗的",
+            "ポップ"
+          ],
+          "player_should_feel": "メニューを開くだけで気分が上がる",
+          "avoid": [
+            "無難で整いすぎた画面",
+            "左右対称の退屈な構図"
+          ],
+          "ui": "斜めの帯が画面の端からはみ出す、極端なサイズ差の文字、ビビッドな配色"
+        },
+        "facts": {
+          "ui": {
+            "screen": "プレイ中の HUD",
+            "interactiveElements": "ひとつ",
+            "textElements": "少し",
+            "labels": [
+              "春 # 日目 はれ",
+              "# ゴールド",
+              "かばん"
+            ],
+            "horizontalLayout": "左右に分かれている",
+            "verticalLayout": "下に寄っている",
+            "centeredShare": "ほぼ無い",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": []
+          }
+        }
+      }
+    },
+    {
+      "name": "T1_gacha",
+      "expect": 1,
+      "labelSource": "claude-draft",
+      "note": "静かで情報が少ない。地味(avoid)",
+      "context": {
+        "brief": {
+          "title": "スターリンク・ガチャ",
+          "genre": "ソーシャルゲームのガチャ画面",
+          "mood": [
+            "にぎやか",
+            "きらきら",
+            "お祭り"
+          ],
+          "player_should_feel": "引く瞬間にわくわくする",
+          "avoid": [
+            "地味で静かな画面",
+            "情報が少なくて寂しい画面"
+          ],
+          "ui": "光って動くボタン、色とりどりの装飾、大小さまざまな文字で煽る"
+        },
+        "facts": {
+          "ui": {
+            "screen": "タイトル画面",
+            "interactiveElements": "いくつも",
+            "textElements": "いくつも",
+            "labels": [
+              "AURORA",
+              "はじめから",
+              "つづきから",
+              "設定",
+              "終了"
+            ],
+            "horizontalLayout": "中央に集まっている",
+            "verticalLayout": "上下に散っている",
+            "centeredShare": "ほぼ全部",
+            "fontSizeKinds": "少ない",
+            "colorFamilies": "ごく少ない",
+            "heavilyDecoratedPanels": "なし",
+            "animatedGloss": "なし",
+            "textEffects": "なし",
+            "issues": [
+              {
+                "code": "CENTERED_MONOTONY",
+                "issue": "ほとんどのボタンと文字が画面の水平中央に並んでいる(左右対称の中央構図)",
+                "severity": "提案"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

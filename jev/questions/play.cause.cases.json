@@ -1,0 +1,971 @@
+{
+  "question": "play.cause",
+  "cases": [
+    {
+      "name": "careful_horror",
+      "expect": "none",
+      "labelSource": "claude-draft",
+      "note": "慎重な歩きは狙いどおり",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "notes": "立ち止まって辺りを見回しながら、おそるおそる進むのが狙いの遊び方"
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着いた",
+            "sections": [
+              {
+                "section": "序盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "中盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "終盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "目の前"
+              }
+            ],
+            "hardestSection": "中盤"
+          }
+        }
+      }
+    },
+    {
+      "name": "careful_action",
+      "expect": [
+        "lost_way",
+        "none"
+      ],
+      "labelSource": "claude-draft",
+      "note": "止まって見回す = 道が分からない。ただしゴールには着いていて迷いは軽いので none も正解(★Jev の答えを見て広げた。人の確認待ち)",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着いた",
+            "sections": [
+              {
+                "section": "序盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "中盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "終盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "目の前"
+              }
+            ],
+            "hardestSection": "中盤"
+          }
+        }
+      }
+    },
+    {
+      "name": "jumps_action",
+      "expect": "jump_too_hard",
+      "labelSource": "claude-draft",
+      "note": "同じ跳躍で落ち続ける",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "序盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "ひとつ",
+                "sentBackAfterFall": "ひとつ",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "中盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "少し",
+                "sentBackAfterFall": "ひとつ",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "終盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "ひとつ",
+                "sentBackAfterFall": "少し",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "変わらない",
+                "goalDistance": "遠い"
+              }
+            ],
+            "hardestSection": "終盤"
+          }
+        }
+      }
+    },
+    {
+      "name": "jumps_needle",
+      "expect": "none",
+      "labelSource": "claude-draft",
+      "note": "落ちるのは狙いどおり",
+      "context": {
+        "brief": {
+          "title": "NEEDLE",
+          "genre": "高難度プラットフォーマー",
+          "mood": [
+            "張り詰めた",
+            "達成感"
+          ],
+          "player_should_feel": "何度も落ちながら、ついに越えたときの達成感",
+          "notes": "同じジャンプで何度も落ちるのは狙いどおり。敵に理不尽に倒されることは無い"
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "序盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "ひとつ",
+                "sentBackAfterFall": "ひとつ",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "中盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "少し",
+                "sentBackAfterFall": "ひとつ",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "終盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "ひとつ",
+                "sentBackAfterFall": "少し",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "変わらない",
+                "goalDistance": "遠い"
+              }
+            ],
+            "hardestSection": "終盤"
+          }
+        }
+      }
+    },
+    {
+      "name": "lost_maze",
+      "expect": "none",
+      "labelSource": "claude-draft",
+      "note": "迷うのは狙いどおり",
+      "context": {
+        "brief": {
+          "title": "ENDLESS HALL",
+          "genre": "迷路探索",
+          "mood": [
+            "不安",
+            "方向感覚を失う"
+          ],
+          "player_should_feel": "同じような廊下で自分がどこにいるか分からなくなる",
+          "notes": "迷って行き来するのは狙いどおり。ただし引っかかって進めないのは不具合"
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "序盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "ひとつ",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "中盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "いくつも",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "激しく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "遠ざかった",
+                "goalDistance": "とても遠い"
+              },
+              {
+                "section": "終盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "少し",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "とても遠い"
+              }
+            ],
+            "hardestSection": "中盤"
+          }
+        }
+      }
+    },
+    {
+      "name": "lost_action",
+      "expect": "lost_way",
+      "labelSource": "claude-draft",
+      "note": "行き来と見回し",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "序盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "ひとつ",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "中盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "いくつも",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "激しく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "遠ざかった",
+                "goalDistance": "とても遠い"
+              },
+              {
+                "section": "終盤",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "少し",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "よく見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "とても遠い"
+              }
+            ],
+            "hardestSection": "中盤"
+          }
+        }
+      }
+    },
+    {
+      "name": "stuck_maze",
+      "expect": "stuck_geometry",
+      "labelSource": "claude-draft",
+      "note": "引っかかりは不具合(notes)",
+      "context": {
+        "brief": {
+          "title": "ENDLESS HALL",
+          "genre": "迷路探索",
+          "mood": [
+            "不安",
+            "方向感覚を失う"
+          ],
+          "player_should_feel": "同じような廊下で自分がどこにいるか分からなくなる",
+          "notes": "迷って行き来するのは狙いどおり。ただし引っかかって進めないのは不具合"
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "前半",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "半分くらい",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "少し見回す",
+                "jumpsInPlace": "少し",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "後半",
+                "standingStill": "ほぼ全部",
+                "pushingWithoutMoving": "ほぼ全部",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "いくつも",
+                "towardGoal": "変わらない",
+                "goalDistance": "遠い"
+              }
+            ],
+            "hardestSection": "後半"
+          }
+        }
+      }
+    },
+    {
+      "name": "stuck_action",
+      "expect": "stuck_geometry",
+      "labelSource": "claude-draft",
+      "note": "押しても動けない",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "前半",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "半分くらい",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "少し見回す",
+                "jumpsInPlace": "少し",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "後半",
+                "standingStill": "ほぼ全部",
+                "pushingWithoutMoving": "ほぼ全部",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "いくつも",
+                "towardGoal": "変わらない",
+                "goalDistance": "遠い"
+              }
+            ],
+            "hardestSection": "後半"
+          }
+        }
+      }
+    },
+    {
+      "name": "killed_action",
+      "expect": "unfair_hazard",
+      "labelSource": "claude-draft",
+      "note": "落ちずに戻される",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "前半",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "ひとつ",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "後半",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "少し",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              }
+            ],
+            "hardestSection": "後半"
+          }
+        }
+      }
+    },
+    {
+      "name": "killed_needle",
+      "expect": "unfair_hazard",
+      "labelSource": "claude-draft",
+      "note": "敵に理不尽に倒されることは無いはず(notes)",
+      "context": {
+        "brief": {
+          "title": "NEEDLE",
+          "genre": "高難度プラットフォーマー",
+          "mood": [
+            "張り詰めた",
+            "達成感"
+          ],
+          "player_should_feel": "何度も落ちながら、ついに越えたときの達成感",
+          "notes": "同じジャンプで何度も落ちるのは狙いどおり。敵に理不尽に倒されることは無い"
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "前半",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "ひとつ",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "後半",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "少し",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              }
+            ],
+            "hardestSection": "後半"
+          }
+        }
+      }
+    },
+    {
+      "name": "smooth_action",
+      "expect": "none",
+      "labelSource": "claude-draft",
+      "note": "順調",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着いた",
+            "sections": [
+              {
+                "section": "前半",
+                "standingStill": "ほぼ無い",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              },
+              {
+                "section": "後半",
+                "standingStill": "ほぼ無い",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "近づいた",
+                "goalDistance": "目の前"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "aimless_action",
+      "expect": "unclear_goal",
+      "labelSource": "claude-draft",
+      "note": "最初から目的が分からない",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "人のプレイ",
+            "length": "短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "序盤",
+                "standingStill": "大半",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "少し見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "遠ざかった",
+                "goalDistance": "とても遠い"
+              },
+              {
+                "section": "中盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "少し見回す",
+                "jumpsInPlace": "なし",
+                "towardGoal": "遠ざかった",
+                "goalDistance": "とても遠い"
+              },
+              {
+                "section": "終盤",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし",
+                "towardGoal": "遠ざかった",
+                "goalDistance": "とても遠い"
+              }
+            ],
+            "hardestSection": "序盤"
+          }
+        }
+      }
+    },
+    {
+      "name": "autoStuck_action",
+      "expect": "stuck_geometry",
+      "labelSource": "claude-draft",
+      "note": "機械が壁に詰まった",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "自動操縦(ナビメッシュの経路を機械がなぞった。迷うことはない)",
+            "length": "とても短い",
+            "outcome": "ゴールに着かなかった",
+            "sections": [
+              {
+                "section": "全体",
+                "standingStill": "半分くらい",
+                "pushingWithoutMoving": "半分くらい",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "towardGoal": "近づいた",
+                "goalDistance": "遠い"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "replayFall_action",
+      "expect": "jump_too_hard",
+      "labelSource": "claude-draft",
+      "note": "再生で跳躍に失敗して落ちた",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "記録した人の入力を機械が再生した(入力は記録どおりで、迷うことはない)",
+            "length": "とても短い",
+            "outcome": "ゴールは指定されていない",
+            "sections": [
+              {
+                "section": "前半",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "一部",
+                "backtracking": "なし",
+                "falls": "ひとつ",
+                "sentBackAfterFall": "ひとつ",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし"
+              },
+              {
+                "section": "後半",
+                "standingStill": "ほぼ無い",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし"
+              }
+            ],
+            "hardestSection": "前半",
+            "deviation": "後半で記録の経路から大きく外れた"
+          }
+        }
+      }
+    },
+    {
+      "name": "replayKilled_action",
+      "expect": "unfair_hazard",
+      "labelSource": "claude-draft",
+      "note": "再生で落ちずに戻された",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "記録した人の入力を機械が再生した(入力は記録どおりで、迷うことはない)",
+            "length": "とても短い",
+            "outcome": "ゴールは指定されていない",
+            "sections": [
+              {
+                "section": "前半",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "一部",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "ひとつ",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし"
+              },
+              {
+                "section": "後半",
+                "standingStill": "一部",
+                "pushingWithoutMoving": "一部",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "ひとつ",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし"
+              }
+            ],
+            "hardestSection": "前半",
+            "deviation": "前半で記録の経路から大きく外れた"
+          }
+        }
+      }
+    },
+    {
+      "name": "replayDrift_action",
+      "expect": "none",
+      "labelSource": "claude-draft",
+      "note": "機械の再生なので迷いは無く、落下・引っかかり・やられも無い",
+      "context": {
+        "brief": {
+          "title": "SKY HOPPER",
+          "genre": "3D アクションプラットフォーマー",
+          "mood": [
+            "軽快",
+            "爽快"
+          ],
+          "player_should_feel": "リズムよく跳び移って気持ちいい",
+          "avoid": [
+            "理不尽な即死",
+            "同じジャンプを何度もやり直させる",
+            "迷わせる"
+          ]
+        },
+        "facts": {
+          "play": {
+            "player": "記録した人の入力を機械が再生した(入力は記録どおりで、迷うことはない)",
+            "length": "とても短い",
+            "outcome": "ゴールは指定されていない",
+            "sections": [
+              {
+                "section": "全体",
+                "standingStill": "ほぼ無い",
+                "pushingWithoutMoving": "ほぼ無い",
+                "backtracking": "なし",
+                "falls": "なし",
+                "sentBackAfterFall": "なし",
+                "sentBackWithoutFall": "なし",
+                "lookingAround": "ほとんど見回さない",
+                "jumpsInPlace": "なし"
+              }
+            ],
+            "deviation": "全体で記録の経路から大きく外れた"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,917 @@
+{
+  "question": "layout.no_collider_ok",
+  "cases": [
+    {
+      "name": "nocol_forest_A_LVL_Wall",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "壁は当たり判定が要る",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "Deep Woods",
+          "genre": "写実的な森の探索",
+          "mood": [
+            "自然",
+            "静か"
+          ],
+          "player_should_feel": "本物の森を歩いている",
+          "avoid": [
+            "木や岩をすり抜ける嘘っぽさ"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_forest_B_ENV_Grass_Patch",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "草むらは歩いて抜ける",
+      "vars": {
+        "ref": "B"
+      },
+      "context": {
+        "brief": {
+          "title": "Deep Woods",
+          "genre": "写実的な森の探索",
+          "mood": [
+            "自然",
+            "静か"
+          ],
+          "player_should_feel": "本物の森を歩いている",
+          "avoid": [
+            "木や岩をすり抜ける嘘っぽさ"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_forest_C_FX_LightShaft",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "光の筋は見た目だけ",
+      "vars": {
+        "ref": "C"
+      },
+      "context": {
+        "brief": {
+          "title": "Deep Woods",
+          "genre": "写実的な森の探索",
+          "mood": [
+            "自然",
+            "静か"
+          ],
+          "player_should_feel": "本物の森を歩いている",
+          "avoid": [
+            "木や岩をすり抜ける嘘っぽさ"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_forest_D_ENV_Tree_Oak",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "写実的な森。avoid に木をすり抜ける嘘っぽさ",
+      "vars": {
+        "ref": "D"
+      },
+      "context": {
+        "brief": {
+          "title": "Deep Woods",
+          "genre": "写実的な森の探索",
+          "mood": [
+            "自然",
+            "静か"
+          ],
+          "player_should_feel": "本物の森を歩いている",
+          "avoid": [
+            "木や岩をすり抜ける嘘っぽさ"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_dream_D_ENV_Tree_Oak",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "木の幹を通り抜けられる(notes)",
+      "vars": {
+        "ref": "D"
+      },
+      "context": {
+        "brief": {
+          "title": "Ghost Forest",
+          "genre": "幻想的な夢の森",
+          "mood": [
+            "夢",
+            "ふわふわ"
+          ],
+          "player_should_feel": "幽霊のように木々をすり抜けて漂う",
+          "notes": "プレイヤーは木の幹を通り抜けられる。地面と足場にだけ立てる"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_dream_F_LVL_Platform_Fake",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "足場には立てる(notes)",
+      "vars": {
+        "ref": "F"
+      },
+      "context": {
+        "brief": {
+          "title": "Ghost Forest",
+          "genre": "幻想的な夢の森",
+          "mood": [
+            "夢",
+            "ふわふわ"
+          ],
+          "player_should_feel": "幽霊のように木々をすり抜けて漂う",
+          "notes": "プレイヤーは木の幹を通り抜けられる。地面と足場にだけ立てる"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_cyber_E_ENV_Hologram_Sign",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "ホログラムはすり抜けられる(notes)",
+      "vars": {
+        "ref": "E"
+      },
+      "context": {
+        "brief": {
+          "title": "Neon Alley",
+          "genre": "サイバーパンクの街の探索",
+          "mood": [
+            "ネオン",
+            "雑踏"
+          ],
+          "player_should_feel": "ホログラムの広告の中を歩き抜ける",
+          "notes": "ホログラム看板は実体が無く、すり抜けられる"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_forest_E_ENV_Hologram_Sign",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "ホログラムはそもそも実体が無い(★初版は false にしていたが Jev の答えを見て見直した。人の確認待ち)",
+      "vars": {
+        "ref": "E"
+      },
+      "context": {
+        "brief": {
+          "title": "Deep Woods",
+          "genre": "写実的な森の探索",
+          "mood": [
+            "自然",
+            "静か"
+          ],
+          "player_should_feel": "本物の森を歩いている",
+          "avoid": [
+            "木や岩をすり抜ける嘘っぽさ"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_trap_F_LVL_Platform_Fake",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "偽の足場は当たり判定が無いのが仕掛け",
+      "vars": {
+        "ref": "F"
+      },
+      "context": {
+        "brief": {
+          "title": "False Floor",
+          "genre": "錯覚の足場パズル",
+          "mood": [
+            "疑心",
+            "緊張"
+          ],
+          "player_should_feel": "見えているのに乗れない偽の足場にだまされて落ちる",
+          "notes": "偽の足場は見た目だけで当たり判定が無いのが仕掛け"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_forest_F_LVL_Platform_Fake",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "足場は乗れるべき",
+      "vars": {
+        "ref": "F"
+      },
+      "context": {
+        "brief": {
+          "title": "Deep Woods",
+          "genre": "写実的な森の探索",
+          "mood": [
+            "自然",
+            "静か"
+          ],
+          "player_should_feel": "本物の森を歩いている",
+          "avoid": [
+            "木や岩をすり抜ける嘘っぽさ"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_cyber_A_LVL_Wall",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "壁は当たり判定が要る",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "Neon Alley",
+          "genre": "サイバーパンクの街の探索",
+          "mood": [
+            "ネオン",
+            "雑踏"
+          ],
+          "player_should_feel": "ホログラムの広告の中を歩き抜ける",
+          "notes": "ホログラム看板は実体が無く、すり抜けられる"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "nocol_trap_B_ENV_Grass_Patch",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "草むらはどの作品でも歩いて抜ける",
+      "vars": {
+        "ref": "B"
+      },
+      "context": {
+        "brief": {
+          "title": "False Floor",
+          "genre": "錯覚の足場パズル",
+          "mood": [
+            "疑心",
+            "緊張"
+          ],
+          "player_should_feel": "見えているのに乗れない偽の足場にだまされて落ちる",
+          "notes": "偽の足場は見た目だけで当たり判定が無いのが仕掛け"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Wall",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "B",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Grass_Patch",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "C",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "FX_LightShaft",
+                "group": "FX(エフェクト)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "D",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Tree_Oak",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "建物くらい"
+              },
+              {
+                "ref": "E",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "ENV_Hologram_Sign",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)"
+              },
+              {
+                "ref": "F",
+                "kind": "NO_COLLIDER",
+                "what": "人がぶつかる大きさなのに当たり判定が無い(すり抜ける)",
+                "object": "LVL_Platform_Fake",
+                "group": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "size": "人より大きい(家具や壁くらい)"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

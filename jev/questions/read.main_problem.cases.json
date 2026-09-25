@@ -1,0 +1,907 @@
+{
+  "question": "read.main_problem",
+  "cases": [
+    {
+      "name": "shardLit_junction_A",
+      "expect": "fine",
+      "labelSource": "claude-draft",
+      "note": "読める",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "継ぎ目 F の焦点(灯りを手前に置いた)(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "明るい",
+              "upper_half": "面が見える（中くらいの距離）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "遠い",
+              "dominant": "C#_wall（画面の大半）"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "C#_p#",
+                "role": "見つけてほしい破片(継ぎ目の手がかり)",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "中央やや右",
+                "brightness": "中くらい",
+                "contrast": "低い（周囲より暗い）",
+                "texture": "模様・陰影が少ない",
+                "lit_side": "照らされている",
+                "main_light": "C#_fill（見えている面に当たっている）",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "shardDark_junction_A",
+      "expect": "unlit_side",
+      "labelSource": "claude-draft",
+      "note": "灯りが裏から当たって黒い板",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "継ぎ目 F の焦点(灯りを裏へ回した)(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "明るい",
+              "upper_half": "面が見える（中くらいの距離）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "遠い",
+              "dominant": "C#_wall（画面の大半）"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "C#_p#",
+                "role": "見つけてほしい破片(継ぎ目の手がかり)",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "中央やや右",
+                "brightness": "暗い",
+                "contrast": "普通（周囲より暗い）",
+                "texture": "普通",
+                "lit_side": "影（灯りは裏側から当たっている）",
+                "main_light": "C#_fill（裏側から当たっている）",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "pitOn_junction_A",
+      "expect": "fine",
+      "labelSource": "claude-draft",
+      "note": "縁で隠れるのは見下ろす物の宿命で、深さは読める",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "井戸の縁から見下ろす(底の灯りあり)(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "中くらい",
+              "upper_half": "面が見える（近い）",
+              "lower_half": "面が見える（中くらいの距離）",
+              "left_half": "面が見える（中くらいの距離）",
+              "right_half": "面が見える（中くらいの距離）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "少し",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "中くらいの距離"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "W#_pit",
+                "role": "下に深い空間があると分かってほしい井戸",
+                "visibility": "見えている",
+                "screen_share": "中くらい",
+                "position": "中央やや右",
+                "brightness": "中くらい",
+                "contrast": "ほぼ同じ（背景に溶ける）",
+                "texture": "模様・陰影がはっきり",
+                "lit_side": "照らされている",
+                "main_light": "W#_pl#（見えている面に当たっている）",
+                "occluded": "大半が隠れている",
+                "fits_in_view": "収まらない（画面より大きい）",
+                "distance": "中くらいの距離",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "pitOff_junction_A",
+      "expect": [
+        "no_shape",
+        "too_dark"
+      ],
+      "labelSource": "claude-draft",
+      "note": "底が暗くのっぺりで深さが読めない",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "井戸の縁から見下ろす(底の灯りなし)(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "中くらい",
+              "upper_half": "面が見える（近い）",
+              "lower_half": "面が見える（中くらいの距離・とても暗い）",
+              "left_half": "面が見える（中くらいの距離）",
+              "right_half": "面が見える（中くらいの距離）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "少し",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "中くらいの距離"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "W#_pit",
+                "role": "下に深い空間があると分かってほしい井戸",
+                "visibility": "見えている",
+                "screen_share": "中くらい",
+                "position": "中央やや右",
+                "brightness": "暗い",
+                "contrast": "普通（周囲より暗い）",
+                "texture": "模様・陰影が少ない",
+                "lit_side": "照らされている",
+                "main_light": "C#_fill（見えている面に当たっている）",
+                "occluded": "大半が隠れている",
+                "fits_in_view": "収まらない（画面より大きい）",
+                "distance": "中くらいの距離",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "shardFill_junction_A",
+      "expect": "fills_view",
+      "labelSource": "claude-draft",
+      "note": "寄りすぎて画面を埋める",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "破片に寄りすぎた視点(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "暗い",
+              "upper_half": "面が見える（すぐ近く・暗い）",
+              "lower_half": "面が見える（すぐ近く・暗い）",
+              "left_half": "面が見える（すぐ近く・暗い）",
+              "right_half": "面が見える（すぐ近く・暗い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "すぐ近く",
+              "dominant": "C#_p#（画面の大半）"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "C#_p#",
+                "role": "全体の形を見せたい仕掛け(破片)",
+                "visibility": "見えている",
+                "screen_share": "画面の大半",
+                "position": "中央",
+                "brightness": "暗い",
+                "texture": "模様・陰影が少ない",
+                "lit_side": "照らされている",
+                "occluded": "隠れていない",
+                "fits_in_view": "収まらない（画面より大きい）",
+                "distance": "すぐ近く",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "tinyKey_puzzle_A",
+      "expect": "too_small",
+      "labelSource": "claude-draft",
+      "note": "点にしかならない",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面"
+          ]
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "広場の入口(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "明るい",
+              "upper_half": "空が半分くらい・面が見える（遠い）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（遠い）",
+              "right_half": "面が見える（遠い）",
+              "sky_or_void": "一部",
+              "black_crush": "ほぼ無い",
+              "blown_out": "少し",
+              "farthest_surface": "とても遠い"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "GP_Key",
+                "role": "拾うべき鍵",
+                "visibility": "見えている",
+                "screen_share": "ほぼ見えない",
+                "position": "右",
+                "brightness": "明るい",
+                "contrast": "普通（周囲より明るい）",
+                "texture": "普通",
+                "lit_side": "照らされている",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "遠い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "hiddenKey_puzzle_A",
+      "expect": "occluded",
+      "labelSource": "claude-draft",
+      "note": "棚にほぼ全部隠れている",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面"
+          ]
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "棚の前(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "中くらい",
+              "upper_half": "面が見える（近い）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "中くらいの距離"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "GP_Key",
+                "role": "拾うべき鍵",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "中央",
+                "brightness": "明るい",
+                "contrast": "普通（周囲より明るい）",
+                "texture": "普通",
+                "lit_side": "照らされている",
+                "occluded": "ほぼ全部隠れている",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "blendSwitch_junction_A",
+      "expect": "blends_in",
+      "labelSource": "claude-draft",
+      "note": "壁と同じ明るさ",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "白い廊下の突き当たり(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "明るい",
+              "upper_half": "面が見える（中くらいの距離）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "遠い"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "Switch_#",
+                "role": "押すべきスイッチ",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "中央",
+                "brightness": "明るい",
+                "contrast": "ほぼ同じ（背景に溶ける）",
+                "texture": "のっぺり（模様も陰影もほぼ無い）",
+                "lit_side": "照らされている",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "doorOut_realistic_A",
+      "expect": "out_of_view",
+      "labelSource": "claude-draft",
+      "note": "視野の外",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "Apartment 3F",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "自然",
+            "生活感"
+          ],
+          "player_should_feel": "実在する部屋に立っているように感じる"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "部屋の入口(出口に背を向けている)(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "中くらい",
+              "upper_half": "面が見える（近い）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "中くらいの距離"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "GP_Goal_Door",
+                "role": "向かうべき出口",
+                "visibility": "視野の外",
+                "fits_in_view": "一部が画面の外"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "doorClear_puzzle_A",
+      "expect": "fine",
+      "labelSource": "claude-draft",
+      "note": "読める",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面"
+          ]
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "広場の入口(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "明るい",
+              "upper_half": "空が半分くらい・面が見える（遠い）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（遠い）",
+              "right_half": "面が見える（遠い）",
+              "sky_or_void": "一部",
+              "black_crush": "ほぼ無い",
+              "blown_out": "少し",
+              "farthest_surface": "とても遠い"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "GP_Goal_Door",
+                "role": "向かうべき出口",
+                "visibility": "見えている",
+                "screen_share": "中くらい",
+                "position": "中央",
+                "brightness": "とても明るい",
+                "contrast": "普通（周囲より明るい）",
+                "texture": "模様・陰影がはっきり",
+                "lit_side": "照らされている",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "unbuilt_junction_A",
+      "expect": "too_dark",
+      "labelSource": "claude-draft",
+      "note": "照らされていると出ても真っ暗(litFacing の癖)",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "未完成の扉の前(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "明るい",
+              "upper_half": "面が見える（中くらいの距離）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "遠い"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "Door_Unbuilt",
+                "role": "通り抜ける扉",
+                "visibility": "見えている",
+                "screen_share": "中くらい",
+                "position": "中央",
+                "brightness": "とても暗い",
+                "contrast": "ほぼ同じ（背景に溶ける）",
+                "texture": "模様・陰影が少ない",
+                "lit_side": "照らされている",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "lurkerHorror_horror_A",
+      "expect": "fine",
+      "labelSource": "claude-draft",
+      "note": "暗闇に潜ませたいのが狙い(Brief と役割)",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "notes": "暗闇で見えないこと自体が恐怖の主役。追跡者は見えるか見えないかのぎりぎりに置く"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "暗い廊下の奥(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "とても暗い",
+              "upper_half": "暗くて何も見えない",
+              "lower_half": "面が見える（近い・とても暗い）",
+              "left_half": "暗くて何も見えない",
+              "right_half": "暗くて何も見えない",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "とても多い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "中くらいの距離"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "GP_Stalker",
+                "role": "暗闇に潜む追跡者(見えるか見えないかのぎりぎりにしたい)",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "中央",
+                "brightness": "ほぼ真っ暗",
+                "contrast": "ほぼ同じ（背景に溶ける）",
+                "texture": "のっぺり（模様も陰影もほぼ無い）",
+                "lit_side": "影（灯りは裏側から当たっている）",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "中くらいの距離",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "lurkerPuzzle_puzzle_A",
+      "expect": "too_dark",
+      "labelSource": "claude-draft",
+      "note": "同じ暗さでも拾うべき鍵なら暗すぎる",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面"
+          ]
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "暗い廊下の奥(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "とても暗い",
+              "upper_half": "暗くて何も見えない",
+              "lower_half": "面が見える（近い・とても暗い）",
+              "left_half": "暗くて何も見えない",
+              "right_half": "暗くて何も見えない",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "とても多い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "中くらいの距離"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "GP_Key",
+                "role": "拾うべき鍵",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "中央",
+                "brightness": "ほぼ真っ暗",
+                "contrast": "ほぼ同じ（背景に溶ける）",
+                "texture": "のっぺり（模様も陰影もほぼ無い）",
+                "lit_side": "影（灯りは裏側から当たっている）",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "中くらいの距離",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "lever_realistic_A",
+      "expect": "fine",
+      "labelSource": "claude-draft",
+      "note": "一部隠れても読める",
+      "vars": {
+        "ref": "A"
+      },
+      "context": {
+        "brief": {
+          "title": "Apartment 3F",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "自然",
+            "生活感"
+          ],
+          "player_should_feel": "実在する部屋に立っているように感じる"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "機械室(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "中くらい",
+              "upper_half": "面が見える（近い）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "中くらいの距離"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "Lever_#",
+                "role": "引くレバー",
+                "visibility": "見えている",
+                "screen_share": "中くらい",
+                "position": "中央",
+                "brightness": "明るい",
+                "contrast": "普通（周囲より明るい）",
+                "texture": "模様・陰影がはっきり",
+                "lit_side": "照らされている",
+                "occluded": "半分くらい隠れている",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "twoTargets_junction_B",
+      "expect": "fine",
+      "labelSource": "claude-draft",
+      "note": "同じ視点の案内板は読める",
+      "vars": {
+        "ref": "B"
+      },
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "霧で形がぼやけること"
+          ],
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "read": {
+            "viewpoint": "継ぎ目 F の焦点(灯りを裏へ回した)(指定した視点（エディタ）)",
+            "scene": {
+              "brightness": "明るい",
+              "upper_half": "面が見える（中くらいの距離）",
+              "lower_half": "面が見える（近い）",
+              "left_half": "面が見える（近い）",
+              "right_half": "面が見える（近い）",
+              "sky_or_void": "ほぼ無い",
+              "black_crush": "ほぼ無い",
+              "blown_out": "ほぼ無い",
+              "farthest_surface": "遠い",
+              "dominant": "C#_wall（画面の大半）"
+            },
+            "targets": [
+              {
+                "ref": "A",
+                "name": "C#_p#",
+                "role": "見つけてほしい破片(継ぎ目の手がかり)",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "中央やや右",
+                "brightness": "暗い",
+                "contrast": "普通（周囲より暗い）",
+                "texture": "普通",
+                "lit_side": "影（灯りは裏側から当たっている）",
+                "main_light": "C#_fill（裏側から当たっている）",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              },
+              {
+                "ref": "B",
+                "name": "Sign_Exit",
+                "role": "非常口の案内板",
+                "visibility": "見えている",
+                "screen_share": "小さい",
+                "position": "左・上寄り",
+                "brightness": "とても明るい",
+                "contrast": "普通（周囲より明るい）",
+                "texture": "模様・陰影がはっきり",
+                "lit_side": "照らされている",
+                "occluded": "隠れていない",
+                "fits_in_view": "全体が視野に収まる",
+                "distance": "近い",
+                "saturation": "普通"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

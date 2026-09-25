@@ -1,0 +1,51 @@
+{
+  "id": "finding.intended",
+  "version": 2,
+  "type": "noul",
+  "instructions": {
+    "what": "A generic polish checklist flagged this condition in a game scene: {{code}} = {{gloss}}. The checklist assumes every scene should be a bright, fully dressed showcase. Read state.brief (the creator's intent) and state.facts.look (the current frame in words). Is this particular condition intentional for this work, something the brief's mood, intended player feeling, lighting budget or avoid list calls for, so it should be kept instead of fixed?",
+    "not_for": "Answer no when the brief is silent or neutral about this condition, or when fixing it would make the scene serve the brief better. Do not answer yes only because the scene is dark or minimal overall; the brief itself must call for this specific condition."
+  },
+  "criteria": {
+    "true": "Keep it: the brief's mood, intended feeling, lighting budget or avoid list calls for this condition.",
+    "false": "Fix it: the condition is a real gap for this brief, or the brief does not call for it."
+  },
+  "state": [
+    "brief",
+    "facts.look",
+    "facts.findings"
+  ],
+  "threshold": {
+    "yes": 0.67,
+    "band": 0.1
+  },
+  "fallback": "no",
+  "lookup": {
+    "gloss": {
+      "by": "code",
+      "map": {
+        "NO_LIGHTS": "there are no light sources in the scene",
+        "SUN_ONLY": "the sun is the only light; there are no fill or rim lights",
+        "LIGHTS_OVER_BUDGET": "more lights are placed than the renderer draws, so some lights are silently dropped",
+        "NO_SHADOW_CASTER": "no light casts shadows",
+        "NO_HDRI": "there is no HDRI environment map; ambient light comes only from the default procedural sky",
+        "NO_FOG": "there is no volumetric fog or haze in the air",
+        "POST_PASSTHROUGH": "there is no color grading (tone mapping only)",
+        "NO_BLOOM": "bloom is off, so bright lights do not glow",
+        "NO_VIGNETTE": "there is no vignette (the frame corners are not darkened)",
+        "GODRAYS_FOG_DOUBLE": "god rays and volumetric fog are both strong, so sunlight scattering is applied twice",
+        "NO_MOTION": "nothing moves in the frame (no particles such as dust, embers, insects or leaves)",
+        "NO_NORMAL_MAPS": "no surface uses normal maps, so surfaces have no fine relief",
+        "DEFAULT_PBR": "most materials use the same default roughness and metallic values",
+        "NO_SSAO": "ambient occlusion is off (no darkening where objects meet)",
+        "NO_CONTACT_SHADOW": "contact shadows are off (no tight shadows under small objects)",
+        "FLAT_IMAGE": "the frame has low contrast (a narrow range between its brightest and darkest areas)",
+        "CLIPPED_WHITES": "a large area of the frame is pure white",
+        "CRUSHED_BLACKS": "a large area of the frame is pure black",
+        "DESATURATED": "the frame has almost no color (very low saturation)"
+      }
+    }
+  },
+  "cases": "finding.intended.cases.json",
+  "notes": "指摘ごとに 1 質問。state は 3 問共通(brief + facts)にして polish_audit の 1 リクエストに束ねる。 2026-09-25 実測(jev-1.13.0、ケース 21 件、ラベルは claude-draft): v1 は正解率 0.952・margin +0.13 / +0.10(2 回)。外したのは D_junction_FLAT_IMAGE(0.64)で、英語の説明の『flat and hazy』が JUNCTION の avoid『霧で形がぼやける』と衝突していた。v2 で説明から評価語(looks flat / sleepy CG / look like they float 等)を抜き、状態の記述だけにした → 正解率 1.0(4 回とも)、margin +0.13 / +0.19 / +0.17 / +0.14。4 回を合わせた境界は yes 群の最小 0.72 / no 群の最大 0.62 → 閾値 0.67(中点)。band 0.1 は同じケースの揺れ(最大 ±0.07)より広く取った。ルールだけ(全部直す)なら 0.524。"
+}

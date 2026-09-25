@@ -1,0 +1,57 @@
+{
+  "id": "look.brief_fit",
+  "version": 2,
+  "type": "score",
+  "instructions": {
+    "what": "Rate how well the current visual look of a game scene serves the creator's intent. state.brief is the creative brief (genre, mood, what the player should feel, things to avoid, lighting budget). state.facts.look describes the rendered frame and scene settings in words (brightness, contrast, color saturation, fog, lights, post effects, moving particles, dirt decals, materials). state.facts.findings lists what a generic polish checklist flagged; the checklist assumes every scene should be a bright, fully dressed showcase, so its flags may not apply to this brief.",
+    "not_for": "Do not rate technical polish or completeness on its own. A dark, empty or colorless frame can fit perfectly when the brief asks for it, and a bright, colorful, busy frame can be a total miss. Judge only the match between the look and the brief."
+  },
+  "criteria": [
+    {
+      "summary": "Contradicts the brief",
+      "signals": [
+        "the look produces the opposite of the intended mood or feeling",
+        "things the brief says to avoid dominate the frame"
+      ]
+    },
+    {
+      "summary": "Mostly off",
+      "signals": [
+        "a competent look, but its mood belongs to a different kind of work than the brief",
+        "something the brief says to avoid is clearly present"
+      ]
+    },
+    {
+      "summary": "Neutral or generic",
+      "signals": [
+        "an untouched default look with no mood of its own, neither helping nor hurting the brief"
+      ]
+    },
+    {
+      "summary": "Mostly fits",
+      "signals": [
+        "the overall mood matches the brief, with one or two clear mismatches"
+      ]
+    },
+    {
+      "summary": "Strongly fits",
+      "signals": [
+        "brightness, contrast, color and atmosphere all serve the intended feeling",
+        "nothing the brief says to avoid is present",
+        "any remaining checklist flags are minor or intended by the brief"
+      ]
+    }
+  ],
+  "state": [
+    "brief",
+    "facts.look",
+    "facts.findings"
+  ],
+  "threshold": {
+    "pass": 2.73,
+    "minConfidence": 0.5,
+    "band": 0.5
+  },
+  "cases": "look.brief_fit.cases.json",
+  "notes": "0..4 の 5 段。decided は pass 以上で pass。 2026-09-25 実測(ケース 16 件、claude-draft): 段の正解率 v1 0.688 / 0.688 → v2 0.688 / 0.625、平均絶対誤差 v1 0.382〜0.416 / v2 0.381〜0.401(差は揺れの範囲)。判断段が使う合否は v1・v2 とも 16/16 で、合否の margin は v1 0.92 / 0.83 → v2 0.95 / 1.03(v2 で段の説明を具体化)。v2 の境界は合格群の最小 3.2 / 不合格群の最大 2.25 → pass 2.73(中点)。facts.findings を state から外す実験は段の正解率 0.563・合否 margin 0.40 と悪化したので、3 問共通の state のまま。強く合う絵を 3.2〜3.4 と控えめに付ける(中央へ寄る)癖があるので、段の番号より合否を使うこと。"
+}

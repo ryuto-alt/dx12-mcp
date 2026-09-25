@@ -1,0 +1,24 @@
+{
+  "id": "read.noticeable",
+  "version": 4,
+  "type": "noul",
+  "instructions": {
+    "what": "A 3D game shows the player the view described in state.facts.read, measured from the player's eye and put into words: the viewpoint, the whole screen, and each target with its size on screen, position, brightness, contrast with its surroundings, amount of shading or pattern, which side the light hits, how much of it is hidden, whether it fits in view and its distance. A target may have a role saying what it is for; state.brief is the creator's intent. Would a first-time player looking from this viewpoint notice target {{ref}} within a few seconds and read it as what it is?",
+    "not_for": "Decide by the facts that matter for its role, using the words in state.facts.read. An object the player must find (a key, a fragment, a switch, a door, a sign) reads when all of these hold: visibility is 見えている; screen_share is 小さい or larger (ほぼ見えない and ごく小さい are too small); occluded is not 大半が隠れている or ほぼ全部隠れている; brightness is not とても暗い or ほぼ真っ暗; contrast is not ほぼ同じ (低い still stands out); lit_side is not 影 or ほぼ影. A shape or depth the player must read (a pit, an opening, a mechanism) reads when its texture is 普通 or はっきり, its brightness is 中くらい or brighter, and it is not so close that it fills the screen; a pit seen from its edge is naturally mostly hidden by its own rim and close in brightness to the floor, so occluded and contrast do not count against it. The light-side fact ignores custom shaders: when it says lit but brightness is very dark, it does not read. Judge only target {{ref}}; the other targets are context."
+  },
+  "criteria": {
+    "true": "Noticed and read as what it is within a few seconds.",
+    "false": "Missed, or seen but not read as what it is."
+  },
+  "state": [
+    "brief",
+    "facts.read"
+  ],
+  "threshold": {
+    "yes": 0.59,
+    "band": 0.1
+  },
+  "fallback": "read.noticeableRules",
+  "cases": "read.noticeable.cases.json",
+  "notes": "対象 1 つごとに 1 質問。state は read.main_problem と共通(brief + facts.read)で、どの対象かは {{ref}}(英字)で名指しする。 2026-09-25 実測(ケース 15 件、JUNCTION の 9/8 の欠陥 3 件の実測値 + 変形、Brief 4 種、claude-draft): v1 正解率 0.867・margin -0.18(yes 最小 0.37 / no 最大 0.55)。外れは灯りを手前にした破片(0.54)と底の灯りがある井戸(0.35)。井戸は縁で 86% 隠れ、縁の明るさが床と同じ(contrast ほぼ同じ)ことを「読めない」に数えていた。v2 で「役割ごとに効く事実(見つける物は大きさ・明るさ・コントラスト / 形や奥行きは陰影・明るさ・視野)」と「井戸の縁は数えない」を足した → margin -0.07 / -0.12。v3 で判断の条件を箇条にした → margin -0.03 / 0 / 0(境界のケースが全部 0.4〜0.55 に集まる)。v4 で条件を state の語そのもの(screen_share が ほぼ見えない / ごく小さい は小さすぎる、contrast の 低い はまだ目立つ …)で書いた → 正解率 1.0(3 回とも)、margin +0.28 / +0.24 / +0.27、合わせた境界 0.71 / 0.47 → 閾値 0.59(中点)。ルールだけ(読みにくさの印)なら 0.933(井戸を縁の遮蔽で「読めない」と言う)。★灯りを手前にした破片(0.71〜0.74)と井戸(0.79)は閾値の近くで uncertain になりやすい。"
+}

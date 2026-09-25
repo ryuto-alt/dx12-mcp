@@ -1,0 +1,24 @@
+{
+  "id": "layout.no_collider_ok",
+  "version": 2,
+  "type": "noul",
+  "instructions": {
+    "what": "An automatic layout checker flagged issue {{ref}} in a 3D game scene: NO_COLLIDER = an object large enough for a player to walk into has no collision, so the player passes straight through it. Read state.brief (the creator's intent) and the entry with ref {{ref}} in state.facts.layout.issues: the object's name, its scene group and parent, and its size, all in words. Is this an object that does not need collision, one that is purely visual, out of the player's reach, intangible by nature, or meant to be walked through (for example grass, fog or light shafts, a distant backdrop, a hanging banner, a hologram), so the missing collision should be kept as it is? The brief can override the usual rule: when it says certain objects are fake, illusory, ghostly or meant to be passed through, objects that match that description do not need collision.",
+    "not_for": "Answer no for floors, walls, stairs, platforms, doors, large furniture, vehicles, tree trunks and anything the player is meant to stand on or be blocked by, unless the brief says such objects are fake or meant to be passed through. The group only states the usual convention; the brief and the object's own name decide. Judge only issue {{ref}}; the other issues are context."
+  },
+  "criteria": {
+    "true": "Keep it: this object does not need collision.",
+    "false": "Fix it: the player should be blocked by or stand on this object, so it needs collision."
+  },
+  "state": [
+    "brief",
+    "facts.layout"
+  ],
+  "threshold": {
+    "yes": 0.68,
+    "band": 0.1
+  },
+  "fallback": "layout.noColliderByGroup",
+  "notes": "NO_COLLIDER 1 件ごとに 1 質問。state は layout.intended と共通。ルールのフォールバックはグループの規約(ENV / FX / LIGHT なら要らない)。 2026-09-25 実測(ケース 12 件・Brief 4 種、claude-draft): v1 は正解率 0.833・margin -0.38(yes 最小 0.47 / no 最大 0.85)。外れは (1) 写実の森のホログラム看板(期待 false に 0.85)と (2) 偽の足場が罠の Brief の偽の足場(期待 true に 0.47)。(1) はラベルの誤り(ホログラムはそもそも実体が無い)と判断して true に直した(★Jev の答えを見て直したラベル。人の確認待ち)。(2) は質問文の not_for「床・壁・足場は no」が Brief の上書きより強く効いていた。v2 で「Brief が偽物・幻・すり抜けると言う物は要らない」を本文に上げ、「グループは慣習を言うだけで、決めるのは Brief と物の名前」を足した → 正解率 1.0(3 回とも)、margin +0.19 / +0.16 / +0.19、合わせた境界 0.76 / 0.60 → 閾値 0.68(中点)。ルールだけ(グループの規約)なら 0.833。 和集合 state(品質ゲートの bundle:\"one\" と同じく他の検査の事実も入った state)でも測った: 正解率 1.0・margin +0.27(0.74 / 0.47)で劣化なし。",
+  "cases": "layout.no_collider_ok.cases.json"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "read.main_problem",
+  "version": 3,
+  "type": "choice",
+  "instructions": {
+    "what": "A 3D game shows the player the view described in state.facts.read, measured from the player's eye and put into words (the viewpoint, the whole screen, and each target's size on screen, position, brightness, contrast with its surroundings, shading or pattern, which side the light hits, how much is hidden, whether it fits in view, distance). A target may have a role saying what it is for; state.brief is the creator's intent. Pick the main reason target {{ref}} is hard for a first-time player to notice and read from this viewpoint, or fine when it reads well. Weigh the facts that matter for the target's role: an object the player must find (a key, a fragment, a switch, a door) needs enough size on screen, brightness and contrast with its surroundings; a shape or depth the player must read (a pit, an opening, a mechanism) needs visible shading or pattern, enough brightness, and to fit in view. A pit or opening seen from its edge is naturally mostly hidden by its own rim and close in brightness to the floor around it, so judge it by the shading and brightness of what is visible inside.",
+    "not_for": "Pick fine when the target reads well for its role, or when the brief or its role wants it to stay hidden or barely visible and it does. For a pit or opening, being mostly hidden by its own rim is not occlusion and a similar brightness at the rim is not blending in. The light-side fact ignores custom shaders, so when it says lit but brightness is very dark, the problem is darkness. Judge only target {{ref}}; the other targets are context."
+  },
+  "criteria": {
+    "fine": "Reads well from here, or stays hidden exactly as the brief or its role wants.",
+    "too_dark": "The target is very dark or nearly black, too dark to make out, whatever the light-side fact says. Pick this rather than blends_in when the target itself is very dark or nearly black.",
+    "unlit_side": "The light hits the target from behind or it shows its back face, so it reads as a dark flat shape.",
+    "blends_in": "The target is bright enough to see but has almost the same brightness as its surroundings, so it blends into them.",
+    "no_shape": "The target is flat, with little shading or pattern, so its shape or depth cannot be read.",
+    "too_small": "The target is tiny on screen.",
+    "occluded": "Most of the target is hidden behind something in front of it.",
+    "fills_view": "The target covers most of the screen and does not fit in view, so its whole shape cannot be seen.",
+    "out_of_view": "The target is outside the view."
+  },
+  "state": [
+    "brief",
+    "facts.read"
+  ],
+  "threshold": {
+    "minConfidence": 0.5
+  },
+  "fallback": "read.mainProblemRules",
+  "cases": "read.main_problem.cases.json",
+  "notes": "選択肢は jev/readJudge.ts の READ_PROBLEMS と一致させる(テストで突き合わせ)。perceive の指標で区別できるものだけ。 2026-09-25 実測(ケース 15 件、claude-draft): v1 は 0.867(井戸を blends_in、暗い鍵を blends_in)。v2 で役割ごとに効く事実と「井戸の縁は遮蔽でも溶け込みでもない」を足した → 0.8(井戸は直ったが、真っ暗な扉と暗い鍵を blends_in)。v3 で too_dark を「対象自体がとても暗いなら blends_in より too_dark」、blends_in を「見える明るさなのに周囲と同じ」に分けた → 0.933 ×3、自信満々の誤り 0(外れは灯りを手前にした破片を too_small / no_shape に付けるだけで、いつも confidence 0.35 前後の uncertain)。v4(各選択肢を state の語で書く)も試したが 0.933 ×3 で自信満々の誤りが 1 に増えたので v3 に戻した。ルールだけなら 0.8。「同じ暗さでも、暗闇に潜ませたい追跡者なら fine / 拾うべき鍵なら too_dark」の Brief で答えが変わる組を含む。"
+}

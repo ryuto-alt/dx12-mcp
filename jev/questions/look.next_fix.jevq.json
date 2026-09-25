@@ -1,0 +1,43 @@
+{
+  "id": "look.next_fix",
+  "version": 4,
+  "type": "choice",
+  "instructions": {
+    "what": "Pick the single next change that would bring this game scene's look closest to the creator's intent. state.brief is the creative brief; state.facts.look describes the current frame in words; state.facts.findings lists what a generic polish checklist flagged. The checklist assumes a bright, fully dressed showcase, so some flags may be intentional for this brief and must be left alone. Choose the change that best serves the brief's mood and intended player feeling.",
+    "not_for": "Never pick a change that adds something listed in brief.avoid or pushes the look away from the brief's mood. Do not pick a fix only because its flag is marked severe. Pick keep_as_is only when every remaining flag is intended by the brief and nothing else is needed."
+  },
+  "criteria": {
+    "keep_as_is": "Change nothing: the look already serves the brief and every remaining flag is intentional.",
+    "apply_look": "Switch the whole look at once with a preset (sun, fog and color grading together) matching the brief's mood; best when the frame is ungraded or its overall mood is wrong for the brief.",
+    "add_key_light": "Add base lighting from a lighting preset; only when there are no lights at all.",
+    "add_fill_light": "Add fill and rim point lights so shadows are not pitch black and shapes separate from the background.",
+    "fix_light_budget": "Remove or shrink lights; only when the look reports lights over the budget that are not drawn.",
+    "enable_shadows": "Turn on shadow casting for the main light so objects sit on the ground.",
+    "add_hdri": "Add an HDRI environment map for natural ambient light, reflections and color.",
+    "add_fog": "Add volumetric fog for atmosphere, depth and visible light shafts.",
+    "add_bloom": "Turn on bloom so bright lights and emissive things glow.",
+    "add_vignette": "Add a vignette that darkens the frame corners to pull the eye to the center.",
+    "soften_godrays": "Weaken god rays so fog and god rays do not double the light scattering.",
+    "add_motion": "Add small moving particles (drifting dust, embers, insects) so the frame feels alive.",
+    "add_surface_detail": "Apply normal maps and varied roughness so materials read as wood, metal or cloth instead of plastic.",
+    "enable_ssao": "Turn on ambient occlusion so objects darken where they meet.",
+    "enable_contact_shadow": "Turn on contact shadows for tight shadows under small objects.",
+    "deepen_contrast": "Lower the ambient light and raise contrast for deeper shadows and a wider tonal range; for when the mood is already right but the frame looks flat.",
+    "lower_exposure": "Lower the exposure to recover blown-out white areas.",
+    "lift_shadows": "Raise the ambient or fill light so crushed pure-black areas show detail and the frame gets brighter.",
+    "boost_color": "Raise color saturation so the frame is not gray.",
+    "add_decals": "Add dirt, stains and wear decals so the place looks used and lived in.",
+    "tone_down_grading": "Tone down grading that is exaggerated for this brief (strong or very strong bloom, very vivid color, very strong contrast) toward a natural look."
+  },
+  "state": [
+    "brief",
+    "facts.look",
+    "facts.findings"
+  ],
+  "threshold": {
+    "minConfidence": 0.55
+  },
+  "fallback": "polish.firstFindingFix",
+  "cases": "look.next_fix.cases.json",
+  "notes": "選択肢のキーは jev/polishJudge.ts の FIXES と一致させる(テストで突き合わせ)。 2026-09-25 実測(ケース 19 件、claude-draft): 正解率 v1 0.789 / 0.789(自信満々の誤り 2 / 1) → v2 0.737 / 0.737(『Brief が触れていない指摘も直す』を足したら keep_as_is の正解を 2 件壊した) → v3 0.789 / 0.789(v2 の追記を戻し、apply_look / deepen_contrast / tone_down_grading の説明だけ直した。誤りが全部 uncertain に) → v4 0.842 / 0.842 / 0.789(fix_light_budget を『超過の報告があるときだけ』に限定)。ルールだけ(効く順の先頭を直す)なら 0.211。残る外れは D_horror / E_horror(apply_look 期待で deepen_contrast)と E_realistic(keep_as_is 期待で tone_down_grading)、A2_horror が回によって keep_as_is。誤りの confidence は最大 0.52、正解にも 0.30〜0.57 が 7 件あり分離しないので、minConfidence は誤りの最大を上回る 0.55 に置き、誤りを全部 uncertain(Claude が絵を見る)へ上げる。"
+}

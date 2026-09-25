@@ -1,0 +1,1115 @@
+{
+  "question": "layout.intended",
+  "cases": [
+    {
+      "name": "study_study_A_ENV_Book",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "本棚の中の本(AABB が丸ごと重なるのは当然)",
+      "vars": {
+        "ref": "A",
+        "kind": "OVERLAP"
+      },
+      "context": {
+        "brief": {
+          "title": "Study Room",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "静か",
+            "生活感"
+          ],
+          "player_should_feel": "誰かが暮らしていた書斎を調べている",
+          "avoid": [
+            "ゲームっぽい嘘の配置",
+            "物が宙に浮く"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Book",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Library",
+                "size": "小物",
+                "other": "ENV_Bookshelf",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人より大きい(家具や壁くらい)",
+                "degree": "ほぼ丸ごと重なっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Chair",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "other": "ENV_Desk",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              },
+              {
+                "ref": "C",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "GP_Enemy_Slime",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "other": "LVL_Wall",
+                "otherGroup": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "otherSize": "建物くらい",
+                "degree": "深くめり込んでいる"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Lamp_Pendant",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "study_study_B_ENV_Chair",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "机に差し込んだ椅子",
+      "vars": {
+        "ref": "B",
+        "kind": "OVERLAP"
+      },
+      "context": {
+        "brief": {
+          "title": "Study Room",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "静か",
+            "生活感"
+          ],
+          "player_should_feel": "誰かが暮らしていた書斎を調べている",
+          "avoid": [
+            "ゲームっぽい嘘の配置",
+            "物が宙に浮く"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Book",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Library",
+                "size": "小物",
+                "other": "ENV_Bookshelf",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人より大きい(家具や壁くらい)",
+                "degree": "ほぼ丸ごと重なっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Chair",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "other": "ENV_Desk",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              },
+              {
+                "ref": "C",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "GP_Enemy_Slime",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "other": "LVL_Wall",
+                "otherGroup": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "otherSize": "建物くらい",
+                "degree": "深くめり込んでいる"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Lamp_Pendant",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "study_study_C_GP_Enemy_Slime",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "敵が壁に埋まっている = 事故",
+      "vars": {
+        "ref": "C",
+        "kind": "OVERLAP"
+      },
+      "context": {
+        "brief": {
+          "title": "Study Room",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "静か",
+            "生活感"
+          ],
+          "player_should_feel": "誰かが暮らしていた書斎を調べている",
+          "avoid": [
+            "ゲームっぽい嘘の配置",
+            "物が宙に浮く"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Book",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Library",
+                "size": "小物",
+                "other": "ENV_Bookshelf",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人より大きい(家具や壁くらい)",
+                "degree": "ほぼ丸ごと重なっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Chair",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "other": "ENV_Desk",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              },
+              {
+                "ref": "C",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "GP_Enemy_Slime",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "other": "LVL_Wall",
+                "otherGroup": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "otherSize": "建物くらい",
+                "degree": "深くめり込んでいる"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Lamp_Pendant",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "study_study_D_ENV_Lamp_Pendant",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "吊りランプは宙にあるのが正しい",
+      "vars": {
+        "ref": "D",
+        "kind": "FLOATING"
+      },
+      "context": {
+        "brief": {
+          "title": "Study Room",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "静か",
+            "生活感"
+          ],
+          "player_should_feel": "誰かが暮らしていた書斎を調べている",
+          "avoid": [
+            "ゲームっぽい嘘の配置",
+            "物が宙に浮く"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Book",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Library",
+                "size": "小物",
+                "other": "ENV_Bookshelf",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人より大きい(家具や壁くらい)",
+                "degree": "ほぼ丸ごと重なっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Chair",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "other": "ENV_Desk",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              },
+              {
+                "ref": "C",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "GP_Enemy_Slime",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "other": "LVL_Wall",
+                "otherGroup": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "otherSize": "建物くらい",
+                "degree": "深くめり込んでいる"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Lamp_Pendant",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "study_study_E_ENV_Crate",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "木箱が少しだけ浮いている = 接地のし忘れ(avoid に物が宙に浮く)",
+      "vars": {
+        "ref": "E",
+        "kind": "FLOATING"
+      },
+      "context": {
+        "brief": {
+          "title": "Study Room",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "静か",
+            "生活感"
+          ],
+          "player_should_feel": "誰かが暮らしていた書斎を調べている",
+          "avoid": [
+            "ゲームっぽい嘘の配置",
+            "物が宙に浮く"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Book",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Library",
+                "size": "小物",
+                "other": "ENV_Bookshelf",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人より大きい(家具や壁くらい)",
+                "degree": "ほぼ丸ごと重なっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Chair",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "other": "ENV_Desk",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              },
+              {
+                "ref": "C",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "GP_Enemy_Slime",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "other": "LVL_Wall",
+                "otherGroup": "LVL(床・壁・足場などのレベル形状。当たり判定を持つのが原則)",
+                "otherSize": "建物くらい",
+                "degree": "深くめり込んでいる"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Lamp_Pendant",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "parent": "Writing_Corner",
+                "size": "小物",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "crates_junk_B_ENV_Crate",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "がらくたが食い込み合って崩れかけているのが狙い",
+      "vars": {
+        "ref": "B",
+        "kind": "OVERLAP"
+      },
+      "context": {
+        "brief": {
+          "title": "Scrap Yard",
+          "genre": "廃材置き場のサバイバル",
+          "mood": [
+            "雑然",
+            "荒廃"
+          ],
+          "player_should_feel": "がらくたが無造作に積み上がった中を漁る",
+          "notes": "木箱やがらくたは積み重なり、食い込み合って崩れかけているのが正しい見た目"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "下の方が埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "other": "ENV_Crate",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "crates_warehouse_B_ENV_Crate",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "整然とした倉庫。avoid に物どうしの食い込み",
+      "vars": {
+        "ref": "B",
+        "kind": "OVERLAP"
+      },
+      "context": {
+        "brief": {
+          "title": "Logistics",
+          "genre": "整然とした倉庫の仕分けパズル",
+          "mood": [
+            "清潔",
+            "整然"
+          ],
+          "player_should_feel": "きっちり並んだ棚と木箱を読み解く",
+          "avoid": [
+            "散らかった配置",
+            "物どうしの食い込み"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "下の方が埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "other": "ENV_Crate",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "crates_warehouse_A_ENV_Crate",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "床に沈んだ木箱は事故",
+      "vars": {
+        "ref": "A",
+        "kind": "BURIED"
+      },
+      "context": {
+        "brief": {
+          "title": "Logistics",
+          "genre": "整然とした倉庫の仕分けパズル",
+          "mood": [
+            "清潔",
+            "整然"
+          ],
+          "player_should_feel": "きっちり並んだ棚と木箱を読み解く",
+          "avoid": [
+            "散らかった配置",
+            "物どうしの食い込み"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "下の方が埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "OVERLAP",
+                "what": "物どうしが食い込み合っている",
+                "object": "ENV_Crate",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "other": "ENV_Crate",
+                "otherGroup": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "otherSize": "人の背丈くらい",
+                "degree": "浅くめり込んでいる"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "ruins_floating_A_ENV_Rock",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "岩は地面に半分埋もれている(notes)",
+      "vars": {
+        "ref": "A",
+        "kind": "BURIED"
+      },
+      "context": {
+        "brief": {
+          "title": "Skyward Ruins",
+          "genre": "幻想的な浮遊遺跡の冒険",
+          "mood": [
+            "幻想",
+            "神秘"
+          ],
+          "player_should_feel": "重力から解き放たれた古代の遺跡を歩く",
+          "notes": "宙に浮かぶ結晶と岩が遺跡の象徴。風化した柱や岩は地面に半分埋もれている"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Rock",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Pillar_Broken",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "C",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "GP_Chest_Treasure",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crystal_Floating",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Barrel",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "ruins_floating_B_ENV_Pillar_Broken",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "風化した柱が埋もれている(notes)",
+      "vars": {
+        "ref": "B",
+        "kind": "BURIED"
+      },
+      "context": {
+        "brief": {
+          "title": "Skyward Ruins",
+          "genre": "幻想的な浮遊遺跡の冒険",
+          "mood": [
+            "幻想",
+            "神秘"
+          ],
+          "player_should_feel": "重力から解き放たれた古代の遺跡を歩く",
+          "notes": "宙に浮かぶ結晶と岩が遺跡の象徴。風化した柱や岩は地面に半分埋もれている"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Rock",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Pillar_Broken",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "C",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "GP_Chest_Treasure",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crystal_Floating",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Barrel",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "ruins_floating_C_GP_Chest_Treasure",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "宝箱が埋まる理由は Brief に無い(取れなくなる)",
+      "vars": {
+        "ref": "C",
+        "kind": "BURIED"
+      },
+      "context": {
+        "brief": {
+          "title": "Skyward Ruins",
+          "genre": "幻想的な浮遊遺跡の冒険",
+          "mood": [
+            "幻想",
+            "神秘"
+          ],
+          "player_should_feel": "重力から解き放たれた古代の遺跡を歩く",
+          "notes": "宙に浮かぶ結晶と岩が遺跡の象徴。風化した柱や岩は地面に半分埋もれている"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Rock",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Pillar_Broken",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "C",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "GP_Chest_Treasure",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crystal_Floating",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Barrel",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "ruins_dig_C_GP_Chest_Treasure",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "埋もれた宝箱を掘り出すのが目的",
+      "vars": {
+        "ref": "C",
+        "kind": "BURIED"
+      },
+      "context": {
+        "brief": {
+          "title": "Excavation",
+          "genre": "写実的な発掘現場",
+          "mood": [
+            "土埃",
+            "静か"
+          ],
+          "player_should_feel": "埋もれた宝箱を自分の手で掘り出す",
+          "notes": "宝箱は土に深く埋まっていて、掘り出すのが目的",
+          "avoid": [
+            "物が宙に浮く"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Rock",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Pillar_Broken",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "C",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "GP_Chest_Treasure",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crystal_Floating",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Barrel",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "ruins_floating_D_ENV_Crystal_Floating",
+      "expect": true,
+      "labelSource": "claude-draft",
+      "note": "宙に浮かぶ結晶が遺跡の象徴",
+      "vars": {
+        "ref": "D",
+        "kind": "FLOATING"
+      },
+      "context": {
+        "brief": {
+          "title": "Skyward Ruins",
+          "genre": "幻想的な浮遊遺跡の冒険",
+          "mood": [
+            "幻想",
+            "神秘"
+          ],
+          "player_should_feel": "重力から解き放たれた古代の遺跡を歩く",
+          "notes": "宙に浮かぶ結晶と岩が遺跡の象徴。風化した柱や岩は地面に半分埋もれている"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Rock",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Pillar_Broken",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "C",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "GP_Chest_Treasure",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crystal_Floating",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Barrel",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "ruins_dig_D_ENV_Crystal_Floating",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "写実的な発掘現場。avoid に物が宙に浮く",
+      "vars": {
+        "ref": "D",
+        "kind": "FLOATING"
+      },
+      "context": {
+        "brief": {
+          "title": "Excavation",
+          "genre": "写実的な発掘現場",
+          "mood": [
+            "土埃",
+            "静か"
+          ],
+          "player_should_feel": "埋もれた宝箱を自分の手で掘り出す",
+          "notes": "宝箱は土に深く埋まっていて、掘り出すのが目的",
+          "avoid": [
+            "物が宙に浮く"
+          ]
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Rock",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Pillar_Broken",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "C",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "GP_Chest_Treasure",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crystal_Floating",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Barrel",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "ruins_floating_E_ENV_Barrel",
+      "expect": false,
+      "labelSource": "claude-draft",
+      "note": "樽が浮く理由は無い(浮くのは結晶と岩)",
+      "vars": {
+        "ref": "E",
+        "kind": "FLOATING"
+      },
+      "context": {
+        "brief": {
+          "title": "Skyward Ruins",
+          "genre": "幻想的な浮遊遺跡の冒険",
+          "mood": [
+            "幻想",
+            "神秘"
+          ],
+          "player_should_feel": "重力から解き放たれた古代の遺跡を歩く",
+          "notes": "宙に浮かぶ結晶と岩が遺跡の象徴。風化した柱や岩は地面に半分埋もれている"
+        },
+        "facts": {
+          "layout": {
+            "issues": [
+              {
+                "ref": "A",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Rock",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "B",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "ENV_Pillar_Broken",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人より大きい(家具や壁くらい)",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "C",
+                "kind": "BURIED",
+                "what": "床や地面に沈み込んでいる",
+                "object": "GP_Chest_Treasure",
+                "group": "GAMEPLAY(プレイヤー・敵・アイテム・仕掛け)",
+                "size": "小物",
+                "degree": "半分以上埋まっている"
+              },
+              {
+                "ref": "D",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Crystal_Floating",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "人の背丈くらい",
+                "degree": "はるか上に浮いている"
+              },
+              {
+                "ref": "E",
+                "kind": "FLOATING",
+                "what": "真下の面から浮いている",
+                "object": "ENV_Barrel",
+                "group": "ENV(背景・装飾。当たり判定が要らない見せ物)",
+                "size": "小物",
+                "degree": "自分の高さより低く浮いている"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "ui.brief_fit",
+  "version": 1,
+  "type": "score",
+  "instructions": {
+    "what": "Rate how well the current in-game UI screen serves the creator's intent. state.brief is the creative brief (genre, mood, what the player should feel, things to avoid, and any direction for the UI). state.facts.ui describes the screen in words: which screen it is, how many buttons and texts, the words shown on screen, where elements sit, how many font sizes and surface colors are used, how much decoration, animated shine and text effects there are, and what a generic UI lint flagged. The lint assumes one restrained, tidy house style, so its flags may not apply to this brief.",
+    "not_for": "Do not rate technical tidiness or completeness on its own. A loud, glittering, crowded screen can fit perfectly when the brief asks for it, and a clean, quiet, centered screen can be a total miss. Judge only the match between the screen's style and the brief."
+  },
+  "criteria": [
+    {
+      "summary": "Contradicts the brief",
+      "signals": [
+        "the screen's style produces the opposite of the intended mood",
+        "things the brief says to avoid dominate the screen"
+      ]
+    },
+    {
+      "summary": "Mostly off",
+      "signals": [
+        "a competent screen, but its style belongs to a different kind of game than the brief",
+        "something the brief says to avoid is clearly present"
+      ]
+    },
+    {
+      "summary": "Neutral or generic",
+      "signals": [
+        "a default-looking screen with no style of its own, neither helping nor hurting the brief"
+      ]
+    },
+    {
+      "summary": "Mostly fits",
+      "signals": [
+        "the overall style matches the brief, with one or two clear mismatches"
+      ]
+    },
+    {
+      "summary": "Strongly fits",
+      "signals": [
+        "layout, type, color and decoration all serve the intended feeling",
+        "nothing the brief says to avoid is present",
+        "any remaining lint flags are minor or intended by the brief"
+      ]
+    }
+  ],
+  "state": [
+    "brief",
+    "facts.ui"
+  ],
+  "threshold": {
+    "pass": 2.64,
+    "minConfidence": 0.5,
+    "band": 0.5
+  },
+  "notes": "0..4 の 5 段。decided は pass 以上で pass。look.brief_fit と同じ組み立て(段の番号より合否を使う)。 2026-09-25 実測(ケース 14 件・Brief 6 種、claude-draft、3 回): 段の正解率 0.571(3 回とも)・平均絶対誤差 0.43〜0.44。外れは全部「だいたい外れ(1)」を 0 付近に付ける癖(T1_persona / T4_gacha / T1_gacha など)で、合否は 14/14(3 回とも)。合否 margin 0.79 / 0.99 / 0.89、合わせた境界は合格群の最小 3.03 / 不合格群の最大 2.25 → pass 2.64(中点)。 和集合 state(品質ゲートの bundle:\"one\" と同じく他の検査の事実も入った state)でも測った: 合否 13/14・合否 margin 0.26(合格群の最小 1.83 / 不合格群の最大 1.57)と大きく劣化し、分布も下へずれた(UI の絵の話に、関係ないシーンの絵の事実が混ざると低く付ける)。→ 品質ゲートの既定は検査ごとの state(bundle:\"perDomain\")。",
+  "cases": "ui.brief_fit.cases.json"
+}

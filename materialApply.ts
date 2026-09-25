@@ -8,7 +8,8 @@
 //   「ディレクトリを渡す → 中のファイル名から用途を推定 → まとめて割り当てる」までをやる。
 //
 // ★エンジン側の事実（src/core/Application.cpp を読んで確認した分）
-//   - set_texture の slot は albedo / normal / metalRoughness の 3 つだけ
+//   - set_texture の slot は albedo / normal / metalRoughness / emissive の 4 つ
+//     (このツールが貼るのは前 3 つ。emissive は dx12_set_texture + dx12_set_pbr で個別に)
 //     (Application.cpp:5521-5524)。height(disp) を割り当てる先はメッシュには無い。
 //   - 描画側の PBR flags は
 //       flags |= 1u … 法線マップ有り / flags |= 2u … metalRoughness テクスチャ有り
@@ -200,7 +201,7 @@ export function resolveTextureSet(input: {
 
 /** height はメッシュに割り当てるスロットが無い。理由を付けて ignored へ回すための定数。 */
 export const HEIGHT_UNSUPPORTED_REASON =
-  "メッシュに高さ/変位テクスチャのスロットが無い(dx12_set_texture の slot は albedo/normal/metalRoughness だけ)。"
+  "メッシュに高さ/変位テクスチャのスロットが無い(dx12_set_texture の slot は albedo/normal/metalRoughness/emissive だけ)。"
   + "変位を使えるのは地形の .terrainlayers(docs/AUTHORING.md §10.5.1)のみ";
 
 export type PbrPlan = {

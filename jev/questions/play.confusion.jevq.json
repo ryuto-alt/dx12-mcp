@@ -1,0 +1,57 @@
+{
+  "id": "play.confusion",
+  "version": 2,
+  "type": "score",
+  "instructions": {
+    "what": "Rate how much unintended confusion or frustration this play session shows. state.brief is the creator's intent (genre, mood, what the player should feel, things to avoid). state.facts.play describes one session in words, section by section: how much of the time the player stood still, how much they kept pushing forward without moving, how often they came back to places they had already left, falls, being sent back to a checkpoint after a fall or without one, how much they swung the camera around while standing still, repeated jumps in one spot, whether they got closer to the goal and how far it still was, and whether they reached it. Judge the player's state against what the brief intends: slow, careful movement with pauses and looking around can be exactly the intended experience in a horror or exploration game, but when the brief wants fast, rhythmic or smooth play, long pauses with looking around are unintended hesitation. Getting a little lost can be intended in a maze. Being sent back to a checkpoint again and again, with or without a fall, is frustration unless the brief calls for it, and repeated failed jumps are intended only when the brief asks for hard platforming.",
+    "not_for": "Do not rate the game's difficulty or the player's skill in general. Do not count behavior the brief calls for as confusion. Judge only the sections described; the player field says whether a human played."
+  },
+  "criteria": [
+    {
+      "summary": "No unintended trouble",
+      "signals": [
+        "the session flows as the brief intends",
+        "any pauses, looking around or failures are what the brief calls for"
+      ]
+    },
+    {
+      "summary": "Minor hesitation",
+      "signals": [
+        "a short pause or one small detour, then steady progress"
+      ]
+    },
+    {
+      "summary": "Clear confusion or frustration in one section",
+      "signals": [
+        "one section with long standing still, backtracking, repeated falls or pushing without moving that the brief does not intend"
+      ]
+    },
+    {
+      "summary": "Strong confusion or frustration",
+      "signals": [
+        "several sections of unintended trouble",
+        "little progress toward the goal"
+      ]
+    },
+    {
+      "summary": "Stuck or giving up",
+      "signals": [
+        "no progress for most of the session",
+        "the same failure again and again",
+        "the goal is never reached"
+      ]
+    }
+  ],
+  "state": [
+    "brief",
+    "facts.play"
+  ],
+  "threshold": {
+    "pass": 1.09,
+    "minConfidence": 0.5,
+    "band": 0.2
+  },
+  "fallback": "play.confusionRules",
+  "notes": "0..4 の 5 段(0 = 困っていない)。★この質問では threshold.pass が「困っている線」: 値がこれ以上なら troubled。人のプレイだけ聞く(機械の軌跡は迷わないので聞かない)。 2026-09-25 実測(ケース 13 件・Brief 4 種、claude-draft): v1 は段の正解率 0.615・合否(線 2)0.769・合否 margin -0.36(困っている群の最小 0.58 / 困っていない群の最大 0.94)。外れは「軽快なアクションで止まって見回す」(0.58)と「落ちずに何度も戻される」(1.36)を低く付けたこと。v2 で「Brief が速さ・リズムを求めるなら長い停止と見回しは意図しない迷い」「落下の有無に関係なく何度も戻されるのは苛立ち」を足した → 合否 margin +0.23 / +0.34 / +0.23、合わせた境界は困っている群の最小 1.19 / 困っていない群の最大 0.98 → 困っている線 1.09(中点)で合否 13/13。段の正解率は 0.46(3 回とも)に下がったが、外れは全部「低めに付ける」方向(強い困り 3〜4 を 1.2〜3.5)。判断段が使うのは合否だけ。band は margin(0.21)に合わせて 0.2(境界のケースは uncertain になる)。ルールだけ(印の数)なら段 0.385。 和集合 state(品質ゲートの bundle:\"one\" と同じく他の検査の事実も入った state)でも測った: 合否 margin +0.12(1.38 / 1.26)に縮み、分布が上へずれて線 1.09 だと困っていない群を 1 件取り違える。→ 品質ゲートの既定は検査ごとの state。",
+  "cases": "play.confusion.cases.json"
+}

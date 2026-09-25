@@ -49,6 +49,22 @@ function hasVisibleRect(n: any): boolean {
 // 使用色を近似グループ化した測定値。issue ではなく常に metrics として返す。
 export type ColorGroup = { color: number[]; count: number; examples: string[] };
 
+/**
+ * issue の一覧 → score / grade / pass。auditUiTree と判断段(jev/uiJudge.ts が「意図どおり」と判断した
+ * 指摘を除いて数え直す)の両方がここを通る。式を 2 か所に書くと片方だけ直す事故が起きるため。
+ */
+export function scoreUiIssues(issues: Pick<UiIssue, "severity">[], strictness: "balanced" | "strict" = "balanced") {
+  const errors = issues.filter(i => i.severity === "error").length;
+  const warnings = issues.filter(i => i.severity === "warning").length;
+  const suggestions = issues.filter(i => i.severity === "suggestion").length;
+  const score = Math.max(0, 100 - errors * 12 - warnings * 5 - suggestions * 2);
+  return {
+    errors, warnings, suggestions, score,
+    grade: score >= 90 ? "A" : score >= 80 ? "B" : score >= 65 ? "C" : score >= 50 ? "D" : "F",
+    pass: errors === 0 && (strictness !== "strict" || warnings === 0),
+  };
+}
+
 export function auditUiTree(tree: any, strictness: "balanced" | "strict" = "balanced") {
   const all = flatten(tree);
   const issues: UiIssue[] = [];
@@ -198,13 +214,9 @@ export function auditUiTree(tree: any, strictness: "balanced" | "strict" = "bala
   const colorGroups: ColorGroup[] = [...groupMap.values()].sort((a, b) => b.count - a.count)
     .map(g => ({ color: g.sum.map(v => Math.round(v / g.count * 1000) / 1000), count: g.count, examples: g.examples }));
 
-  const errors = issues.filter(i => i.severity === "error").length;
-  const warnings = issues.filter(i => i.severity === "warning").length;
-  const suggestions = issues.filter(i => i.severity === "suggestion").length;
-  const score = Math.max(0, 100 - errors * 12 - warnings * 5 - suggestions * 2);
+  const { errors, warnings, suggestions, score, grade, pass } = scoreUiIssues(issues, strictness);
   return {
-    pass: errors === 0 && (strictness !== "strict" || warnings === 0), score,
-    grade: score >= 90 ? "A" : score >= 80 ? "B" : score >= 65 ? "C" : score >= 50 ? "D" : "F",
+    pass, score, grade,
     summary: { canvases: tree?.canvases?.length ?? 0, nodes: all.length, errors, warnings, suggestions },
     issues,
     // 測定値サマリ。issue にならなくても常に返す(AIっぽさの定量把握用)。

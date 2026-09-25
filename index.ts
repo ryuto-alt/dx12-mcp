@@ -54,13 +54,30 @@ import {
   SEQUENCE_EXAMPLE, generateLua, referencedEntities, referencedVfx, validateSpec,
   type SequenceSpec,
 } from "./sequence.ts";
-import {
-  auditScene, imageFacts, polishScore, verdict,
-  lightFactsFrom, entityHasNormalMap, entityHasDefaultPbr, type SceneFacts,
-} from "./polish.ts";
+import { auditScene, polishScore, verdict } from "./polish.ts";
 import {
   DECAL_IDS, buildAtlasPng, describeDecals, findDecal, planDecal,
 } from "./decals.ts";
+import { collectSceneFacts } from "./polishCollect.ts";
+import { planBatchTransaction } from "./batchTx.ts";
+import { perceptionFacts } from "./perceive.ts";
+import { JEV_ENDPOINT, JEV_MODEL, hasApiKey } from "./jev/client.ts";
+import {
+  ask as jevAsk, askRaw as jevAskRaw, countCache as jevCountCache, jevDir, loadLibrary as loadJevLibrary,
+  summarizeLog as jevSummarizeLog, type CacheMode as JevCacheMode, type QuestionRef as JevQuestionRef,
+} from "./jev/library.ts";
+import { runEval as jevRunEval, runEvalAll as jevRunEvalAll, summarize as jevSummarize } from "./jev/eval.ts";
+import {
+  BRIEF_EXAMPLE, isBriefEmpty, mergeBrief, readBrief, validateBrief, writeBrief,
+} from "./jev/brief.ts";
+import { judgePolish, wordifyLook } from "./jev/polishJudge.ts";
+import { UI_SCREENS, judgeUi } from "./jev/uiJudge.ts";
+import { collectLayoutContext, judgeLayout } from "./jev/layoutJudge.ts";
+import { JEV_RULES } from "./jev/rules.ts";
+import { GATE_CHECKS, runQualityGate } from "./jev/qualityGate.ts";
+import {
+  eventsFromSteps, fromSession, judgePlay, pointsFromTrace, type PlayInput, type Vec3 as PlayVec3,
+} from "./jev/playJudge.ts";
 
 // DX12 ゲームエンジン用 MCP サーバ。Codex / Claude Code から接続し、
 // 起動中のエディタ(TCP 127.0.0.1:<port>)を叩いてゲームを作っていくための入口。
@@ -393,13 +410,36 @@ reg(
   ({ genre, screen, tone }) => run(async () => designBrief(genre, screen, tone)),
 );
 
-reg(
+regRaw(
   "dx12_ui_audit",
-  "ゲームUI品質監査",
-  "現在のui_treeを自動解析し、崩れ・入力遮断・小さな操作領域・文字切れ・文字あふれ・rich/wrap競合・操作要素の重なり・過装飾・色の散乱を検出する。score/grade/passと、entityId付きの修正案を返す。★UI生成後は必ずstrictでpassさせ、その後ui_screenshotで美的判断を行う。数値監査だけで完成扱いにしない。",
-  { strictness: z.enum(["balanced", "strict"]).optional().describe("strictはwarningが1件でもpass=false。最終検証ではstrict推奨。") },
-  { readOnlyHint: true },
-  ({ strictness }) => run(async () => auditUiTree(await engine.call("ui_tree", {}), strictness ?? "balanced")),
+  {
+    title: "ゲームUI品質監査",
+    description:
+      "現在のui_treeを自動解析し、崩れ・入力遮断・小さな操作領域・文字切れ・文字あふれ・rich/wrap競合・操作要素の重なり・過装飾・色の散乱を検出する。score/grade/passと、entityId付きの修正案を返す。★UI生成後は必ずstrictでpassさせ、その後ui_screenshotで美的判断を行う。数値監査だけで完成扱いにしない。"
+      + "★judge は判断段: 好みのルール(CENTERED_MONOTONY / FONT_SIZE_SPRAWL / PALETTE_SPRAWL / OVER_DECORATED / BUSY_GLOSS / EFFECT_STACKING / OUT_OF_CANVAS)を"
+      + "作品の意図(dx12_brief)と一緒に Jev へ 1 往復で聞き、{source, briefFit(0..4), findings:[{code, intended, keep}], uncertain[], passExcludingKept, scoreExcludingKept, notAsked} を返す。"
+      + "keep:true は Brief に照らすと意図どおり＝直さない(ガチャ画面の光沢など)。押せない・読めない・崩れている系は聞かずにルールのまま(notAsked)。"
+      + "uncertain は dx12_ui_screenshot で自分の目で見て決める。Brief / 鍵が無いときは judge.source:\"rules\"(全部直す＝従来どおり)。judge:false で止める。",
+    inputSchema: {
+      strictness: z.enum(["balanced", "strict"]).optional().describe("strictはwarningが1件でもpass=false。最終検証ではstrict推奨。"),
+      screen: z.enum(UI_SCREENS).optional().describe("画面の役割(title/hud/inventory/settings/result/dialog/other)。判断段に「何の画面か」として渡す。"),
+      judge: z.boolean().optional().describe("false で判断段(Jev に Brief と照らして聞く段)を止め、ルールの結果だけ返す。既定 true。"),
+    },
+    outputSchema: OUT,
+    // 判断段は外部の Jev へ出る(鍵があるときだけ)ので openWorldHint は true。
+    annotations: { title: "ゲームUI品質監査", readOnlyHint: true, openWorldHint: true },
+  },
+  ({ strictness, screen, judge }) => run(async () => {
+    const tree = await engine.call("ui_tree", {});
+    const audit = auditUiTree(tree, strictness ?? "balanced");
+    if (judge === false) return audit;
+    // ★既存の pass / score / grade / issues / metrics は一切変えない(後方互換)。判断は judge にだけ足す。
+    const baseDir = await jevProjectBaseDir();
+    const brief = baseDir ? readBrief(baseDir).brief : null;
+    const judged = await judgeUi({ brief, tree, audit, strictness, screen, askOptions: { baseDir } })
+      .catch((e: any) => ({ source: "rules", reason: `判断段で想定外の失敗: ${e?.message ?? e}` }));
+    return { ...audit, judge: judged };
+  }),
 );
 
 reg(
@@ -596,9 +636,13 @@ reg(
 reg(
   "dx12_set_pbr",
   "PBR マテリアル設定",
-  "エンティティの PBR パラメータ(metallic/roughness/UV スケール/透明)を設定する。指定分のみ更新。"
-  + "即時反映で {entityId, metallic, roughness, uvScaleU, uvScaleV, alphaMode, alphaCutoff, opacity} を返す。"
-  + "透明は alphaMode(auto/opaque/mask/blend) + alphaCutoff + opacity。mask は影も同じ形に抜ける。",
+  "エンティティの PBR パラメータ(metallic/roughness/UV スケール/透明/自己発光)を設定する。指定分のみ更新。"
+  + "即時反映で {entityId, metallic, roughness, uvScaleU, uvScaleV, alphaMode, alphaCutoff, opacity, "
+  + "emissiveIntensity, emissiveColor} を返す。"
+  + "透明は alphaMode(auto/opaque/mask/blend) + alphaCutoff + opacity。mask は影も同じ形に抜ける。"
+  + "★自己発光(emissive)は emissiveIntensity を上げるだけで光る(色を省くと白)。ライティングも影も "
+  + "通さず最終色へ加算するので、1 を超えるとブルームが乗る。天井照明パネル・看板・非常口サイン向け。"
+  + "テクスチャで発光形状を指定したいときは dx12_set_texture の slot:\"emissive\" と併用する。",
   {
     ...entityRef,
     metallic: z.number().optional().describe("金属度 0..1"),
@@ -621,9 +665,22 @@ reg(
       .number()
       .optional()
       .describe("不透明度 0..1。1 未満なら alphaMode を省いても半透明になる(ガラス・水面)"),
+    emissiveIntensity: z
+      .number()
+      .optional()
+      .describe(
+        "自己発光の強さ 0..64(0=消灯、負=マテリアルに従う)。1 を超えるとブルームが乗る。" +
+          "目安: 看板 2..5 / 天井照明パネル 4..10 / 非常口サイン 3..6",
+      ),
+    emissiveColor: z
+      .array(z.number())
+      .length(3)
+      .optional()
+      .describe("自己発光の色 [r,g,b](0..1、リニア)。省略して強度だけ指定すると白になる"),
   },
   { idempotentHint: true },
-  ({ entity, name, metallic, roughness, uvScaleU, uvScaleV, alphaMode, alphaCutoff, opacity }) =>
+  ({ entity, name, metallic, roughness, uvScaleU, uvScaleV, alphaMode, alphaCutoff, opacity,
+     emissiveIntensity, emissiveColor }) =>
     run(() =>
       engine.call("set_pbr", {
         entity,
@@ -635,6 +692,8 @@ reg(
         alphaMode,
         alphaCutoff,
         opacity,
+        emissiveIntensity,
+        emissiveColor,
       }),
     ),
 );
@@ -740,28 +799,83 @@ reg(
   }),
 );
 
+// ── Undo / Redo / トランザクション(エンジンは ebd7b32 から MCP の編集を Undo に積む) ──
+// ★MCP の書き込みは 1 呼び出し = 1 エントリ「AI: <method>」として積まれ、応答に undoEntry が載る。
+//   まとまった編集は dx12_transaction_begin 〜 commit で 1 エントリにまとめ、失敗したら rollback で丸ごと戻す。
+// ★undo / redo の onlyAi は既定 true: 一番上が人の編集なら戻さずに MODE_CONFLICT(3)+ ヒントを返す。
+//   AI が undo を呼ぶのはほぼ「自分の直前の変更を取り消したい」ときで、人の作業を黙って消すと
+//   人には理由が分からない(画面の外で AI がやったこと)。人の編集ごと戻すときだけ onlyAi:false を明示する。
+
 reg(
   "dx12_undo",
   "Undo",
-  "エディタの Undo スタックを 1 つ戻す。フレーム境界で適用され {queuedUndo, undoable, willUndo} を返す。" +
-    "★Undo に積まれる MCP 編集は dx12_group_entities / dx12_spawn_prefab / 地形とスカルプトの編集" +
-    "(dx12_terrain_generate・dx12_terrain_sculpt・dx12_terrain_erode・dx12_terrain_paint・" +
-    "dx12_terrain_autopaint・dx12_sculpt_brush)だけ。" +
-    "set_transform / set_component 等は積まれないので、それらを取り消すつもりで呼ぶと" +
-    "スタックの一番上にある別の操作(エディタでの編集や entity 生成)が戻る。戻す前に willUndo を見て、" +
-    "自分の操作でなければ呼ばないこと。MCP の変更を戻したいなら反対の値を set し直す。",
+  "エディタの Undo スタックを 1 つ戻す(フレーム境界で適用される遅延応答)。"
+    + "返り値 {undone, wasAi, onlyAi, undoable, willUndo, next:{undo, redo}}(互換で queuedUndo も残る)。スタックが空なら ok で undoable:false。"
+    + "★MCP の編集は 1 呼び出し = 1 エントリ「AI: <method>」として積まれる(トランザクション中は「AI: <label>」の 1 エントリ)ので、"
+    + "直前の自分の変更はそのまま undo で戻せる。"
+    + "★onlyAi は既定 true: 一番上が人の編集なら戻さずに MODE_CONFLICT(3)+ ヒントを返す(人の作業を黙って消さない)。"
+    + "人の編集ごと戻すときだけ onlyAi:false を明示すること。既定を信じて、MODE_CONFLICT が返ったら人に確かめる。"
+    + "トランザクションが開いている / Play 中も MODE_CONFLICT(開いているなら rollback か commit で閉じてから)。",
+  { onlyAi: z.boolean().optional().describe("true(既定)= 一番上が AI の編集のときだけ戻す / false = 人の編集でも戻す。") },
   {},
-  {},
-  () => run(() => engine.call("undo", {})),
+  ({ onlyAi }) => run(() => engine.call("undo", definedOnly({ onlyAi }))),
 );
 
 reg(
   "dx12_redo",
   "Redo",
-  "取り消した操作をやり直す。フレーム境界で適用され {queuedRedo, redoable, willRedo} を返す。",
+  "取り消した操作をやり直す(遅延応答)。返り値 {redone, wasAi, onlyAi, redoable, willRedo, next:{undo, redo}}(互換で queuedRedo も残る)。"
+    + "onlyAi は既定 true(一番上が人の操作なら MODE_CONFLICT)。トランザクションが開いている / Play 中は MODE_CONFLICT。",
+  { onlyAi: z.boolean().optional().describe("true(既定)= AI の操作だけやり直す / false = 人の操作でもやり直す。") },
+  {},
+  ({ onlyAi }) => run(() => engine.call("redo", definedOnly({ onlyAi }))),
+);
+
+reg(
+  "dx12_transaction_begin",
+  "トランザクション開始",
+  "以降の MCP の編集(生成・削除・複製・Transform・コンポーネント・親子・名前・色/PBR/テクスチャ・Lua プロパティ・地形/スカルプト)を"
+    + " 1 つの Undo エントリ「AI: <label>」へまとめ始める。返り値 {open, label, entryName, undoDepth, idleTimeoutSec}。"
+    + "★まとまった編集(部屋を 1 つ組む・レベルの一区画を直す)は begin 〜 commit で囲む。途中で失敗したら dx12_transaction_rollback で"
+    + " begin 前へ丸ごと戻せる。入れ子は不可・Play 中は不可(MODE_CONFLICT)。開いている間の MCP の play / open_scene / new_scene / open_project は断られる。"
+    + "人の Play・シーン切り替え・Ctrl+Z、または 600 秒放置で「確定扱い」に自動で閉じる(理由は dx12_transaction_status の lastClosed)。"
+    + "dx12_batch は既定(atomic:true)でこれを自動で撃つ。",
+  { label: z.string().optional().describe("Undo 履歴に出る名前(「AI: <label>」)。省略で transaction。") },
+  {},
+  ({ label }) => run(() => engine.call("transaction_begin", definedOnly({ label }))),
+);
+
+reg(
+  "dx12_transaction_commit",
+  "トランザクション確定",
+  "begin 以降の MCP の編集を 1 エントリとして Undo に積んで閉じる(遅延応答)。"
+    + "返り値 {committed, label, calls, pushed, entryName, humanEditsDuringTransaction, top}。以後 dx12_undo 1 回で丸ごと戻せる。"
+    + "★応答が返る前に次の書き込みを送ると MODE_CONFLICT(内外どちらか決められないため)。開いていなければ MODE_CONFLICT + 直前に閉じた理由。",
   {},
   {},
-  () => run(() => engine.call("redo", {})),
+  () => run(() => engine.call("transaction_commit", {})),
+);
+
+reg(
+  "dx12_transaction_rollback",
+  "トランザクション巻き戻し",
+  "begin 以降の MCP の編集を全部逆順に戻して閉じる(遅延応答。消した物も guid ごと復元される)。"
+    + "返り値 {rolledBack, label, calls, humanEditsDuringTransaction, top, sceneGeneration}。"
+    + "★途中で人が編集していたら humanEditsDuringTransaction に数が出る(人の編集は戻さない)。Play 中は不可。",
+  {},
+  { destructiveHint: true },
+  () => run(() => engine.call("transaction_rollback", {})),
+);
+
+reg(
+  "dx12_transaction_status",
+  "トランザクションの状態",
+  "開いているか・中身・放置時間・直前に閉じた理由を返す。"
+    + "{open, label?, calls?, callNames?, ageSec?, idleSec?, autoCloseInSec?, humanEditsDuringTransaction?, closePending, lastClosed:{label, reason, calls, agoSec}|null, top:{undo, redo}, undoDepth, redoDepth, mode}。"
+    + "commit / rollback が「開いていない」で弾かれたら、lastClosed.reason(commit / rollback / 人の操作 / 放置)を見る。",
+  {},
+  { readOnlyHint: true },
+  () => run(() => engine.call("transaction_status", {})),
 );
 
 reg(
@@ -1080,16 +1194,54 @@ reg(
   () => run(() => engine.call("stop", {})),
 );
 
-reg(
+// ── プレイテストの判断段(jev/playJudge.ts)──────────────────────────
+// ★到達判定・リプレイ比較の合否はルールのまま。Jev は「なぜ・どれくらい困っているか」の説明だけ。
+//   judge を返すのは get_play_session / record_playtest(人のプレイ: 困り度 + 原因)と
+//   autoplay / run_playtests(機械の軌跡: 原因だけ。機械は迷わないので困り度は聞かない)。
+
+/** 目標の座標(goal をそのまま / goalName は子を含む AABB の中心)。分からなければ null。 */
+async function goalPosition(goal?: number[], goalName?: string): Promise<PlayVec3 | null> {
+  if (Array.isArray(goal) && goal.length >= 3) return [goal[0], goal[1], goal[2]];
+  if (!goalName) return null;
+  const b = await engine.call("get_bounds", { name: goalName, includeChildren: true }).catch(() => null) as any;
+  return Array.isArray(b?.center) ? [b.center[0], b.center[1], b.center[2]] : null;
+}
+
+/** プレイの判断段(Brief を読んで 1 往復)。例外は投げない。 */
+async function judgePlayFor(input: PlayInput): Promise<unknown> {
+  const baseDir = await jevProjectBaseDir();
+  const brief = baseDir ? readBrief(baseDir).brief : null;
+  return judgePlay({ ...input, brief, askOptions: { baseDir } })
+    .catch((e: any) => ({ source: "rules", reason: `判断段で想定外の失敗: ${e?.message ?? e}` }));
+}
+
+regRaw(
   "dx12_get_play_session",
-  "人間のプレイ記録を取る",
-  "直近の Play 1 回ぶんの記録を返す。★dx12_play を押した時点で自動的に記録が始まる(開始ツールは無い)。Stop 後も次の Play まで残るので、人間に遊んでもらってから取りに来ればよい。返る形: {started, recording, durationSec, frames, fpsMin, summary:{errors,warnings,inputEvents,...}, events:[{t,kind,detail}], samples:[{t,fps,camPos,camYaw,camPitch,mouse}]}。kind は key_down/key_up/pad_down/pad_up(操作) と error/warn/lua(ログ)。detail のキー名は dx12_key_press にそのまま渡せる。samples は 10Hz。★挙動のデバッグは AI が合成入力で動かすより、人間に遊ばせてこれを読む方が正確。",
   {
-    maxEvents: z.number().int().optional().describe("返すイベント数の上限(既定 400、最大 8000)。新しい方から残す。"),
-    maxSamples: z.number().int().optional().describe("返すサンプル数の上限(既定 200、最大 4000)。新しい方から残す。"),
+    title: "人間のプレイ記録を取る",
+    description:
+      "直近の Play 1 回ぶんの記録を返す。★dx12_play を押した時点で自動的に記録が始まる(開始ツールは無い)。Stop 後も次の Play まで残るので、人間に遊んでもらってから取りに来ればよい。返る形: {started, recording, durationSec, frames, fpsMin, summary:{errors,warnings,inputEvents,...}, events:[{t,kind,detail}], samples:[{t,fps,camPos,camYaw,camPitch,mouse}], judge?}。kind は key_down/key_up/pad_down/pad_up(操作) と error/warn/lua(ログ)。detail のキー名は dx12_key_press にそのまま渡せる。samples は 10Hz。★挙動のデバッグは AI が合成入力で動かすより、人間に遊ばせてこれを読む方が正確。"
+      + "★judge は判断段: 区間ごとの事実(止まっていた割合・進もうとして動けない割合・行き来・落下・戻された回数・見回し・その場ジャンプ・ゴールへの進み)を言葉にして"
+      + "作品の意図(dx12_brief)と一緒に Jev へ 1 往復で聞き、{source, confusion:{value(0..4), level, troubled}, cause:{id, label, hint, confidence}, words, uncertain[{id, why, look}], cost} を返す。"
+      + "ホラーの慎重な歩きのように Brief が狙う振る舞いは困りごとに数えない。goal / goalName を渡すとゴールへの進みも数える。judge:false で止める。",
+    inputSchema: {
+      maxEvents: z.number().int().optional().describe("返すイベント数の上限(既定 400、最大 8000)。新しい方から残す。"),
+      maxSamples: z.number().int().optional().describe("返すサンプル数の上限(既定 200、最大 4000)。新しい方から残す。"),
+      goal: v3().optional().describe("判断段用: ゴールの座標(ゴールへの進みと残りの距離を数える)。"),
+      goalName: z.string().optional().describe("判断段用: ゴールのエンティティ名(goal の代わり)。"),
+      judge: z.boolean().optional().describe("false で判断段(Jev に Brief と照らして聞く段)を止める。既定 true。"),
+    },
+    outputSchema: OUT,
+    annotations: { title: "人間のプレイ記録を取る", readOnlyHint: true, openWorldHint: true },
   },
-  { readOnlyHint: true },
-  ({ maxEvents, maxSamples }) => run(() => engine.call("get_play_session", { maxEvents, maxSamples })),
+  ({ maxEvents, maxSamples, goal, goalName, judge }) => run(async () => {
+    const s = await engine.call("get_play_session", { maxEvents, maxSamples });
+    if (judge === false || !s?.started) return s;
+    // ★判断は間引いていない全体で数える(返す本体は従来どおり maxEvents / maxSamples で切ったもの)。
+    const full = (maxEvents ?? 0) >= 8000 && (maxSamples ?? 0) >= 4000
+      ? s : await engine.call("get_play_session", { maxEvents: 8000, maxSamples: 4000 });
+    return { ...s, judge: await judgePlayFor(fromSession(full, await goalPosition(goal, goalName))) };
+  }),
 );
 
 // ── 入力シミュレーション(Playing 中の挙動確認用)─────────────────
@@ -1433,6 +1585,85 @@ reg(
   (a) => run(() => applyAndVerify("set_occlusion", "get_occlusion", a)),
 );
 
+// ★この 4 本は docs/MCP.md に載っていてエンジン側の実装もあるのに、
+//   MCP サーバへ登録されていなかった＝ドキュメントにある機能が 1 度も呼べなかった。
+//   原因はエンジン側が "get_x|set_x" の合体形式で定義されていたこと（引数が get にも
+//   付いてしまいスキーマドリフトテストが落ちるので登録を諦めた形跡がある）。
+//   エンジン側を get/set へ分割したうえでここに登録する。
+reg(
+  "dx12_ui_click",
+  "ゲーム内UIを押す",
+  "ゲーム内 UI（UIButton / UIToggle / UISlider）を合成ポインタで押す。"
+  + "★テストプレイで AI がメニューを操作する口。これが無いと『タイトルから始めて 1 面をクリアする』"
+  + "のような検証が UI に触れず成立しない。"
+  + "★実マウスとまったく同じ経路（レイキャスト → 最前面判定 → 押下キャプチャ → release-inside で確定）"
+  + "へ流し込むので、**前面に別の要素が被っているボタンは押せない**のが正しく再現される"
+  + "（名前で onClick を直接呼ぶ方式ではないため、被りやクリップのバグもちゃんと見つかる）。"
+  + "name / entity を渡すとその要素の中心を押す。x,y（ビューポート基準 0..1）でも押せるので、"
+  + "**何も無い所を押してフォーカスを外す**のにも使える。"
+  + "押す→離す→イベント配送の 3 フレームを回してから返る（遅延同期）。"
+  + "Lua の onClick が走るのは Play 中だけ。結果はゲーム側の状態か dx12_ui_tree で確かめること。",
+  {
+    ...entityRef,
+    x: z.number().optional().describe("ビューポート基準 0..1 の横位置。name/entity の代わりに使う"),
+    y: z.number().optional().describe("ビューポート基準 0..1 の縦位置。name/entity の代わりに使う"),
+    move: z.boolean().optional().describe("true で押さずにカーソルを動かすだけ(ホバーの確認用)。既定 false"),
+  },
+  {},
+  (a) => run(() => engine.call("ui_click", a), 20000),
+);
+
+reg(
+  "dx12_get_render_scale",
+  "内部解像度スケール取得",
+  "内部解像度スケール(レンダー解像度と表示解像度の分離)を返す。"
+  + "{scale, renderResolution{width,height}, displayResolution{width,height}, pending, note}。"
+  + "★dx12_screenshot はレンダー解像度、dx12_screenshot_final は表示解像度で返る。"
+  + "dx12_pick / dx12_project_world_to_screen の座標系もレンダー解像度。",
+  {},
+  { readOnlyHint: true },
+  () => run(() => engine.call("get_render_scale", {})),
+);
+
+reg(
+  "dx12_set_render_scale",
+  "内部解像度スケール変更",
+  "3D シーン系の RT(sceneRT / 深度 / SSAO / コンタクトシャドウ / TAA 履歴・速度 / G-Buffer / "
+  + "SSR・SSGI / ブルーム / DoF / ゴッドレイ / 歪み)だけを scale 倍で確保し、最終パスで表示解像度へ"
+  + "引き伸ばす。**UI / ImGui / エディタのアイコンとギズモは常に表示解像度のまま**＝文字はボケない。"
+  + "GPU 律速のときに一番効く手。settings.json の render_scale に保存される。"
+  + "★変更は**次のフレーム先頭**で反映される(内部で WaitIdle するのでフレーム外でしか作り直せない)ので、"
+  + "直後の返り値の renderResolution はまだ 1 フレーム前の値であり得る(pending:true で分かる)。"
+  + "★反映後は TAA / SSR / SSGI / ボリュメトリックフォグの**時間履歴が全部捨てられる**"
+  + "(座標系が変わるため。持ち越すとゴーストする)。",
+  { scale: z.number().describe("0.25..1.0。1.0 で等倍(既定)。0.7 くらいから効きが分かる") },
+  { idempotentHint: true },
+  (a) => run(() => engine.call("set_render_scale", a)),
+);
+
+reg(
+  "dx12_get_depth_prepass",
+  "深度プリパス単独トグル取得",
+  "深度プリパスの単独強制が ON かを返す。{enabled, note}。",
+  {},
+  { readOnlyHint: true },
+  () => run(() => engine.call("get_depth_prepass", {})),
+);
+
+reg(
+  "dx12_set_depth_prepass",
+  "深度プリパス単独トグル",
+  "深度プリパスを単独で走らせる。通常は SSAO / コンタクトシャドウ / TAA / SSR / SSGI / DXR の"
+  + "どれかが要求したときだけ走る。**そのシーンにオーバードローがどれだけあるか＝"
+  + "オクルージョンカリングの余地**を測るための道具で、ON/OFF で "
+  + "dx12_perf_stats の gpuPassMs.mainScene がどれだけ減るかを見る"
+  + "(gpuPassMs.depthPrepass がプリパスの描画だけ、prepassSsao はそれを含むプリパス一式)。"
+  + "正射 / 2D ビューでは自動的に無効。settings.json の render_depth_prepass に保存される。",
+  { enabled: z.boolean() },
+  { idempotentHint: true },
+  (a) => run(() => applyAndVerify("set_depth_prepass", "get_depth_prepass", a)),
+);
+
 reg(
   "dx12_get_ssr",
   "SSR設定取得",
@@ -1646,9 +1877,11 @@ reg(
   + "\n■ 実際に走ったか: shadowActive(ON でも本当に RT 影パスが走ったフレームか) / tlasReady(TLAS が建っているか)。"
   + "enabled:true なのに shadowActive:false なら supported / tlasReady / カメラ(正射)を疑う。"
   + "\n■ stats(直近フレームの加速構造の実測): instances, blasCount, blasBytes, blasTriangles, tlasBytes, "
-  + "scratchBytes, instanceDescBytes, skippedSkinned, skippedTransparent, droppedOverLimit, bytesPerTriangle。"
+  + "scratchBytes, instanceDescBytes, skippedSkinned, skippedTransparent, droppedOverLimit, "
+  + "tlasReuseFrames, bytesPerTriangle。"
   + "skippedSkinned / skippedTransparent は仕様(スキンドと半透明は TLAS に入らず CSM が担当する)。"
   + "droppedOverLimit > 0 なら maxInstances に引っかかっている。"
+  + "tlasReuseFrames は「前フレームの TLAS をそのまま使い回しているフレーム数」。シーンが動いていない間は毎フレーム増える(= CPU の再構築を省けている)。動く物があるフレームや forceBuildTlas:true では 0 のまま。"
   + "\n■ 加速構造が正しいかの目視は dx12_render_debug の mode:\"rtDiff\"(黒 = ラスタと一致)が本命。",
   {},
   { readOnlyHint: true },
@@ -2353,9 +2586,10 @@ reg(
     jumpKey: z.string().optional().describe("ジャンプキー(既定 SPACE)。"),
     arriveRadius: z.number().optional().describe("到達とみなす距離(既定 1.5m)。"),
     timeoutSec: z.number().optional().describe("打ち切り時間(既定 60 秒ぶんのシミュレーション)。"),
+    judge: z.boolean().optional().describe("false で判断段(届かなかった原因を Jev に聞く段)を止める。既定 true。"),
   },
   { destructiveHint: false },
-  ({ goal, goalName, player, forwardKey, jumpKey, arriveRadius, timeoutSec }) =>
+  ({ goal, goalName, player, forwardKey, jumpKey, arriveRadius, timeoutSec, judge }) =>
     run(async () => {
       const fwd = forwardKey ?? "W";
       const jmp = jumpKey ?? "SPACE";
@@ -2395,7 +2629,9 @@ reg(
       let t = 0;
       let wi = 0;
       let stuckFor = 0;
-      let last = here.pos;
+      // ★last は位置の配列ではなくサンプル(下で last.pos を読む)。以前は here.pos を入れていて、
+      //   最初の 1 歩で last.pos[0] が undefined になり autoplay が必ず例外で落ちていた(e2e で発覚)。
+      let last = here;
       await engine.call("key_down", { key: fwd });
       try {
         while (t < limit && wi < waypoints.length) {
@@ -2416,14 +2652,14 @@ reg(
           trace.push(after);
 
           const moved = Math.hypot(after.pos[0] - last.pos[0], after.pos[2] - last.pos[2]);
-          last = after.pos;
+          last = after;
           if (moved < 0.05) {
             stuckFor += 12 * dt;
             // 段差かもしれないので跳んでみる
             if (stuckFor > 0.4) { await engine.call("key_press", { key: jmp }); }
             if (stuckFor > 3.0) {
               await engine.call("key_up", { key: fwd });
-              return {
+              const stuck = {
                 cleared: false, player: name, goal: target, notes,
                 stuckAt: after.pos, stuckAtWaypoint: wi, waypoints, trace,
                 elapsedSec: Number(t.toFixed(2)),
@@ -2431,6 +2667,9 @@ reg(
                 next: "その座標を dx12_screenshot_from で見る。壁・段差・隙間のどれかが塞いでいる。" +
                       "dx12_check_reachable で区間の登り/隙間も確認できる",
               };
+              // 判断段: なぜ詰まったか(原因だけ。機械は迷わないので困り度は聞かない)
+              if (judge === false) return stuck;
+              return { ...stuck, judge: await judgePlayFor({ kind: "autoplay", points: pointsFromTrace(trace), goal: target, cleared: false }) };
             }
           } else stuckFor = 0;
         }
@@ -2441,7 +2680,7 @@ reg(
       const end = await sampleState(name, t);
       const remain = Math.hypot(end.pos[0] - target[0], end.pos[2] - target[2]);
       const cleared = remain < radius;
-      return {
+      const result = {
         cleared, player: name, goal: target, finalPos: end.pos, notes,
         remainingDistance: Number(remain.toFixed(2)),
         waypointsReached: wi, waypoints: waypoints.length, trace,
@@ -2449,6 +2688,9 @@ reg(
         ...(cleared ? {} : { reason: `打ち切り(${limit}s)までにゴールへ届かなかった`,
                              next: "timeoutSec を伸ばすか、dx12_check_reachable で経路の問題を見る" }),
       };
+      // 判断段は届かなかったときだけ(届いたなら説明することが無い)
+      if (judge === false || cleared) return result;
+      return { ...result, judge: await judgePlayFor({ kind: "autoplay", points: pointsFromTrace(trace), goal: target, cleared }) };
     }),
 );
 
@@ -2527,9 +2769,11 @@ reg(
     endTolerance: z.number().optional().describe("終点のずれの許容(m)。既定 1.0（実測のゆらぎは 0.002m）。"),
     pathTolerance: z.number().optional().describe("経路のずれの許容(m)。既定 2.0。ランダム要素があるゲームは緩める。"),
     note: z.string().optional().describe("何を確かめるテストかのメモ。"),
+    goalName: z.string().optional().describe("判断段用: ゴールのエンティティ名(人のプレイがゴールへ近づいたかを数える)。"),
+    judge: z.boolean().optional().describe("false で判断段(人のプレイの困り度と原因を Jev に聞く段)を止める。既定 true。"),
   },
   { destructiveHint: false },
-  ({ name, endTolerance, pathTolerance, note }) =>
+  ({ name, endTolerance, pathTolerance, note, goalName, judge }) =>
     run(async () => {
       const ping = await engine.call("ping", {});
       const session = await engine.call("get_play_session", { maxEvents: 8000, maxSamples: 4000 });
@@ -2558,7 +2802,11 @@ reg(
       const { dir, file } = await playtestPaths(name);
       await fs.promises.mkdir(dir, { recursive: true });
       await fs.promises.writeFile(file!, JSON.stringify(pt, null, 2), "utf8");
+      // 判断段: 人が遊んだ記録そのもの(再生ではない)がどれくらい困っていたか。保存の成否には関係しない。
+      const judged = judge === false ? undefined
+        : await judgePlayFor(fromSession(session, await goalPosition(undefined, goalName)));
       return {
+        ...(judged !== undefined ? { judge: judged } : {}),
         saved: file, name: safeName(name), scene: pt.scene,
         durationSec: Number(pt.durationSec.toFixed(2)),
         inputs: pt.steps.length, samples: pt.reference.length,
@@ -2574,9 +2822,10 @@ reg(
   "保存済みの .playtest を再生して、記録どおりに動くか確かめる。キー列は記録どおり、向きは記録した yaw をマウス注入の閉ループで追いかける(記録にあるのは 10Hz の角度であって毎フレームのマウス移動量ではないため、移動量の流し直しはできない)。落ちたときは【いつ・どれだけ】ずれたかを返す: 『t=4.20s で経路が 6.10m ずれた』『終点が 8.30m ずれた(記録は [0,1.6,20]、今回は [3,0.1,12])』。ジャンプ力を変えた・コライダーをずらした・Lua を直した、でステージがクリアできなくなったのを機械が拾うための機能。name 省略で全部走らせる。",
   {
     name: z.string().optional().describe("走らせるテスト名。省略で全部。"),
+    judge: z.boolean().optional().describe("false で判断段(落ちたテストの原因を Jev に聞く段)を止める。既定 true。"),
   },
   { destructiveHint: false },
-  ({ name }) =>
+  ({ name, judge }) =>
     run(async () => {
       const { dir } = await playtestPaths();
       let files: string[];
@@ -2590,7 +2839,8 @@ reg(
       }
       if (files.length === 0) throw new Error(`該当する .playtest が無い（${dir}）`);
 
-      const results = [];
+      const results: any[] = [];
+      const judgeLater: { index: number; input: PlayInput }[] = [];
       for (const f of files) {
         const raw = JSON.parse(await fs.promises.readFile(path.join(dir, f), "utf8"));
         const bad = validatePlaytest(raw);
@@ -2599,13 +2849,21 @@ reg(
           continue;
         }
         const pt = raw as PlaytestFile;
-        const { verdict } = await replayPlaytest(pt);
+        const { verdict, trace } = await replayPlaytest(pt);
         results.push({
           name: pt.name, scene: pt.scene, pass: verdict.pass,
           endDistance: verdict.endDistance, maxDeviation: verdict.maxDeviation,
           maxDeviationAt: verdict.maxDeviationAt, reasons: verdict.reasons,
         });
+        // 落ちたものだけ、なぜ落ちたか(原因)を後でまとめて聞く(再生はエンジンを占有するので先に全部回す)
+        if (!verdict.pass && judge !== false) {
+          judgeLater.push({ index: results.length - 1, input: {
+            kind: "replay", points: pointsFromTrace(trace), events: eventsFromSteps(pt.steps as any), deviation: verdict,
+          } });
+        }
       }
+      const judged = await Promise.all(judgeLater.map((j) => judgePlayFor(j.input)));
+      judgeLater.forEach((j, i) => { results[j.index].judge = judged[i]; });
       const failed = results.filter((r) => !r.pass);
       return {
         ran: results.length, passed: results.length - failed.length, failed: failed.length,
@@ -2961,16 +3219,45 @@ reg(
     }),
 );
 
-reg(
+/**
+ * 配置検査の結果に判断段を足す(dx12_validate_layout と dx12_quality_gate の両方から使う)。
+ * 聞く種類の指摘が無ければ Jev にも get_bounds にも出ない。例外は投げない。
+ */
+async function judgeLayoutReport(report: any, askOptions: { baseDir?: string | null } = {}) {
+  const baseDir = askOptions.baseDir !== undefined ? askOptions.baseDir : await jevProjectBaseDir();
+  const brief = baseDir ? readBrief(baseDir).brief : null;
+  const ctx = await collectLayoutContext((m, p) => engine.call(m, p), report?.issues ?? []);
+  return judgeLayout({ brief, report: report ?? {}, ctx, askOptions: { baseDir } });
+}
+
+regRaw(
   "dx12_validate_layout",
-  "配置検査",
-  "置いた物の【見れば分かるが AI は見ない】破綻を数値で拾う。埋まり(BURIED)/浮き(FLOATING)/同一平面の重なり=ちらつき(Z_FIGHT)/深いめり込み(OVERLAP)/二重配置(DUPLICATE)/当たり判定の欠落(NO_COLLIDER・COLLIDER_WITHOUT_BODY)/スケール異常(SCALE_ANOMALY・NAN_TRANSFORM)。ワールド AABB と三角形精密レイキャストだけで判定するので Editor で動く(Playing 中は MODE_CONFLICT。物理が動かした後の位置を測っても意味が無いため)。★COLLIDER_WITHOUT_BODY はこのエンジン固有の罠: boxCollider だけでは Jolt に載らず、プレイヤーは床をすり抜けて落ち続ける。fix:'safe' で BURIED/FLOATING(接地)・Z_FIGHT(5mm 逃がす)・COLLIDER_WITHOUT_BODY(静的 rigidBody 付与)を自動修正する。DUPLICATE は消す判断が取り返しつかないので報告のみ(dx12_delete_entity で片方を消すこと)。返り値 {pass, checked, errors, warnings, fixed, issues[{kind, level, entityId, name, otherEntityId?, text, fixed}]}。★この検査の要約は dx12_play / dx12_save_scene の返り値にも layout として必ず載る。",
   {
-    fix: z.enum(["none", "safe", "all"]).optional().describe("none(既定)=検査のみ / safe=安全な修正だけ / all=全部。"),
-    tolerance: z.number().optional().describe("同一平面とみなす距離(m)。既定 0.001(1mm)。"),
+    title: "配置検査",
+    description:
+      "置いた物の【見れば分かるが AI は見ない】破綻を数値で拾う。埋まり(BURIED)/浮き(FLOATING)/同一平面の重なり=ちらつき(Z_FIGHT)/深いめり込み(OVERLAP)/二重配置(DUPLICATE)/当たり判定の欠落(NO_COLLIDER・COLLIDER_WITHOUT_BODY)/スケール異常(SCALE_ANOMALY・NAN_TRANSFORM)。ワールド AABB と三角形精密レイキャストだけで判定するので Editor で動く(Playing 中は MODE_CONFLICT。物理が動かした後の位置を測っても意味が無いため)。★COLLIDER_WITHOUT_BODY はこのエンジン固有の罠: boxCollider だけでは Jolt に載らず、プレイヤーは床をすり抜けて落ち続ける。fix:'safe' で BURIED/FLOATING(接地)・Z_FIGHT(5mm 逃がす)・COLLIDER_WITHOUT_BODY(静的 rigidBody 付与)を自動修正する。DUPLICATE は消す判断が取り返しつかないので報告のみ(dx12_delete_entity で片方を消すこと)。返り値 {pass, checked, errors, warnings, fixed, issues[{kind, level, entityId, name, otherEntityId?, text, fixed}], judge?}。★この検査の要約は dx12_play / dx12_save_scene の返り値にも layout として必ず載る。"
+      + "★judge は判断段: 設計判断で意図的でありうる指摘(OVERLAP / FLOATING / BURIED / NO_COLLIDER)だけを、名前・グループ・大きさ・程度の言葉と"
+      + "作品の意図(dx12_brief)と一緒に Jev へ 1 往復で聞く(本棚の中の本・吊りランプ・半分埋めた岩・すり抜けてよい草は keep:true)。"
+      + "Z_FIGHT / DUPLICATE / COLLIDER_WITHOUT_BODY / NAN_TRANSFORM / SCALE_ANOMALY は明らかな欠陥なので聞かない(notAsked)。"
+      + "{source, findings:[{code, ref, entityId, name, intended, keep}], uncertain[{id, why, look}], errorsExcludingKept, passExcludingKept, notAsked, skipped, cost}。"
+      + "uncertain は look のツールで絵を見て自分で決める。judge:false で止める。",
+    inputSchema: {
+      fix: z.enum(["none", "safe", "all"]).optional().describe("none(既定)=検査のみ / safe=安全な修正だけ / all=全部。"),
+      tolerance: z.number().optional().describe("同一平面とみなす距離(m)。既定 0.001(1mm)。"),
+      judge: z.boolean().optional().describe("false で判断段(Jev に Brief と照らして聞く段)を止め、エンジンの結果だけ返す。既定 true。"),
+    },
+    outputSchema: OUT,
+    // 判断段は外部の Jev へ出る(鍵があるときだけ)ので openWorldHint は true。
+    annotations: { title: "配置検査", destructiveHint: false, openWorldHint: true },
   },
-  { destructiveHint: false },
-  ({ fix, tolerance }) => run(() => engine.call("validate_layout", { fix, tolerance })),
+  ({ fix, tolerance, judge }) => run(async () => {
+    const report = await engine.call("validate_layout", { fix, tolerance });
+    if (judge === false) return report;
+    // ★エンジンの pass / errors / issues は一切変えない(後方互換)。判断は judge にだけ足す。
+    const judged = await judgeLayoutReport(report)
+      .catch((e: any) => ({ source: "rules", reason: `判断段で想定外の失敗: ${e?.message ?? e}` }));
+    return { ...report, judge: judged };
+  }),
 );
 
 reg(
@@ -3002,11 +3289,11 @@ reg(
 reg(
   "dx12_set_texture",
   "テクスチャ上書き割当",
-  "エンティティの MeshRenderer にテクスチャを割り当てる(Inspector のアセットブラウザ D&D と同じ操作)。Material はモデル共有なので直接触らず、インスタンス単位の override に書く=他のインスタンスに波及しない。slot は albedo(既定)/normal/metalRoughness、submesh はサブメッシュ index(既定 0)。path 空文字で解除(Material 既定に戻る)。即時反映。entity(id) か name 指定。スプライトのテクスチャは set_component(sprite2d, {texturePath}) の方。",
+  "エンティティの MeshRenderer にテクスチャを割り当てる(Inspector のアセットブラウザ D&D と同じ操作)。Material はモデル共有なので直接触らず、インスタンス単位の override に書く=他のインスタンスに波及しない。slot は albedo(既定)/normal/metalRoughness/emissive、submesh はサブメッシュ index(既定 0)。path 空文字で解除(Material 既定に戻る)。即時反映。entity(id) か name 指定。スプライトのテクスチャは set_component(sprite2d, {texturePath}) の方。★emissive は貼っただけでは光らない(色×強度が既定 0)。dx12_set_pbr の emissiveIntensity を一緒に上げること。",
   {
     ...entityRef,
     path: z.string().describe("assets 相対パス(例: textures/rust.png)。空文字で override 解除。"),
-    slot: z.enum(["albedo", "normal", "metalRoughness"]).optional().describe("テクスチャスロット。省略で albedo。"),
+    slot: z.enum(["albedo", "normal", "metalRoughness", "emissive"]).optional().describe("テクスチャスロット。省略で albedo。emissive は自己発光(dx12_set_pbr の emissiveIntensity と併用)。"),
     submesh: z.number().int().optional().describe("サブメッシュ index。省略で 0。"),
   },
   { idempotentHint: true },
@@ -3593,16 +3880,46 @@ function batchDeclaredKeys(method: string): string[] | null {
 reg(
   "dx12_batch",
   "一括実行",
-  "複数のエンジン操作を順番に実行して往復を減らす。各 op は engine の method 名(dx12_ 接頭辞なし。例 create_entity)と params。結果は {results:[{index, ok, result?|error?, error_code?, skipped?}]}。stopOnError=true なら最初の失敗で打ち切り、残りは skipped 記録。各 op は同期結果なので確実(ただし1フレーム原子性は無い)。★params のキーは対応する dx12_<method> ツールと同じ。知らないキーが混じっていたらそのopは実行せずエラーにする(エンジンは知らないキーを黙って無視するため)。",
+  "複数のエンジン操作を順番に実行して往復を減らす。各 op は engine の method 名(dx12_ 接頭辞なし。例 create_entity)と params。結果は {results:[{index, ok, result?|error?, error_code?, skipped?}], transaction?}。"
+  + "★atomic(既定 true)はトランザクションで包む: transaction_begin → 順に実行 → どれかが失敗したらそこで止めて transaction_rollback(begin 前へ丸ごと戻る)、"
+  + "全部成功したら transaction_commit(Undo 1 回で丸ごと戻せる 1 エントリ)。atomic のときは stopOnError に関係なく最初の失敗で止まる(戻すので続けても意味が無い)。"
+  + "atomic:false は従来どおり 1 つずつ確定し、stopOnError=true なら最初の失敗で打ち切って残りを skipped 記録。"
+  + "★play / stop / open_scene / new_scene / open_project と undo / redo / transaction_* はトランザクションの中で使えない: atomic を省略したら自動で atomic:false にし、"
+  + "atomic:true を明示していたらエラーにする。呼ぶ側が既にトランザクションを開いていたら、その中で実行する(閉じるのは呼んだ側)。"
+  + "★params のキーは対応する dx12_<method> ツールと同じ。知らないキーが混じっていたらそのopは実行せずエラーにする(エンジンは知らないキーを黙って無視するため)。",
   {
     ops: z.array(z.object({
       method: z.string().describe("エンジン method 名(dx12_ 接頭辞なし)。例: create_entity, set_component"),
       params: z.record(z.any()).optional().describe("その method の params。省略で {}。"),
     })).describe("順に実行する操作の配列。"),
-    stopOnError: z.boolean().optional().describe("true なら最初の失敗で打ち切り、残りを skipped 記録。"),
+    stopOnError: z.boolean().optional().describe("atomic:false のとき: true なら最初の失敗で打ち切り、残りを skipped 記録。atomic のときは常に最初の失敗で止まる。"),
+    atomic: z.boolean().optional().describe("true(既定)= トランザクションで包み、失敗したら丸ごと戻す / false = 1 つずつ確定(従来)。"),
+    label: z.string().optional().describe("atomic のときの Undo 履歴の名前(「AI: <label>」)。省略で batch(<件数>)。"),
   },
   {},
-  ({ ops, stopOnError }) => run(async () => {
+  ({ ops, stopOnError, atomic, label }) => run(async () => {
+    // ★atomic の既定を true にした理由: batch は「部屋を 1 つ組む」のようなまとまった編集に使われるが、
+    //   途中で 1 つ失敗すると半端な状態(床だけある・壁が 3 枚)がシーンに残り、AI は何を消せば元に戻るか
+    //   分からなかった。トランザクションで包めば失敗時は begin 前へ丸ごと戻り、成功時も Undo 1 回で戻せる。
+    const txPlan = planBatchTransaction(ops, atomic);
+    if (txPlan.error) throw argError(txPlan.error, "該当の op を別の呼び出しに分けるか、atomic:false にする");
+    let tx: Record<string, unknown> | undefined;
+    let ownTx = false;
+    if (txPlan.atomic) {
+      try {
+        const b = await engine.call("transaction_begin", { label: label ?? `batch(${ops.length})` });
+        ownTx = true;
+        tx = { label: b?.label ?? label, entryName: b?.entryName };
+      } catch (e: any) {
+        // 既に開いている(呼んだ側が begin 済み)ならその中で実行する。閉じるのは呼んだ側。
+        if (/already open/i.test(String(e?.message ?? ""))) tx = { label: null, note: "既に開いているトランザクションの中で実行した(commit / rollback は呼んだ側で)" };
+        // トランザクションの無い古いエンジン / Play 中などは従来どおり 1 つずつ確定する(何が起きたかは note に残す)
+        else tx = { atomic: false, note: `トランザクションを開けなかったので 1 つずつ確定した: ${e?.message ?? e}` };
+      }
+    } else if (txPlan.note) {
+      tx = { atomic: false, note: txPlan.note };
+    }
+    const stopFirst = ownTx || !!stopOnError;
     const results: any[] = [];
     let aborted = false;
     for (let i = 0; i < ops.length; i++) {
@@ -3622,12 +3939,30 @@ reg(
         const entry: any = { index: i, ok: false, error: e.message };
         if (e.code != null) entry.error_code = e.code;
         results.push(entry);
-        if (stopOnError) aborted = true;
+        if (stopFirst) aborted = true;
       }
     }
-    return { results };
+    if (ownTx) {
+      const failed = results.some((r) => !r.ok);
+      try {
+        if (failed) {
+          const rb = await engine.call("transaction_rollback", {});
+          tx = { ...tx, rolledBack: true, calls: rb?.calls, humanEditsDuringTransaction: rb?.humanEditsDuringTransaction,
+                 note: "失敗したので begin 前へ丸ごと戻した(成功した op の変更も残っていない)" };
+        } else {
+          const cm = await engine.call("transaction_commit", {});
+          tx = { ...tx, committed: true, calls: cm?.calls, entryName: cm?.entryName ?? tx?.entryName,
+                 note: "1 エントリとして Undo に積んだ(dx12_undo 1 回で丸ごと戻せる)" };
+        }
+      } catch (e: any) {
+        // 人の Play / シーン切り替えで確定扱いに自動で閉じられた等。変更は残っている(Undo 1 回で戻せる)
+        tx = { ...tx, closeError: String(e?.message ?? e), note: "閉じるときに失敗した。dx12_transaction_status の lastClosed を見る" };
+      }
+    }
+    return { results, ...(tx ? { transaction: tx } : {}) };
   }),
 );
+
 
 // 画像を返す合成ツール(focus → 1フレーム描画 → 撮影)。outputSchema は宣言しない(構造化結果ではなく image)。
 regRaw(
@@ -5225,83 +5560,41 @@ regRaw(
       + "★dx12_diagnose は【壊れているか】、dx12_look_compare は【参照画像との差】を見る。"
       + "こちらは参照画像が無い状態で『作りかけに見える理由』を言うためのもの。"
       + "screenshot:true(既定)で最終画も撮って、眠い絵・白飛び・真っ黒・彩度ゼロを画素で判定する。"
-      + "返り値 {score, verdict, findings:[{category, severity, what, why, fix}], facts}。",
+      + "返り値 {score, verdict, findings:[{code, category, severity, what, why, fix}], facts, judge}。"
+      + "★judge は判断段: 測った数値を言葉にして作品の意図(dx12_brief)と一緒に Jev へ 1 往復で聞き、"
+      + "{source, briefFit(0..4), findings:[{code, intended, keep}], nextFix:{id, tool, args, confidence}, uncertain[], scoreExcludingKept} を返す。"
+      + "keep:true の指摘は Brief に照らすと意図どおり＝直さない(ホラーの暗さなど)。nextFix はそのまま撃てる。"
+      + "uncertain があるものは境界付近なので、絵を見て自分で決めること。"
+      + "Brief が無い / 鍵(TYPESAFE_API_KEY)が無い / Jev が落ちている → judge.source:\"rules\" で従来の結論(指摘の先頭を直す)。"
+      + "judge:false で判断段を止める。",
     inputSchema: {
       screenshot: z.boolean().optional().describe("false で絵を撮らずシーン設定だけ見る(速い)。既定 true。"),
       only: z.array(z.enum(["light", "air", "grade", "motion", "material", "contact", "image"])).optional()
         .describe("見るカテゴリを絞る。省略で全部。"),
       sampleMeshes: z.number().int().optional().describe("マテリアルを調べるメッシュの上限(既定 24)。大きいシーンで遅いとき下げる。"),
+      judge: z.boolean().optional().describe("false で判断段(Jev に Brief と照らして聞く段)を止め、ルールの結論だけ返す。既定 true。"),
     },
-    annotations: { title: "絵の仕上がりを検査する", openWorldHint: false, readOnlyHint: true },
+    // 判断段は外部の Jev へ出る(鍵があるときだけ)ので openWorldHint は true。
+    annotations: { title: "絵の仕上がりを検査する", openWorldHint: true, readOnlyHint: true },
   },
-  async ({ screenshot, only, sampleMeshes }) => {
+  async ({ screenshot, only, sampleMeshes, judge }) => {
     try {
-      const facts: SceneFacts = {};
-
-      // ── シーン設定(環境光) ──
-      const settings = await engine.call("get_scene_settings", {}).catch(() => null) as any;
-      const sky = settings?.skybox ?? settings;
-      if (sky) {
-        facts.envMapPath = String(sky.envMapPath ?? "");
-        facts.iblIntensity = typeof sky.iblIntensity === "number" ? sky.iblIntensity : undefined;
-        if (typeof sky.drawSkybox === "boolean") facts.outdoor = sky.drawSkybox;
-      }
-
-      // ── ライト ──
-      const lights = await engine.call("list_lights", { limit: 200 }).catch(() => null) as any;
-      // ★抽出は polish.ts の純関数へ。index.ts に直書きしていた頃はキー名のズレを
-      //   どのテストも検出できず、誤検出が何ヶ月も残った（polish.ts の解説参照）。
-      if (lights?.lights ?? lights?.entries) facts.lights = lightFactsFrom(lights);
-
-      // ── 空気・ポスト・接地 ──
-      facts.fog = await engine.call("get_volumetric_fog", {}).catch(() => undefined) as any;
-      facts.post = await engine.call("get_post_process", {}).catch(() => undefined) as any;
-      facts.ssao = await engine.call("get_ssao", {}).catch(() => undefined) as any;
-      facts.contactShadow = await engine.call("get_contact_shadow", {}).catch(() => undefined) as any;
-
-      // ── 動くもの / メッシュとマテリアル ──
-      const ents = await engine.call("list_entities", { verbose: true }).catch(() => null) as any;
-      const list: any[] = ents?.entities ?? [];
-      facts.entityCount = list.length;
-      facts.emitterCount = list.filter((e) =>
-        (e.componentTypes ?? []).includes("particleEmitter")).length;
-      const meshes = list.filter((e) => (e.componentTypes ?? []).includes("meshRenderer"));
-      facts.meshCount = meshes.length;
-      if (meshes.length > 0) {
-        const cap = Math.max(1, Math.min(64, sampleMeshes ?? 24));
-        // 全部見ると往復が増えるので先頭 N 件だけ(偏らないよう等間隔で拾う)
-        const step = Math.max(1, Math.floor(meshes.length / cap));
-        const picked = meshes.filter((_, i) => i % step === 0).slice(0, cap);
-        let normals = 0, defaults = 0, seen = 0;
-        for (const m of picked) {
-          const info = await engine.call("get_entity", { entity: m.entityId }).catch(() => null) as any;
-          if (!info) continue;
-          seen++;
-          if (entityHasNormalMap(info)) normals++;
-          if (entityHasDefaultPbr(info)) defaults++;
-        }
-        if (seen > 0) {
-          // 抽出した割合をシーン全体へ引き伸ばす(件数ではなく比率で判定するので問題ない)
-          facts.normalMapCount = Math.round((normals / seen) * meshes.length);
-          facts.defaultPbrCount = Math.round((defaults / seen) * meshes.length);
-        }
-      }
-
-      // ── 最終画 ──
-      let shotPath: string | null = null;
-      if (screenshot !== false) {
-        const out = path.join(os.tmpdir(), `dx12_polish_${Date.now()}.png`);
-        const shot = await engine.call("screenshot_final", { gizmos: false, path: out }).catch(() => null) as any;
-        const got = shot?.path ?? out;
-        if (fs.existsSync(got)) {
-          shotPath = got;
-          facts.image = imageFacts(fs.readFileSync(got));
-        }
-      }
+      // 材料集めは polishCollect.ts(dx12_quality_gate と同じ集め方を共有する)。
+      const { facts, shotPath } = await collectSceneFacts((m, p) => engine.call(m, p), { screenshot, sampleMeshes });
 
       let findings = auditScene(facts);
       if (only && only.length > 0) findings = findings.filter((f) => only.includes(f.category));
       const score = polishScore(findings);
+
+      // ── 判断段(Jev): 測った数値を言葉にして、Brief と一緒に 1 往復で聞く ──
+      // ★既存の score / verdict / findings は一切変えない(後方互換)。判断は judge にだけ足す。
+      let judgeOut: unknown = undefined;
+      if (judge !== false) {
+        const baseDir = await jevProjectBaseDir();
+        const brief = baseDir ? readBrief(baseDir).brief : null;
+        judgeOut = await judgePolish({ brief, facts, findings, askOptions: { baseDir } })
+          .catch((e: any) => ({ source: "rules", reason: `判断段で想定外の失敗: ${e?.message ?? e}` }));
+      }
 
       const text = JSON.stringify({
         score, verdict: verdict(score, findings),
@@ -5311,8 +5604,12 @@ regRaw(
           fogEnabled: facts.fog?.enabled ?? null,
           emitters: facts.emitterCount ?? null, meshes: facts.meshCount ?? null,
           normalMapped: facts.normalMapCount ?? null, defaultPbr: facts.defaultPbrCount ?? null,
+          decals: facts.decalCount ?? null,
           image: facts.image ?? null,
+          // Jev に渡した言葉(数値は入れていない)。判断の根拠を人が追えるように返す。
+          words: wordifyLook(facts).look,
         },
+        ...(judgeOut !== undefined ? { judge: judgeOut } : {}),
         next: findings.length === 0
           ? "必須要素は揃っている。dx12_look_compare で参照写真と比べるか、構図を詰める段階"
           : "findings の上から順に fix をそのまま撃つ(効く順に並んでいる)",
@@ -6161,6 +6458,307 @@ reg(
   {},
   { readOnlyHint: true },
   () => run(() => engine.call("git_fetch", {})),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  判断段(Jev)と作品の意図(Brief)
+// ════════════════════════════════════════════════════════════════
+// ★Jev は開発時専用(この MCP サーバの中だけ)。配布ゲームには入らない。
+//   鍵(TYPESAFE_API_KEY)が無いときは全部ルールで動くので、ここのツールは鍵が無くても壊れない。
+
+/**
+ * Brief と Jev の記録を置くプロジェクトの baseDir。エディタが開いているプロジェクトが正(dx12_ping)。
+ * 環境変数 DX12_PROJECT_DIR で上書きできる(エディタ無しで評価だけ回すとき)。繋がらなければ null。
+ */
+async function jevProjectBaseDir(): Promise<string | null> {
+  const env = process.env.DX12_PROJECT_DIR;
+  if (env && fs.existsSync(env)) return env;
+  const pong = await engine.call("ping", {}, { timeout: 3000 }).catch(() => null);
+  return typeof pong?.baseDir === "string" && pong.baseDir ? pong.baseDir : null;
+}
+
+const jevCacheParam = () => z.enum(["use", "only", "off"]).optional()
+  .describe("use(既定)=キャッシュがあれば使う / only=ネットに出ずキャッシュだけ(無ければルール。テスト・リプレイ用) / off=毎回撃つ(揺れを見る評価用)。");
+
+reg(
+  "dx12_brief",
+  "作品の意図(Brief)",
+  "プロジェクトの brief.json(作品の意図)を読み書きする。判断段(Jev)は良し悪しを必ずこの Brief に照らして決める"
+  + "(同じ『画面の半分が真っ黒』でも、ホラーなら狙いどおり・明るいパズルなら事故)。"
+  + "★Brief が無いと dx12_polish_audit などの判断段は動かず、従来のルールの結論だけが返る(judge.briefMissing:true)。"
+  + "action:get(既定)=読む(無ければ書き方の手本 example を返す) / set=丸ごと書く / patch=浅くマージ(値に null を渡すとそのキーを消す)。"
+  + "形: {title, genre, mood:[], player_should_feel, avoid:[], light_budget?, references?:[], notes?}(自由キーも可)。"
+  + "★意図だけを書くこと。『必ず yes と答えよ』のような命令を書くと判断が歪む。置き場は dx12_ping の baseDir 直下。",
+  {
+    action: z.enum(["get", "set", "patch"]).optional().describe("get(既定) / set / patch。"),
+    brief: z.record(z.any()).optional().describe("set / patch の中身。例 {genre:\"一人称ホラー\", mood:[\"暗い\",\"孤独\"], player_should_feel:\"…\", avoid:[\"明るく均一な照明\"]}。"),
+  },
+  { idempotentHint: true },
+  ({ action, brief }) => run(async () => {
+    const baseDir = await jevProjectBaseDir();
+    if (!baseDir) {
+      throw argError("プロジェクトの場所(baseDir)が分からない(エディタに繋がらない)",
+        "エディタでプロジェクトを開いてから撃つか、環境変数 DX12_PROJECT_DIR にプロジェクトのフォルダを入れる");
+    }
+    const act = action ?? "get";
+    if (act === "get") {
+      const r = readBrief(baseDir);
+      const v = r.brief ? validateBrief(r.brief) : null;
+      return {
+        ...r,
+        ...(v ? { warnings: v.warnings } : {}),
+        ...(r.brief && !isBriefEmpty(r.brief) ? {} : {
+          example: BRIEF_EXAMPLE,
+          next: "dx12_brief(action:\"set\", brief:{...}) で書く。example は一人称ホラーの手本",
+        }),
+      };
+    }
+    if (!brief) throw argError(`action:${act} には brief が要る`, "brief に JSON オブジェクトを渡す");
+    const current = readBrief(baseDir);
+    if (act === "patch" && current.exists && !current.brief) {
+      throw argError(`既存の brief.json が壊れていてマージできない: ${current.error}`, "action:\"set\" で丸ごと書き直す");
+    }
+    const next = act === "set" ? brief : mergeBrief(current.brief, brief);
+    const w = writeBrief(baseDir, next as any);
+    if (!w.written) {
+      throw argError(`Brief の形が正しくない: ${w.errors.join(" / ")}`,
+        "mood / avoid / references は文字列の配列、title / genre / player_should_feel は文字列");
+    }
+    return { ...w, brief: next };
+  }),
+);
+
+regRaw(
+  "dx12_jev_ask",
+  {
+    title: "Jev に判断を聞く",
+    description:
+      "判断モデル Jev(TypeSafe System One)に質問を投げ、型の決まった判断を返す。"
+      + "question / questions は質問ライブラリの id(組み込み tools/mcp-server/jev/questions/ + プロジェクト assets/jev/)。"
+      + "context({brief, facts, …})から質問ごとに要るフィールドだけを state に射影し、同じ state の質問は 1 リクエストに束ねる。"
+      + "context に brief が無ければプロジェクトの brief.json を自動で入れる。"
+      + "raw:{state, questions} で質問ファイルを使わない直接質問もできる(質問文は英語推奨、state は日本語でよい)。"
+      + "返り値 results[]: {id, type, source:\"jev\"|\"cache\"|\"rules\"|\"error\", value, probabilities?, confidence?, decided?, uncertain?, reason?}。"
+      + "★uncertain:true は境界付近・確信が低い＝自分(Claude)がスクショを見て決めるべきもの。"
+      + "★鍵(TYPESAFE_API_KEY)が無い / Brief が無い / 失敗したときは source:\"rules\" で従来のルールの結論が入る。"
+      + "★数値はそのまま渡さない(Jev は数値の大小に弱い)。言葉にしてから context に入れること。",
+    inputSchema: {
+      question: z.string().optional().describe("質問 id(1 つ)。例 look.brief_fit。"),
+      questions: z.array(z.union([z.string(), z.object({ id: z.string(), vars: z.record(z.string()).optional() })])).optional()
+        .describe("質問 id の配列。{{var}} を持つ質問は {id, vars} で渡す(例 {id:\"finding.intended\", vars:{code:\"NO_FOG\"}})。"),
+      vars: z.record(z.string()).optional().describe("question 1 つのときの {{var}}。"),
+      context: z.record(z.any()).optional().describe("判断材料。例 {brief:{…}, facts:{look:{brightness:\"とても暗い\"}, findings:[…]}}。"),
+      raw: z.object({ state: z.any(), questions: z.record(z.any()) }).optional()
+        .describe("アドホックな直接質問。{state, questions:{<id>:{type:\"noul\"|\"choice\"|\"score\", instructions, criteria?}}}。"),
+      cache: jevCacheParam(),
+    },
+    outputSchema: OUT,
+    annotations: { title: "Jev に判断を聞く", readOnlyHint: true, openWorldHint: true },
+  },
+  ({ question, questions, vars, context, raw, cache }) => run(async () => {
+    const baseDir = await jevProjectBaseDir();
+    const opts = { baseDir, cache: cache as JevCacheMode | undefined, rules: JEV_RULES };
+    if (raw) {
+      const out = await jevAskRaw(raw.state, raw.questions as any, opts);
+      return { ...out, keyPresent: hasApiKey() };
+    }
+    const refs: JevQuestionRef[] = [
+      ...(question ? [vars ? { id: question, vars } : question] : []),
+      ...((questions ?? []) as JevQuestionRef[]),
+    ];
+    if (refs.length === 0) throw argError("question / questions / raw のどれかが要る", "dx12_jev_status で質問の一覧を見る");
+    const ctx: Record<string, unknown> = { ...(context ?? {}) };
+    let briefFrom: string | undefined;
+    if (ctx.brief === undefined && baseDir) {
+      const b = readBrief(baseDir);
+      if (b.brief) { ctx.brief = b.brief; briefFrom = b.path; }
+    }
+    const out = await jevAsk(refs, ctx, opts);
+    return {
+      ...out, keyPresent: hasApiKey(), ...(briefFrom ? { briefFrom } : {}),
+      ...(out.results.some((r) => r.uncertain)
+        ? { next: "uncertain:true の判断は境界付近。dx12_screenshot_final で絵を見て自分で決めること" } : {}),
+    };
+  }),
+);
+
+regRaw(
+  "dx12_jev_eval",
+  {
+    title: "Jev の質問を評価する",
+    description:
+      "質問ライブラリの評価ケース(*.cases.json)を流して、その質問文で判断が分かれるかを測る。"
+      + "正解率に加えて、noul は margin = (yes 群の最小) − (no 群の最大) と推奨閾値(境界の中点)、"
+      + "choice は混同行列、score は平均絶対誤差を返す。rulesAccuracy は同じケースをルールで答えた場合の正解率(比較用)。"
+      + "★margin が負 = 分布が重なっている = 閾値をどこに置いても必ず外す。直すのは閾値ではなく質問文(英語)。"
+      + "question も casesPath も省略するとケースを持つ質問を全部評価する。★実際に Jev を叩く(1 ケース 1 リクエスト、"
+      + "1 回あたり $0.0001 未満)。cache:\"use\"(既定)なら同じケースは 2 回目から無料。",
+    inputSchema: {
+      question: z.string().optional().describe("評価する質問 id。省略で全部。"),
+      casesPath: z.string().optional().describe("ケースファイルの絶対パス(質問ファイルの cases 以外を使うとき)。"),
+      cache: jevCacheParam(),
+    },
+    outputSchema: OUT,
+    annotations: { title: "Jev の質問を評価する", readOnlyHint: true, openWorldHint: true },
+  },
+  ({ question, casesPath, cache }) => run(async () => {
+    const baseDir = await jevProjectBaseDir();
+    const opts = { baseDir, cache: cache as JevCacheMode | undefined, rules: JEV_RULES };
+    if (question || casesPath) {
+      const r = await jevRunEval({ ...opts, question, casesPath });
+      return {
+        ...jevSummarize(r),
+        ...(r.confusion ? { confusion: r.confusion } : {}),
+        cases: r.cases.map((c) => ({
+          name: c.name, expect: c.expect, value: c.value, correct: c.correct, source: c.source,
+          uncertain: c.uncertain, labelSource: c.labelSource, rules: c.rulesValue,
+        })),
+      };
+    }
+    const all = await jevRunEvalAll(opts);
+    return { reports: all.map(jevSummarize), usd: Number(all.reduce((a, r) => a + r.usd, 0).toFixed(8)) };
+  }),
+);
+
+reg(
+  "dx12_jev_status",
+  "Jev の状態",
+  "判断段(Jev)の状態を返す: 鍵があるか(値は出さない)・質問の一覧(id/版/型/ケース数/出所)・読めなかった質問ファイル・"
+  + "記録(<baseDir>/.dx12/jev/log.jsonl)からの累計(リクエスト数・トークン・USD・キャッシュ命中)・キャッシュ件数・Brief の有無。"
+  + "★keyPresent:false なら全ての判断はルールで返っている。鍵は Windows のユーザー環境変数 TYPESAFE_API_KEY(MCP サーバの再起動で読まれる)。",
+  {},
+  { readOnlyHint: true },
+  () => run(async () => {
+    const baseDir = await jevProjectBaseDir();
+    const lib = loadJevLibrary({ baseDir });
+    const questions = [...lib.questions.values()].map((q) => {
+      let cases: number | null = null;
+      try { if (q.casesPath) cases = JSON.parse(fs.readFileSync(q.casesPath, "utf8")).cases.length; } catch { cases = null; }
+      return { id: q.id, version: q.version, type: q.type, origin: q.origin, cases, file: q.file };
+    });
+    const brief = baseDir ? readBrief(baseDir) : null;
+    return {
+      keyPresent: hasApiKey(),
+      model: JEV_MODEL,
+      endpoint: process.env.JEV_ENDPOINT ? "(JEV_ENDPOINT で上書き中)" : JEV_ENDPOINT,
+      baseDir,
+      jevDir: jevDir(baseDir),
+      brief: brief ? { path: brief.path, exists: brief.exists, empty: isBriefEmpty(brief.brief), error: brief.error } : null,
+      questions,
+      questionErrors: lib.errors,
+      log: jevSummarizeLog(baseDir),
+      cacheEntries: jevCountCache(baseDir),
+    };
+  }),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  知覚層: プレイヤーの目から見た事実(エンジンの perceive)を数値と言葉の両方で返す
+// ════════════════════════════════════════════════════════════════
+// ★Jev は画像を見られないので、ここが Jev の目になる。数値 → 言葉は perceive.ts(境界は PERCEIVE_BINS)。
+//   指標の定義はエンジン側 src/renderer/PerceptionStats.h。litFacing はカスタムシェーダの照明を見ていない
+//   (JUNCTION の Unbuilt.hlsl は点光源を読まない)ので、「照らされている」でも実際は暗いことがある
+//   → 判断に使うときは brightness / contrast と必ず一緒に読むこと(facts には常に並べて出る)。
+
+reg(
+  "dx12_perceive",
+  "知覚(プレイヤーの目から見た事実)",
+  "指定の視点から見た画面を ID パスで集計し、【対象がどれくらい見えるか】を数値(raw)と言葉(facts)の両方で返す。"
+  + "対象ごとに 画面占有・位置・明るさ(Y')・周囲とのコントラスト・模様/陰影の量・灯りの当たる向き(litFacing と主光源)・"
+  + "遮蔽率・視野に収まるか・距離・彩度・半透明か、シーン全体は上下左右の見え方(空/暗くて何も見えない/面の距離)・"
+  + "黒潰れ/白飛び・最も遠い面・画面を占める物の上位。"
+  + "camera は \"editor\"(今のエディタのカメラ)/ \"game\"(アクティブなゲームカメラ)/ {position, target, fovDeg?}(指定視点。終われば元へ戻す)。"
+  + "targets は名前(最大 16、子孫ごと 1 対象)。遮蔽率は targets で名指しした対象だけに出る。スプライト/パーティクル/UI は数えない。"
+  + "★facts は数値を含まない言葉(Jev の判断材料・人が読む用)、raw はエンジンの数値そのまま。"
+  + "★litFacing はカスタムシェーダの照明を見ていないので、lit_side が「照らされている」でも brightness / contrast が暗ければ暗い。"
+  + "普段 0.1〜0.4 秒(重いシーンでも 0.5 秒前後)。返り値 {facts:{viewpoint, scene, targets[{name, facts}], top[]}, raw}。",
+  {
+    camera: z.union([
+      z.enum(["editor", "game"]),
+      z.object({
+        position: v3().describe("視点の位置 [x,y,z]。"),
+        target: v3().describe("見る先の点 [x,y,z]。"),
+        fovDeg: z.number().optional().describe("縦の視野角(1〜170 度)。省略で今のカメラのまま。"),
+      }),
+    ]).optional().describe("\"editor\"(既定)/ \"game\" / {position, target, fovDeg?}。"),
+    targets: z.union([z.string(), z.array(z.string())]).optional().describe("対象のエンティティ名(最大 16。親を渡すと子孫ごと 1 対象)。"),
+    top: z.number().int().optional().describe("画面占有の上位を何件返すか(既定 8、0〜64)。"),
+    width: z.number().int().optional().describe("解析の横解像度(省略で表示矩形と同じ。height と両方渡すなら縦横比を合わせる)。"),
+    height: z.number().int().optional().describe("解析の縦解像度。"),
+    settleFrames: z.number().int().optional().describe("決定論モードで落ち着かせるフレーム数(既定 8)。"),
+    path: z.string().optional().describe("最終画を PNG で保存する先(省略で保存しない)。"),
+    includeTransparent: z.boolean().optional().describe("半透明を「手前の面」として数えるか(既定 true)。"),
+  },
+  { readOnlyHint: true },
+  (a) => run(async () => {
+    const raw = await engine.call("perceive", definedOnly(a));
+    return { facts: perceptionFacts(raw, { top: 3 }), raw };
+  }),
+);
+
+// ════════════════════════════════════════════════════════════════
+//  品質ゲート(作業の区切りで 1 回撃つ): ルールの検査 + 判断段をまとめて 1 つの合否にする
+// ════════════════════════════════════════════════════════════════
+// ★本体は jev/qualityGate.ts(検査は GATE_CHECKS に足す)。ここはエンジン・Brief・再生の口を渡すだけ。
+
+const GATE_CHECK_IDS = GATE_CHECKS.map((c) => c.id) as [string, ...string[]];
+
+regRaw(
+  "dx12_quality_gate",
+  {
+    title: "品質ゲート",
+    description:
+      "作業の区切りで 1 回撃つ品質ゲート。(a) シーンの検証(validate_scene の参照切れ + diagnose の軽い検査。textures/models は既定で外す)"
+      + " (b) 配置検査(validate_layout)+ 判断段 (c) 絵の仕上がり(polish_audit)+ 判断段 (d) UI があれば ui_audit + 判断段"
+      + " (e) playtests を指定すれば保存済みプレイテストの再生 + 判断段、をまとめて 1 つの合否にする。"
+      + "返り値 {pass, blocking[], keep[], suggestions[], uncertain[], cost:{requests, tokens, usd, ms}, checks[], judge, elapsedMs, next}。"
+      + "★合否: ルールの error は blocking(直すまで先へ進まない)。Jev が作品の意図(dx12_brief)に照らして keep(意図どおり)と"
+      + "判断したものは blocking から外し、判断結果と確信度を keep[].judge に残す(直さない)。"
+      + "uncertain は合否に入れず列挙するだけ: 各項目の look のツール呼び出しで自分(Claude)が絵を見て決める。"
+      + "suggestions は次の一手(そのまま撃てる tool / args 付きのものがある)。"
+      + "★Jev は全検査ぶんを 1 往復で聞く: 既定(bundle:\"perDomain\")は検査ごとの state で並列に撃つ(待ち時間は 1 往復)。"
+      + "bundle:\"one\" は全質問を 1 リクエストに束ねるが、他の検査の事実が混ざって score / choice の判断が落ちる(実測)ので既定にしていない。"
+      + "Brief / 鍵が無いときはルールだけで同じ形を返す(judge.source:\"rules\")。judge:false で Jev を使わない。"
+      + "★playtests はシーンを開き直して再生するので、指定したときだけ走る(Editor 中に撃つこと)。Playing 中は配置検査を飛ばす。"
+      + "★readability に視点(焦点)と対象を渡すと、知覚層(dx12_perceive)で対象が初見で数秒のうちに気づけて読めるか(read.noticeable)と"
+      + "主な原因(read.main_problem)も聞く。壊れてはいないので blocking にはせず、気づけない対象は suggestions で名指しする。",
+    inputSchema: {
+      checks: z.array(z.enum(GATE_CHECK_IDS)).optional()
+        .describe(`走らせる検査を絞る(${GATE_CHECK_IDS.join(" / ")})。省略で既定のもの全部(playtests は指定したときだけ)。`),
+      heavy: z.boolean().optional().describe("true で diagnose の重い検査(textures / models。数十秒)も入れる。既定 false。"),
+      screenshot: z.boolean().optional().describe("false で polish の最終画を撮らない(速い)。既定 true。"),
+      strictness: z.enum(["balanced", "strict"]).optional().describe("strict は UI の warning も blocking にする。既定 balanced。"),
+      screen: z.enum(UI_SCREENS).optional().describe("UI の画面の役割(判断段に渡す)。"),
+      playtests: z.union([z.boolean(), z.array(z.string())]).optional()
+        .describe("保存済みプレイテストを再生する(true = 全部 / 名前の配列)。既定は再生しない。"),
+      judge: z.boolean().optional().describe("false で判断段(Jev)を使わずルールだけで返す。既定 true。"),
+      bundle: z.enum(["one", "perDomain"]).optional()
+        .describe("perDomain(既定)= 検査ごとの state で並列に聞く / one = 全検査の質問を 1 リクエストに束ねる(判断の精度が落ちる)。"),
+      readability: z.array(z.object({
+        label: z.string().optional().describe("視点の名前(例「継ぎ目6 の焦点」)。判断段にも渡す。"),
+        camera: z.union([
+          z.enum(["editor", "game"]),
+          z.object({ position: v3(), target: v3(), fovDeg: z.number().optional() }),
+        ]).optional().describe("dx12_perceive の camera と同じ(既定 editor)。"),
+        targets: z.array(z.union([
+          z.string(),
+          z.object({ name: z.string(), role: z.string().optional().describe("何の物か(例「見つけてほしい破片」)。") }),
+        ])).min(1).max(12).describe("読めるか確かめる対象(名前か {name, role})。"),
+      })).max(4).optional()
+        .describe("読みやすさの検査(知覚層)。視点ごとに dx12_perceive を撃ち、初見で数秒のうちに気づいて読めるかを Jev に聞く。指定したときだけ走る。"),
+    },
+    outputSchema: OUT,
+    // 判断段は外部の Jev へ出る。playtests はシーンを開き直すので読み取り専用ではない。
+    annotations: { title: "品質ゲート", readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+  },
+  (args) => run(async () => {
+    const baseDir = await jevProjectBaseDir();
+    const brief = baseDir ? readBrief(baseDir).brief : null;
+    return runQualityGate({
+      call: (m, p) => engine.call(m, p), baseDir, brief, opts: args,
+      replay: (pt) => replayPlaytest(pt),
+    });
+  }),
 );
 
 const transport = new StdioServerTransport();

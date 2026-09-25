@@ -1,0 +1,38 @@
+{
+  "id": "ui.finding_intended",
+  "version": 2,
+  "type": "noul",
+  "instructions": {
+    "what": "A generic game-UI lint flagged this condition on the current screen: {{code}} = {{gloss}}. The lint assumes every game UI should follow one restrained, tidy house style, which many works deliberately break. Read state.brief (the creator's intent: genre, mood, what the player should feel, things to avoid, and any direction for the UI) and state.facts.ui (the current screen described in words; the lint's flags are listed in state.facts.ui.issues). Does the brief ask for this kind of style, so the condition is part of the intended look and should be kept instead of fixed?",
+    "not_for": "Answer yes when the brief's UI direction, mood or genre clearly asks for this kind of style, even though it breaks the tidy house style. Answer no when the brief is silent or neutral about it, when the brief's avoid list or its wish for a calm, clean or readable screen rules it out, or when fixing it would serve the brief better."
+  },
+  "criteria": {
+    "true": "Keep it: the brief's UI direction, mood or genre calls for this condition.",
+    "false": "Fix it: the brief does not call for this condition, or it works against the brief."
+  },
+  "state": [
+    "brief",
+    "facts.ui"
+  ],
+  "threshold": {
+    "yes": 0.5,
+    "band": 0.1
+  },
+  "fallback": "no",
+  "lookup": {
+    "gloss": {
+      "by": "code",
+      "map": {
+        "CENTERED_MONOTONY": "almost every button and text sits on the horizontal center line of the screen (a symmetric, centered composition)",
+        "FONT_SIZE_SPRAWL": "the screen uses many different font sizes instead of a short type scale",
+        "PALETTE_SPRAWL": "panels and images use many different surface colors instead of a small palette",
+        "OVER_DECORATED": "some panels stack a gradient, an outline, a drop shadow and a special shape at the same time",
+        "BUSY_GLOSS": "an animated shine sweeps quickly across some elements",
+        "EFFECT_STACKING": "some texts combine per-character animation with an outline or a shadow",
+        "OUT_OF_CANVAS": "some elements extend past the edge of the screen"
+      }
+    }
+  },
+  "notes": "指摘コードごとに 1 質問。state は ui.brief_fit と共通(brief + facts.ui)にして ui_audit の 1 リクエストに束ねる。 2026-09-25 実測(ケース 18 件・Brief 6 種、ラベルは claude-draft、runEval --cache off を 3 回ずつ): v1 は正解率 0.72〜0.78(閾値 0.7)・margin +0.21〜+0.25(3 回を合わせた境界 yes 最小 0.41 / no 最大 0.20)。分離はしていたが、ガチャの Brief が「光って動くボタン・色とりどりの装飾」と名指ししていても yes が 0.41〜0.69 に留まった。原因は not_for の「ジャンルが派手なだけで yes にするな / Brief がこの様式を名指ししていること」が強すぎたこと。v2 で「Brief がこの種の様式を求めていれば、きれいな標準様式を崩していても yes」と書き直した → 正解率 1.0(3 回とも)、margin +0.54 / +0.52 / +0.53、合わせた境界 0.76 / 0.24 → 閾値 0.50(中点)。ルールだけ(全部直す)なら 0.556。 和集合 state(品質ゲートの bundle:\"one\" と同じく他の検査の事実も入った state)でも測った: 正解率 1.0・margin +0.64(0.81 / 0.17)で劣化なし。",
+  "cases": "ui.finding_intended.cases.json"
+}

@@ -1,0 +1,1330 @@
+{
+  "question": "look.next_fix",
+  "cases": [
+    {
+      "name": "A_horror",
+      "expect": "keep_as_is",
+      "labelSource": "claude-draft",
+      "note": "指摘(HDRI 無し・黒つぶれ・無彩色)は全部ホラーの狙いどおり",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "avoid": [
+            "明るく均一な照明",
+            "鮮やかな色",
+            "陽気な雰囲気"
+          ],
+          "light_budget": "懐中電灯と数個の弱い電球だけ",
+          "notes": "暗闇で見えないこと自体が恐怖の主役"
+        },
+        "facts": {
+          "look": {
+            "brightness": "とても暗い",
+            "contrast": "普通",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "とても多い",
+            "blownWhiteArea": "ほぼ無い",
+            "setting": "屋内",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "なし",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "濃い",
+            "postEffects": "ブルーム・ビネット・露出補正・フィルムグレイン",
+            "bloomStrength": "弱い",
+            "movingParticles": "少し",
+            "dirtAndWearDecals": "いくつも",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "CRUSHED_BLACKS",
+              "issue": "真っ黒に潰れている面積が大きい",
+              "severity": "中"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "A_puzzle",
+      "expect": [
+        "lift_shadows",
+        "apply_look"
+      ],
+      "labelSource": "claude-draft",
+      "note": "暗くて見づらいのを明るくする",
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面",
+            "霧で遠くがぼやける",
+            "不気味さ"
+          ],
+          "light_budget": "昼の太陽と空の環境光"
+        },
+        "facts": {
+          "look": {
+            "brightness": "とても暗い",
+            "contrast": "普通",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "とても多い",
+            "blownWhiteArea": "ほぼ無い",
+            "setting": "屋内",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "なし",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "濃い",
+            "postEffects": "ブルーム・ビネット・露出補正・フィルムグレイン",
+            "bloomStrength": "弱い",
+            "movingParticles": "少し",
+            "dirtAndWearDecals": "いくつも",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "CRUSHED_BLACKS",
+              "issue": "真っ黒に潰れている面積が大きい",
+              "severity": "中"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "A_junction",
+      "expect": [
+        "lift_shadows",
+        "apply_look"
+      ],
+      "labelSource": "claude-draft",
+      "note": "白っぽく形が見える方へ",
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "動くもの(静止した空間が主役)",
+            "汚れや生活感",
+            "強いコントラスト",
+            "霧で形がぼやけること"
+          ],
+          "light_budget": "天井の蛍光灯の均一な光",
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "look": {
+            "brightness": "とても暗い",
+            "contrast": "普通",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "とても多い",
+            "blownWhiteArea": "ほぼ無い",
+            "setting": "屋内",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "なし",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "濃い",
+            "postEffects": "ブルーム・ビネット・露出補正・フィルムグレイン",
+            "bloomStrength": "弱い",
+            "movingParticles": "少し",
+            "dirtAndWearDecals": "いくつも",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "CRUSHED_BLACKS",
+              "issue": "真っ黒に潰れている面積が大きい",
+              "severity": "中"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "A2_horror",
+      "expect": "add_fog",
+      "labelSource": "claude-draft",
+      "note": "暗さは狙いどおり。足りないのは空気(フォグ)だけ",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "avoid": [
+            "明るく均一な照明",
+            "鮮やかな色",
+            "陽気な雰囲気"
+          ],
+          "light_budget": "懐中電灯と数個の弱い電球だけ",
+          "notes": "暗闇で見えないこと自体が恐怖の主役"
+        },
+        "facts": {
+          "look": {
+            "brightness": "とても暗い",
+            "contrast": "普通",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "とても多い",
+            "blownWhiteArea": "ほぼ無い",
+            "setting": "屋内",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "なし",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正・フィルムグレイン",
+            "bloomStrength": "弱い",
+            "movingParticles": "少し",
+            "dirtAndWearDecals": "いくつも",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "CRUSHED_BLACKS",
+              "issue": "真っ黒に潰れている面積が大きい",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "A2_puzzle",
+      "expect": [
+        "lift_shadows",
+        "apply_look"
+      ],
+      "labelSource": "claude-draft",
+      "note": "フォグは avoid。まず明るくする",
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面",
+            "霧で遠くがぼやける",
+            "不気味さ"
+          ],
+          "light_budget": "昼の太陽と空の環境光"
+        },
+        "facts": {
+          "look": {
+            "brightness": "とても暗い",
+            "contrast": "普通",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "とても多い",
+            "blownWhiteArea": "ほぼ無い",
+            "setting": "屋内",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "なし",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正・フィルムグレイン",
+            "bloomStrength": "弱い",
+            "movingParticles": "少し",
+            "dirtAndWearDecals": "いくつも",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "CRUSHED_BLACKS",
+              "issue": "真っ黒に潰れている面積が大きい",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "B_horror",
+      "expect": "apply_look",
+      "labelSource": "claude-draft",
+      "note": "明るい昼の絵をホラーの光と色調へ丸ごと変える",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "avoid": [
+            "明るく均一な照明",
+            "鮮やかな色",
+            "陽気な雰囲気"
+          ],
+          "light_budget": "懐中電灯と数個の弱い電球だけ",
+          "notes": "暗闇で見えないこと自体が恐怖の主役"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "眠い",
+            "colorSaturation": "普通",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋外(空が見える)",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "あり",
+            "otherLights": "なし",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "素通し(トーンマップのみ)",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "ほぼ無い",
+            "untouchedMaterials": "ほぼ全部",
+            "ambientOcclusion": "なし",
+            "contactShadows": "なし"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "POST_PASSTHROUGH",
+              "issue": "ポストプロセスが素通し(色調の仕上げが無い)",
+              "severity": "重大"
+            },
+            {
+              "code": "FLAT_IMAGE",
+              "issue": "明暗の幅が狭く、眠い絵になっている",
+              "severity": "重大"
+            },
+            {
+              "code": "SUN_ONLY",
+              "issue": "光源が太陽だけで、補助光(フィル・リム)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "中"
+            },
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_NORMAL_MAPS",
+              "issue": "法線マップが使われておらず、表面がつるつる",
+              "severity": "中"
+            },
+            {
+              "code": "DEFAULT_PBR",
+              "issue": "ほとんどの素材が既定の質感(roughness/metallic)のまま",
+              "severity": "中"
+            },
+            {
+              "code": "NO_SSAO",
+              "issue": "SSAO(接触部の陰り)が無い",
+              "severity": "中"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "B_puzzle",
+      "expect": [
+        "apply_look",
+        "deepen_contrast",
+        "add_hdri"
+      ],
+      "labelSource": "claude-draft",
+      "note": "明るいが眠い。仕上げを当てる",
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面",
+            "霧で遠くがぼやける",
+            "不気味さ"
+          ],
+          "light_budget": "昼の太陽と空の環境光"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "眠い",
+            "colorSaturation": "普通",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋外(空が見える)",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "あり",
+            "otherLights": "なし",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "素通し(トーンマップのみ)",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "ほぼ無い",
+            "untouchedMaterials": "ほぼ全部",
+            "ambientOcclusion": "なし",
+            "contactShadows": "なし"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "POST_PASSTHROUGH",
+              "issue": "ポストプロセスが素通し(色調の仕上げが無い)",
+              "severity": "重大"
+            },
+            {
+              "code": "FLAT_IMAGE",
+              "issue": "明暗の幅が狭く、眠い絵になっている",
+              "severity": "重大"
+            },
+            {
+              "code": "SUN_ONLY",
+              "issue": "光源が太陽だけで、補助光(フィル・リム)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "中"
+            },
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_NORMAL_MAPS",
+              "issue": "法線マップが使われておらず、表面がつるつる",
+              "severity": "中"
+            },
+            {
+              "code": "DEFAULT_PBR",
+              "issue": "ほとんどの素材が既定の質感(roughness/metallic)のまま",
+              "severity": "中"
+            },
+            {
+              "code": "NO_SSAO",
+              "issue": "SSAO(接触部の陰り)が無い",
+              "severity": "中"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "B_realistic",
+      "expect": [
+        "add_surface_detail",
+        "add_hdri"
+      ],
+      "labelSource": "claude-draft",
+      "note": "のっぺりした素材か既定の空",
+      "context": {
+        "brief": {
+          "title": "Apartment 3F",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "自然",
+            "生活感",
+            "落ち着いた"
+          ],
+          "player_should_feel": "実在する部屋に立っているように感じる",
+          "avoid": [
+            "ゲームっぽい誇張",
+            "過剰なブルームや彩度",
+            "のっぺりした素材"
+          ],
+          "light_budget": "窓からの日光と室内灯",
+          "references": [
+            "実写の不動産写真"
+          ]
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "眠い",
+            "colorSaturation": "普通",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋外(空が見える)",
+            "environmentLight": "既定の手続き空のまま(HDRI なし)",
+            "sun": "あり",
+            "otherLights": "なし",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "素通し(トーンマップのみ)",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "ほぼ無い",
+            "untouchedMaterials": "ほぼ全部",
+            "ambientOcclusion": "なし",
+            "contactShadows": "なし"
+          },
+          "findings": [
+            {
+              "code": "NO_HDRI",
+              "issue": "環境マップ(HDRI)が無く、既定の手続き空のまま",
+              "severity": "重大"
+            },
+            {
+              "code": "POST_PASSTHROUGH",
+              "issue": "ポストプロセスが素通し(色調の仕上げが無い)",
+              "severity": "重大"
+            },
+            {
+              "code": "FLAT_IMAGE",
+              "issue": "明暗の幅が狭く、眠い絵になっている",
+              "severity": "重大"
+            },
+            {
+              "code": "SUN_ONLY",
+              "issue": "光源が太陽だけで、補助光(フィル・リム)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "中"
+            },
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_NORMAL_MAPS",
+              "issue": "法線マップが使われておらず、表面がつるつる",
+              "severity": "中"
+            },
+            {
+              "code": "DEFAULT_PBR",
+              "issue": "ほとんどの素材が既定の質感(roughness/metallic)のまま",
+              "severity": "中"
+            },
+            {
+              "code": "NO_SSAO",
+              "issue": "SSAO(接触部の陰り)が無い",
+              "severity": "中"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "C_puzzle",
+      "expect": [
+        "keep_as_is",
+        "tone_down_grading"
+      ],
+      "labelSource": "claude-draft",
+      "note": "フォグ無しは狙いどおり。強いブルームを抑えるのは可",
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面",
+            "霧で遠くがぼやける",
+            "不気味さ"
+          ],
+          "light_budget": "昼の太陽と空の環境光"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "とても強い",
+            "colorSaturation": "とても鮮やか",
+            "crushedBlackArea": "少し",
+            "blownWhiteArea": "少し",
+            "setting": "屋外(空が見える)",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "あり",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・コントラスト・彩度補正",
+            "bloomStrength": "とても強い",
+            "movingParticles": "いくつも",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "中"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "C_realistic",
+      "expect": "tone_down_grading",
+      "labelSource": "claude-draft",
+      "note": "過剰なブルームと彩度を戻す",
+      "context": {
+        "brief": {
+          "title": "Apartment 3F",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "自然",
+            "生活感",
+            "落ち着いた"
+          ],
+          "player_should_feel": "実在する部屋に立っているように感じる",
+          "avoid": [
+            "ゲームっぽい誇張",
+            "過剰なブルームや彩度",
+            "のっぺりした素材"
+          ],
+          "light_budget": "窓からの日光と室内灯",
+          "references": [
+            "実写の不動産写真"
+          ]
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "とても強い",
+            "colorSaturation": "とても鮮やか",
+            "crushedBlackArea": "少し",
+            "blownWhiteArea": "少し",
+            "setting": "屋外(空が見える)",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "あり",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・コントラスト・彩度補正",
+            "bloomStrength": "とても強い",
+            "movingParticles": "いくつも",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "中"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "D_junction",
+      "expect": "keep_as_is",
+      "labelSource": "claude-draft",
+      "note": "指摘(眠い・動きなし・フォグなし・無彩色)は全部狙いどおり",
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "動くもの(静止した空間が主役)",
+            "汚れや生活感",
+            "強いコントラスト",
+            "霧で形がぼやけること"
+          ],
+          "light_budget": "天井の蛍光灯の均一な光",
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "眠い",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "なし",
+            "otherLights": "いくつも",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正",
+            "bloomStrength": "弱い",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "半分くらい",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "FLAT_IMAGE",
+              "issue": "明暗の幅が狭く、眠い絵になっている",
+              "severity": "重大"
+            },
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "D_puzzle",
+      "expect": [
+        "boost_color",
+        "deepen_contrast",
+        "apply_look"
+      ],
+      "labelSource": "claude-draft",
+      "note": "色と明暗差が無い",
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面",
+            "霧で遠くがぼやける",
+            "不気味さ"
+          ],
+          "light_budget": "昼の太陽と空の環境光"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "眠い",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "なし",
+            "otherLights": "いくつも",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正",
+            "bloomStrength": "弱い",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "半分くらい",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "FLAT_IMAGE",
+              "issue": "明暗の幅が狭く、眠い絵になっている",
+              "severity": "重大"
+            },
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "D_horror",
+      "expect": "apply_look",
+      "labelSource": "claude-draft",
+      "note": "明るく均一な照明をホラーへ丸ごと変える",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "avoid": [
+            "明るく均一な照明",
+            "鮮やかな色",
+            "陽気な雰囲気"
+          ],
+          "light_budget": "懐中電灯と数個の弱い電球だけ",
+          "notes": "暗闇で見えないこと自体が恐怖の主役"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "眠い",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "なし",
+            "otherLights": "いくつも",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正",
+            "bloomStrength": "弱い",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "半分くらい",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "FLAT_IMAGE",
+              "issue": "明暗の幅が狭く、眠い絵になっている",
+              "severity": "重大"
+            },
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "D2_junction",
+      "expect": "keep_as_is",
+      "labelSource": "claude-draft",
+      "note": "指摘(動きなし・フォグなし・無彩色)は全部狙いどおり",
+      "context": {
+        "brief": {
+          "title": "JUNCTION",
+          "genre": "リミナル空間の錯覚パズル",
+          "mood": [
+            "静か",
+            "空虚",
+            "少し不安",
+            "白っぽい"
+          ],
+          "player_should_feel": "誰もいない同じような廊下が続き、見え方の継ぎ目に気づいたとき背筋が冷える",
+          "avoid": [
+            "敵や派手なエフェクト",
+            "動くもの(静止した空間が主役)",
+            "汚れや生活感",
+            "強いコントラスト",
+            "霧で形がぼやけること"
+          ],
+          "light_budget": "天井の蛍光灯の均一な光",
+          "notes": "空間の継ぎ目(錯覚)を読ませるため、形がはっきり見えることが大事"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "普通",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "なし",
+            "otherLights": "いくつも",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正",
+            "bloomStrength": "弱い",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "半分くらい",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "D2_puzzle",
+      "expect": "boost_color",
+      "labelSource": "claude-draft",
+      "note": "明暗差は普通。足りないのは色",
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面",
+            "霧で遠くがぼやける",
+            "不気味さ"
+          ],
+          "light_budget": "昼の太陽と空の環境光"
+        },
+        "facts": {
+          "look": {
+            "brightness": "明るい",
+            "contrast": "普通",
+            "colorSaturation": "くすんでいる",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "なし",
+            "otherLights": "いくつも",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正",
+            "bloomStrength": "弱い",
+            "movingParticles": "なし",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "半分くらい",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_MOTION",
+              "issue": "画面の中で動くもの(パーティクル)が無い",
+              "severity": "中"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            },
+            {
+              "code": "DESATURATED",
+              "issue": "色がほとんど無い(彩度が低い)",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "E_realistic",
+      "expect": "keep_as_is",
+      "labelSource": "claude-draft",
+      "note": "フォグ無しは屋内の写実として正しい",
+      "context": {
+        "brief": {
+          "title": "Apartment 3F",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "自然",
+            "生活感",
+            "落ち着いた"
+          ],
+          "player_should_feel": "実在する部屋に立っているように感じる",
+          "avoid": [
+            "ゲームっぽい誇張",
+            "過剰なブルームや彩度",
+            "のっぺりした素材"
+          ],
+          "light_budget": "窓からの日光と室内灯",
+          "references": [
+            "実写の不動産写真"
+          ]
+        },
+        "facts": {
+          "look": {
+            "brightness": "中くらい",
+            "contrast": "メリハリがある",
+            "colorSaturation": "普通",
+            "crushedBlackArea": "少し",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "あり",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正・コントラスト",
+            "bloomStrength": "中くらい",
+            "movingParticles": "ひとつ",
+            "dirtAndWearDecals": "いくつも",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "E2_realistic",
+      "expect": "add_decals",
+      "labelSource": "claude-draft",
+      "note": "生活感(汚れ・使われた痕跡)だけが無い",
+      "context": {
+        "brief": {
+          "title": "Apartment 3F",
+          "genre": "写実的な屋内探索",
+          "mood": [
+            "自然",
+            "生活感",
+            "落ち着いた"
+          ],
+          "player_should_feel": "実在する部屋に立っているように感じる",
+          "avoid": [
+            "ゲームっぽい誇張",
+            "過剰なブルームや彩度",
+            "のっぺりした素材"
+          ],
+          "light_budget": "窓からの日光と室内灯",
+          "references": [
+            "実写の不動産写真"
+          ]
+        },
+        "facts": {
+          "look": {
+            "brightness": "中くらい",
+            "contrast": "メリハリがある",
+            "colorSaturation": "普通",
+            "crushedBlackArea": "少し",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "あり",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正・コントラスト",
+            "bloomStrength": "中くらい",
+            "movingParticles": "ひとつ",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "E_horror",
+      "expect": "apply_look",
+      "labelSource": "claude-draft",
+      "note": "普通の部屋をホラーの光と色調へ",
+      "context": {
+        "brief": {
+          "title": "Nocturne",
+          "genre": "一人称ホラー",
+          "mood": [
+            "暗い",
+            "息苦しい",
+            "孤独"
+          ],
+          "player_should_feel": "懐中電灯の外に何かいる気がして、進むのが怖い",
+          "avoid": [
+            "明るく均一な照明",
+            "鮮やかな色",
+            "陽気な雰囲気"
+          ],
+          "light_budget": "懐中電灯と数個の弱い電球だけ",
+          "notes": "暗闇で見えないこと自体が恐怖の主役"
+        },
+        "facts": {
+          "look": {
+            "brightness": "中くらい",
+            "contrast": "メリハリがある",
+            "colorSaturation": "普通",
+            "crushedBlackArea": "少し",
+            "blownWhiteArea": "少し",
+            "setting": "屋内",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "あり",
+            "otherLights": "少し",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・露出補正・コントラスト",
+            "bloomStrength": "中くらい",
+            "movingParticles": "ひとつ",
+            "dirtAndWearDecals": "いくつも",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "軽微"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "F_puzzle",
+      "expect": "lower_exposure",
+      "labelSource": "claude-draft",
+      "note": "白飛び。フォグ無しは狙いどおり",
+      "context": {
+        "brief": {
+          "title": "ころころパズル",
+          "genre": "明るいパズル",
+          "mood": [
+            "明るい",
+            "かわいい",
+            "すっきり"
+          ],
+          "player_should_feel": "盤面が一目で読めて、解けると気持ちいい",
+          "avoid": [
+            "暗くて見づらい画面",
+            "霧で遠くがぼやける",
+            "不気味さ"
+          ],
+          "light_budget": "昼の太陽と空の環境光"
+        },
+        "facts": {
+          "look": {
+            "brightness": "とても明るい",
+            "contrast": "メリハリがある",
+            "colorSaturation": "鮮やか",
+            "crushedBlackArea": "ほぼ無い",
+            "blownWhiteArea": "目立つ",
+            "setting": "屋外(空が見える)",
+            "environmentLight": "HDRI(実写の環境光)あり",
+            "sun": "あり",
+            "otherLights": "ひとつ",
+            "shadowCastingLights": "あり",
+            "fog": "なし",
+            "postEffects": "ブルーム・ビネット・コントラスト",
+            "bloomStrength": "中くらい",
+            "movingParticles": "少し",
+            "dirtAndWearDecals": "なし",
+            "normalMappedMeshes": "大半",
+            "untouchedMaterials": "一部",
+            "ambientOcclusion": "あり",
+            "contactShadows": "あり"
+          },
+          "findings": [
+            {
+              "code": "CLIPPED_WHITES",
+              "issue": "白飛びしている面積が大きい",
+              "severity": "重大"
+            },
+            {
+              "code": "NO_FOG",
+              "issue": "空気(ボリュメトリックフォグ)が入っていない",
+              "severity": "中"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -24,6 +24,8 @@ export type SceneFacts = {
   ssr?: { enabled?: boolean };
   /** パーティクル放出器の数(動くもの)。 */
   emitterCount?: number;
+  /** デカール(汚れ・傷)の数。auditScene は見ない(有無の良し悪しは作品による)が、判断段へ渡す。 */
+  decalCount?: number;
   /** シーンのエンティティ数。 */
   entityCount?: number;
   /** メッシュを持つエンティティ数。 */
@@ -56,7 +58,22 @@ export type Severity = "high" | "medium" | "low";
 export const CATEGORIES = ["light", "air", "grade", "motion", "material", "contact", "image"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
+/**
+ * 指摘の安定した識別子。what は数値入りの日本語で版ごとに言い回しが変わるので、
+ * 判断段(jev/polishJudge.ts)や評価ケースが指摘を指すときはこちらを使う。
+ * ★増やしたら jev/polishJudge.ts の FINDING_TEXT / FIX_BY_CODE と
+ *   jev/questions/finding.intended.jevq.json の lookup.gloss にも足すこと(テストが落ちて気付ける)。
+ */
+export const FINDING_CODES = [
+  "NO_LIGHTS", "SUN_ONLY", "LIGHTS_OVER_BUDGET", "NO_SHADOW_CASTER", "NO_HDRI",
+  "NO_FOG", "POST_PASSTHROUGH", "NO_BLOOM", "NO_VIGNETTE", "GODRAYS_FOG_DOUBLE",
+  "NO_MOTION", "NO_NORMAL_MAPS", "DEFAULT_PBR", "NO_SSAO", "NO_CONTACT_SHADOW",
+  "FLAT_IMAGE", "CLIPPED_WHITES", "CRUSHED_BLACKS", "DESATURATED",
+] as const;
+export type FindingCode = (typeof FINDING_CODES)[number];
+
 export type Finding = {
+  code: FindingCode;
   category: Category;
   severity: Severity;
   /** 何が足りないか(1 行)。 */
@@ -137,14 +154,14 @@ export function auditScene(f: SceneFacts): Finding[] {
     const others = f.lights.filter((l) => !l.type.toLowerCase().includes("direction"));
     if (f.lights.length === 0) {
       out.push({
-        category: "light", severity: "high",
+        code: "NO_LIGHTS", category: "light", severity: "high",
         what: "ライトが 1 つも無い",
         why: "環境光だけの絵は陰影が付かず、形が読めない平面の集まりに見える。",
         fix: "dx12_apply_lighting_preset(preset:'day') か dx12_look_apply(preset:'golden_hour')",
       });
     } else if (dir.length > 0 && others.length === 0) {
       out.push({
-        category: "light", severity: "medium",
+        code: "SUN_ONLY", category: "light", severity: "medium",
         what: "光源が太陽 1 灯だけ(補助光が無い)",
         why: "キーライトだけだと影が真っ黒に潰れ、立体の『回り込み』が消えて安っぽく見える。"
           + "実写もゲームも、見せたい物には必ずフィル(起こし)とリム(輪郭)が入っている。",
@@ -154,7 +171,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     }
     if (f.lights.some((l) => l.overBudget)) {
       out.push({
-        category: "light", severity: "high",
+        code: "LIGHTS_OVER_BUDGET", category: "light", severity: "high",
         what: "ライトが上限を超えていて、超過分は描画されていない",
         why: "『置いたのに明るくならない』の原因はほぼこれ。無言で切り捨てられる。",
         fix: "dx12_list_lights で overBudget のものを消すか range を絞る",
@@ -162,7 +179,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     }
     if (f.lights.length > 0 && !f.lights.some((l) => l.castShadow)) {
       out.push({
-        category: "light", severity: "medium",
+        code: "NO_SHADOW_CASTER", category: "light", severity: "medium",
         what: "影を落とすライトが 1 つも無い",
         why: "影が無いと物が床から浮いて見える(接地感が消える)。絵の説得力はほぼ影で決まる。",
         fix: "主要なライトの castShadow を有効にする(dx12_set_component component:'pointLight'/'spotLight' data:{castShadow:true})",
@@ -173,7 +190,7 @@ export function auditScene(f: SceneFacts): Finding[] {
   //   空文字だけ見ていると、既定のシーンがそのまま合格してしまう(実測で踏んだ)。
   if (f.envMapPath !== undefined && (f.envMapPath === "" || f.envMapPath === PROCEDURAL_SKY)) {
     out.push({
-      category: "light", severity: "high",
+      code: "NO_HDRI", category: "light", severity: "high",
       what: "環境マップ(HDRI)が無く、手続き空のまま",
       why: "既定の空は全体に青を乗せて彩度を奪う(実測: 同じ木箱が青灰色 → 本来の木の色になった)。"
         + "金属と光沢は【映り込む物が無いと質感そのものが出ない】。",
@@ -186,7 +203,7 @@ export function auditScene(f: SceneFacts): Finding[] {
   const fogOn = f.fog?.enabled === true && (f.fog?.density ?? 0) > 0.001;
   if (f.fog && !fogOn) {
     out.push({
-      category: "air", severity: f.outdoor === false ? "low" : "medium",
+      code: "NO_FOG", category: "air", severity: f.outdoor === false ? "low" : "medium",
       what: "空気(ボリュメトリックフォグ)が入っていない",
       why: "遠近が濃さで分かれないと、遠景と近景が同じ平面に貼り付いて見える。"
         + "光の筋(ゴッドレイ)も空気が無いと立体的に出ない。",
@@ -201,7 +218,7 @@ export function auditScene(f: SceneFacts): Finding[] {
                     "autoExposureOn", "lutOn", "grainOn"].filter((k) => on(f.post, k));
     if (graded.length === 0) {
       out.push({
-        category: "grade", severity: "high",
+        code: "POST_PASSTHROUGH", category: "grade", severity: "high",
         what: "ポストプロセスが素通し(トーンマップだけ)",
         why: "HDR の絵をそのまま出すと『眠い CG』になる。ブルーム・露出・コントラストが"
           + "入って初めて『撮られた絵』になる。",
@@ -209,7 +226,7 @@ export function auditScene(f: SceneFacts): Finding[] {
       });
     } else if (!on(f.post, "bloomOn")) {
       out.push({
-        category: "grade", severity: "medium",
+        code: "NO_BLOOM", category: "grade", severity: "medium",
         what: "ブルームが無効",
         why: "光源や発光パーティクルが【ただの明るい面】になる。加算エフェクトは"
           + "ブルームに乗って初めて光って見える。",
@@ -218,7 +235,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     }
     if (graded.length > 0 && !on(f.post, "vignetteOn")) {
       out.push({
-        category: "grade", severity: "low",
+        code: "NO_VIGNETTE", category: "grade", severity: "low",
         what: "ビネットが無い",
         why: "四隅が明るいままだと視線が画面外へ逃げる。わずかな減光で中央へ誘導できる。",
         fix: "dx12_set_post_process(vignetteOn:true, vignette:0.28, vignetteRadius:0.8, vignetteSoftness:0.5)",
@@ -226,7 +243,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     }
     if (on(f.post, "godraysOn") && fogOn && numOf(f.post, "grIntensity") > 0.5) {
       out.push({
-        category: "air", severity: "low",
+        code: "GODRAYS_FOG_DOUBLE", category: "air", severity: "low",
         what: "ゴッドレイとボリュメトリックフォグが両方強い",
         why: "太陽の散乱が二重に乗って白飛びする。どちらかを主役にすること。",
         fix: "dx12_set_post_process(grIntensity:0.3) か dx12_set_volumetric_fog(sunIntensity:0.6)",
@@ -237,7 +254,7 @@ export function auditScene(f: SceneFacts): Finding[] {
   // ── 動き ────────────────────────────────────────────
   if (f.emitterCount !== undefined && f.emitterCount === 0) {
     out.push({
-      category: "motion", severity: "medium",
+      code: "NO_MOTION", category: "motion", severity: "medium",
       what: "画面の中で動くものが 1 つも無い(パーティクルがゼロ)",
       why: "静止した絵は『作りかけ』に見える。埃・虫・火の粉・葉のような"
         + "小さな動きが 1 つ入るだけで空気が生きる(安い割に効果が大きい)。",
@@ -250,7 +267,7 @@ export function auditScene(f: SceneFacts): Finding[] {
   if (f.meshCount !== undefined && f.meshCount > 0) {
     if (f.normalMapCount !== undefined && f.normalMapCount === 0) {
       out.push({
-        category: "material", severity: "medium",
+        code: "NO_NORMAL_MAPS", category: "material", severity: "medium",
         what: "法線マップが 1 枚も使われていない",
         why: "面がつるつるのままだと、どんなに光を凝っても『粘土の模型』に見える。"
           + "凹凸は光の当たり方でしか伝わらない。",
@@ -261,7 +278,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     const defRatio = (f.defaultPbrCount ?? 0) / f.meshCount;
     if (defRatio > 0.8) {
       out.push({
-        category: "material", severity: "medium",
+        code: "DEFAULT_PBR", category: "material", severity: "medium",
         what: `メッシュの ${Math.round(defRatio * 100)}% が既定の PBR 値のまま`,
         why: "roughness が全部同じだと、木も金属も布も同じ『プラスチック』に見える。"
           + "質感の差は roughness の差で出る。",
@@ -274,7 +291,7 @@ export function auditScene(f: SceneFacts): Finding[] {
   // ── 接地 ────────────────────────────────────────────
   if (f.ssao && f.ssao.enabled === false) {
     out.push({
-      category: "contact", severity: "medium",
+      code: "NO_SSAO", category: "contact", severity: "medium",
       what: "SSAO(接触部の陰り)が無効",
       why: "物と床の接点に陰りが無いと、置いてあるのではなく浮いて見える。",
       fix: "dx12_set_ssao(enabled:true, intensity:0.8, radius:0.5)",
@@ -282,7 +299,7 @@ export function auditScene(f: SceneFacts): Finding[] {
   }
   if (f.contactShadow && f.contactShadow.enabled === false && f.ssao?.enabled) {
     out.push({
-      category: "contact", severity: "low",
+      code: "NO_CONTACT_SHADOW", category: "contact", severity: "low",
       what: "コンタクトシャドウが無効",
       why: "シャドウマップは細かい接地の影を落としきれない。小物の足元が甘いままになる。",
       fix: "dx12_set_contact_shadow(enabled:true)",
@@ -294,7 +311,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     const im = f.image;
     if (im.dynamicRange < 0.35) {
       out.push({
-        category: "image", severity: "high",
+        code: "FLAT_IMAGE", category: "image", severity: "high",
         what: `明暗の幅が狭い(実効レンジ ${im.dynamicRange.toFixed(2)})`,
         why: "一番明るい所と暗い所の差が小さい絵は、霧がかかったように眠く見える。"
           + "まず光で差を作り、それでも足りなければコントラストで詰める。",
@@ -304,7 +321,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     }
     if (im.whitePct > 8) {
       out.push({
-        category: "image", severity: "high",
+        code: "CLIPPED_WHITES", category: "image", severity: "high",
         what: `白飛びが多い(画面の ${im.whitePct.toFixed(1)}%)`,
         why: "飛んだ所は色も形も失われる。明るさは露出で作るもので、飽和で作るものではない。",
         fix: "dx12_set_post_process(exposureOn:true, exposure:0.8) か、"
@@ -313,7 +330,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     }
     if (im.blackPct > 35) {
       out.push({
-        category: "image", severity: "medium",
+        code: "CRUSHED_BLACKS", category: "image", severity: "medium",
         what: `真っ黒な面積が大きい(画面の ${im.blackPct.toFixed(1)}%)`,
         why: "暗いのと『何も無い』のは違う。潰れた所に情報が無いと、"
           + "作り込んでいない場所を隠しているように見える。",
@@ -323,7 +340,7 @@ export function auditScene(f: SceneFacts): Finding[] {
     }
     if (im.saturation < 0.08) {
       out.push({
-        category: "image", severity: "low",
+        code: "DESATURATED", category: "image", severity: "low",
         what: `彩度がほぼ無い(${im.saturation.toFixed(3)})`,
         why: "白黒狙いでないなら、色が無い＝マテリアルか環境光のどちらかが死んでいる。",
         fix: "dx12_scene_env で HDRI を入れる / dx12_set_post_process(saturationOn:true, saturation:1.15)",

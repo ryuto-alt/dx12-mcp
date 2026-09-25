@@ -24,7 +24,7 @@ for (const m of [
   // 同期編集
   "set_transform", "set_component", "remove_component", "set_parent",
   "rename_entity", "select_entity", "focus_camera", "set_pbr", "set_color", "set_lua_property",
-  "set_scene_settings", "undo", "redo", "save_scene",
+  "set_scene_settings", "save_scene",
   "create_lua_component", "attach_lua_component",
   "create_shader", "read_shader", "set_mesh_shader",
   // 入力シミュレーション(即時)
@@ -85,6 +85,12 @@ TIMEOUT_BY_METHOD["import_asset"] = 60000;
 TIMEOUT_BY_METHOD["read_texture"] = 15000;
 // step_frames は最大 600 フレーム(~10s)回ってから返るので長めに。
 TIMEOUT_BY_METHOD["step_frames"] = 30000;
+// 知覚層: 指定視点へ切り替え → 決定論で settleFrames(最大 240)落ち着かせる → ID パスの読み戻しと集計。
+// 普段 0.1〜0.4 秒だが、settleFrames を大きくしたときと重いシーンのために長めに取る。
+TIMEOUT_BY_METHOD["perceive"] = 30000;
+// Undo / Redo / トランザクションの確定・巻き戻しは遅延応答。巻き戻しは消した物のモデルを読み直す(guid ごと復元)ので、
+// 生成系(spawn_model = 45000)と同じ桁を取る。
+for (const m of ["undo", "redo", "transaction_commit", "transaction_rollback"]) TIMEOUT_BY_METHOD[m] = 45000;
 // 遅延同期(エンティティ生成/削除/複製) = 15000ms
 for (const m of ["create_entity", "delete_entity", "duplicate_entity"]) TIMEOUT_BY_METHOD[m] = 15000;
 // 遅延同期(モデル/プレハブ読込・シーン遷移、GPU/IO が重い) = 45000ms
