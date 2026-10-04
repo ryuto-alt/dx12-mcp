@@ -1,7 +1,7 @@
 {
  "_doc": "旧 220 ツールの tools/list を固定したスナップショット(scripts/gen_legacy_snapshot.mjs で生成/--check で検査)。sha256 は M0 時点の tools/list の 1 ツール分の JSON.stringify(legacy モードと完全一致)。semSha256 は outputSchema と M3 が足した destructiveHint を外した『意味的な同一性』のハッシュ(full / core 面の旧ツールはこちらで比較)。outputSchemaBytes は M3 で削った outputSchema の JSON バイト数。",
  "count": 220,
- "totalBytes": 420946,
+ "totalBytes": 421175,
  "outputSchemaBytesTotal": 61509,
  "tools": [
   {
@@ -445,8 +445,8 @@
   },
   {
    "name": "dx12_set_pbr",
-   "sha256": "d1484fb9dcc995b0bd175970b539e311e274ac903dcfb3beb56ea4a9fe68ce65",
-   "semSha256": "794df5e29be0b0556651e4e581016c7cff02bd661983ceb14cbda86c71945910",
+   "sha256": "f8c3090bee92bb779d9e4c4563d8798ca1129bdcbc496f6d6832d1998629f1bd",
+   "semSha256": "6a841db60280d0fe8f9737aed69c89aa182ea2dab0b988b0d73b9265ca3e1528",
    "outputSchemaBytes": 303,
    "argKeys": [
     "entity",
@@ -459,7 +459,8 @@
     "alphaCutoff",
     "opacity",
     "emissiveIntensity",
-    "emissiveColor"
+    "emissiveColor",
+    "aoStrength"
    ],
    "annotations": {
     "title": "PBR マテリアル設定",

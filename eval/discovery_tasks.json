@@ -475,6 +475,58 @@
       ],
       "holdout": "undo my last edit",
       "core": []
+    },
+    {
+      "id": 31,
+      "design": "dx12_blender_place",
+      "expect": [
+        "dx12_blender_place"
+      ],
+      "queries": [
+        "Blender で並べた配置をそのままエンジンに持ってきたい",
+        "Blender のレイアウトを dx12 のシーンへ反映して"
+      ],
+      "holdout": "place my blender layout into the engine scene",
+      "core": []
+    },
+    {
+      "id": 32,
+      "design": "dx12_material_search",
+      "expect": [
+        "dx12_material_search"
+      ],
+      "queries": [
+        "高品質な木の床のテクスチャ素材を探したい",
+        "錆びた金属の PBR 素材を検索して"
+      ],
+      "holdout": "find a good brick wall texture",
+      "core": []
+    },
+    {
+      "id": 33,
+      "design": "dx12_blender_material_apply",
+      "expect": [
+        "dx12_blender_material_apply"
+      ],
+      "queries": [
+        "Blender のオブジェクトに高品質な素材を実寸で貼りたい",
+        "Blender の箱にレンガの質感を貼って、繰り返しが目立たないようにして"
+      ],
+      "holdout": "apply a photoreal PBR material to my blender mesh",
+      "core": []
+    },
+    {
+      "id": 34,
+      "design": "dx12_material_bake",
+      "expect": [
+        "dx12_material_bake"
+      ],
+      "queries": [
+        "Blender のマテリアルをエンジン用のテクスチャに焼きたい",
+        "汚しや錆の擦れ表現をベイクして"
+      ],
+      "holdout": "bake my blender material into textures for the engine",
+      "core": []
     }
   ],
   "_doc2": "holdout は言い換えの検証用(辞書・ヒントの調整に使っていない英語/口語の 1 通り)。discovery.test.ts は queries と holdout の両方を数える。",

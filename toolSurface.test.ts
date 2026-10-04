@@ -36,6 +36,7 @@ const CORE_MAX_BYTES = 120 * 1024;   // 設計書 §5.2 M3 (d)① / §4.1.7
 // DXR パストレーサー(Q1a)。toolset/pathTracer.ts が full / core / shell 面の末尾へ足す(legacy 面には出さない)。
 const PT_TOOLS = ["dx12_render_reference", "dx12_render_reference_status", "dx12_render_reference_cancel"];
 const VG_TOOLS = ["dx12_vg_stats", "dx12_set_virtual_geometry"];
+const BLENDER_PLACE_TOOLS = ["dx12_blender_place"];   // toolset/blenderPlace.ts(Blender の配置をそのまま置く)
 const ORACLE_TOOLS = ["dx12_oracle"];   // toolset/oracles.ts(書き換えられない正解: 金画像・性能予算・封印。seal だけ guarded)
 const LUA_STEP_TOOLS = ["dx12_lua_step"];   // toolset/luaStep.ts(eval_lua → step_frames → eval_lua を 1 回に束ねた guarded な合成ツール)
 console.log("[1] legacy 面: M0 のスナップショットと一致");
@@ -53,7 +54,7 @@ check("先頭 5 本が shell", eq(full.tools.slice(0, 5).map((t: any) => t.name)
 const restAll = full.tools.slice(5);
 const rest = restAll.slice(0, 220);
 check("旧 220 本の名前と並びが同一のまま続く", rest.length === 220 && eq(rest.map((t: any) => t.name), LEGACY_NAMES), rest.length);
-check("旧 220 本の後ろ(末尾)にパストレーサーの 3 本と仮想ジオメトリの 2 本と lua_step の 1 本と oracle の 1 本とフリートの 6 本とジョブの 6 本とエディタ操作の 4 本とシーン仕様の 2 本だけが足される", eq(restAll.slice(220).map((t: any) => t.name), [...PT_TOOLS, ...VG_TOOLS, ...LUA_STEP_TOOLS, ...ORACLE_TOOLS, ...FLEET_TOOLS, ...JOB_TOOLS, ...EDITOR_TOOLS, ...SCENE_SPEC_TOOLS]), restAll.slice(220).map((t: any) => t.name));
+check("旧 220 本の後ろ(末尾)にパストレーサーの 3 本と仮想ジオメトリの 2 本と lua_step の 1 本と oracle の 1 本と blender_place の 1 本とフリートの 6 本とジョブの 6 本とエディタ操作の 4 本とシーン仕様の 2 本だけが足される", eq(restAll.slice(220).map((t: any) => t.name), [...PT_TOOLS, ...VG_TOOLS, ...LUA_STEP_TOOLS, ...ORACLE_TOOLS, ...BLENDER_PLACE_TOOLS, ...FLEET_TOOLS, ...JOB_TOOLS, ...EDITOR_TOOLS, ...SCENE_SPEC_TOOLS]), restAll.slice(220).map((t: any) => t.name));
 const semDiff = rest.filter((t: any) => sha(semanticView(t)) !== SNAP_BY_NAME.get(t.name)?.semSha256).map((t: any) => t.name);
 check("旧 220 本の name / title / 説明 / inputSchema / annotations / _meta が意味的に同一(outputSchema と destructiveHint 以外は 1 バイトも変わらない)", semDiff.length === 0, semDiff.slice(0, 10));
 const inputDiff = rest.filter((t: any, i: number) => sha(t.inputSchema) !== sha(legacy.tools[i].inputSchema) || t.description !== legacy.tools[i].description).map((t: any) => t.name);
@@ -144,7 +145,7 @@ check("shell の alwaysLoad は 5 本ちょうど(増やさない)", core.tools.
   const named = [...INSTRUCTIONS_CORE.matchAll(/dx12_[a-z_]+/g)].map((m) => m[0]);
   const listedSet = new Set(coreNames);
   const legacySet = new Set(LEGACY_NAMES);
-  const unresolved = [...new Set(named)].filter((n) => !listedSet.has(n) && !legacySet.has(n) && !FLEET_TOOL_SET.has(n) && !JOB_TOOL_SET.has(n) && !EDITOR_TOOL_SET.has(n) && !SCENE_SPEC_TOOL_SET.has(n) && !LUA_STEP_TOOLS.includes(n) && !ORACLE_TOOLS.includes(n) && !/^dx12_(get|set|list)_?$/.test(n) && !["dx12_"].includes(n));
+  const unresolved = [...new Set(named)].filter((n) => !listedSet.has(n) && !legacySet.has(n) && !FLEET_TOOL_SET.has(n) && !JOB_TOOL_SET.has(n) && !EDITOR_TOOL_SET.has(n) && !SCENE_SPEC_TOOL_SET.has(n) && !LUA_STEP_TOOLS.includes(n) && !ORACLE_TOOLS.includes(n) && !BLENDER_PLACE_TOOLS.includes(n) && !/^dx12_(get|set|list)_?$/.test(n) && !["dx12_"].includes(n));
   check("instructions(core)が挙げる dx12_ 名は tools/list か旧ツールに実在(省略記法を除く)", unresolved.length === 0, unresolved);
 }
 

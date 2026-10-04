@@ -12,7 +12,12 @@
  */
 
 import assert from "node:assert/strict";
+import net from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { buildPlaceScript } from "./blenderPlace.ts";
 import {
+  blenderCall, detectBlenderProtocol, officialToLegacy, resetBlenderProtocolCache, wrapForOfficial,
   blenderCandidatePaths, buildExportScript, buildMaterialScript, buildPolishScript, modelBrief,
   parseCodeResult, planImageRenames,
 } from "./blenderBridge.ts";
@@ -193,6 +198,121 @@ console.log("\n[22] modelBrief（実測に基づく注意）");
   assert.ok(b.materials.some((m) => m.includes("B=metallic")), "ORM の並び");
   assert.ok(b.gotchas.some((g) => g.includes("HDRI")), "環境光が無いと質感が出ない");
   pass("ベベル / 実寸 UV / PolyHaven / ORM / HDRI が全部入っている");
+}
+
+// ─── [23-30] 公式 Blender アドオン対応(プロトコル判定・応答の写し・SystemExit 禁止) ─────────────
+console.log("\n[23-30] 公式アドオン対応");
+{
+  // 公式の応答 → 旧形式(既存の呼び出し側と parseCodeResult がそのまま使える)
+  const ok = officialToLegacy({ status: "ok", result: {}, stdout: '{"a":1}\n' });
+  assert.deepStrictEqual(ok, { status: "success", result: { executed: true, result: '{"a":1}\n' } });
+  assert.deepStrictEqual(parseCodeResult(ok).json, { a: 1 });
+  pass("公式 ok → {status:success, result:{result: stdout}} に写り parseCodeResult が読める");
+
+  const ng = officialToLegacy({ status: "error", message: "Traceback...", stderr: "warn", stdout: "x" });
+  assert.equal(ng.status, "error");
+  assert.ok(ng.message!.includes("Traceback") && ng.message!.includes("warn"));
+  assert.equal(officialToLegacy({ status: "error" }).message, "Blender 側で失敗");
+  pass("公式 error → {status:error, message(traceback+stderr)}");
+
+  // ★Blender に送るスクリプトに SystemExit / sys.exit を入れない(公式は except Exception でしか受けず、サーバーまで抜ける)
+  const scripts = [
+    buildExportScript({ objectNames: ["A"], outPath: "C:/t/a.gltf" }),
+    buildPolishScript({ objectNames: ["A"] }),
+    buildMaterialScript({ objectNames: ["A"], keyword: "wood" }),
+    buildMaterialScript({ objectNames: ["A"], assetId: "x" }),
+    buildPlaceScript({ objects: [], assetsRoot: "C:/a", assetDir: "", group: "", exportMeshes: true }),
+  ];
+  for (const sc of scripts) assert.ok(!/SystemExit|sys\.exit|quit_blender/.test(sc), "SystemExit / sys.exit が入っている");
+  pass("生成スクリプトに SystemExit / sys.exit が含まれない(material は _main() の return で終わる)");
+  assert.ok(scripts[2].includes("def _main():") && scripts[2].includes("global ASSET"));
+  pass("buildMaterialScript は関数に包んで return で途中終了する(ASSET は global)");
+
+  // wrapForOfficial: 万一 SystemExit が来ても握りつぶし、元のコードは JSON 文字列として渡る
+  const w = wrapForOfficial("print('日本語')\nraise ValueError('x')");
+  assert.ok(w.includes("except SystemExit") && w.includes("exec(compile(") && w.includes("日本語"));
+  pass("公式へ送るコードは exec(compile(...)) で包まれる");
+}
+
+// プロトコル判定: 偽の Blender サーバー(公式 / 旧)で、判定・写し・キャッシュ・環境変数固定を確かめる
+console.log("\n[31-35] プロトコル判定(偽サーバー)");
+{
+  const NUL = String.fromCharCode(0);
+  const seen: { proto: string; code: string }[] = [];
+  const mk = (proto: "official" | "legacy") => new Promise<{ server: net.Server; port: number }>((resolve) => {
+    const server = net.createServer((sock) => {
+      let buf = "";
+      sock.on("data", (c) => {
+        buf += c.toString("utf8");
+        if (proto === "official") {
+          if (!buf.includes(NUL)) return;
+          const req = JSON.parse(buf.slice(0, buf.indexOf(NUL)));
+          buf = "";
+          seen.push({ proto, code: req.code });
+          sock.write(JSON.stringify({ status: "ok", result: { p: 1 }, stdout: "hello\n" }) + NUL);
+        } else {
+          // 旧アドオンは NUL 付きの JSON を parse できず、何も返さずに待つ(実測で公式の要求に無応答だったのと同じ)
+          let req: any;
+          try { req = JSON.parse(buf); } catch { return; }
+          buf = "";
+          seen.push({ proto, code: req.params?.code });
+          sock.write(JSON.stringify({ status: "success", result: { executed: true, result: "legacy-hello\n" } }));
+        }
+      });
+    });
+    server.listen(0, "127.0.0.1", () => resolve({ server, port: (server.address() as net.AddressInfo).port }));
+  });
+  const off = await mk("official");
+  const leg = await mk("legacy");
+  delete process.env.DX12_BLENDER_PROTOCOL;
+  resetBlenderProtocolCache();
+
+  assert.equal(await detectBlenderProtocol(off.port), "official");
+  const r1 = await blenderCall("execute_code", { code: "print(1)" }, { port: off.port });
+  assert.equal(r1.status, "success");
+  assert.equal(parseCodeResult(r1).stdout, "hello\n");
+  assert.ok(seen.filter((s) => s.proto === "official").some((s) => s.code.includes("exec(compile(")));
+  pass("公式を先に試して判定し、応答を旧形式に写す(コードは包まれて届く)");
+
+  const n0 = seen.length;
+  await blenderCall("execute_code", { code: "print(2)" }, { port: off.port });
+  assert.equal(seen.length - n0, 1, "判定結果はポートごとにキャッシュされ、プローブを撃ち直さない");
+  pass("判定結果はポートごとにキャッシュされる");
+
+  const t0 = Date.now();
+  assert.equal(await detectBlenderProtocol(leg.port), "legacy");
+  const r2 = await blenderCall("execute_code", { code: "print(3)" }, { port: leg.port });
+  assert.equal(parseCodeResult(r2).stdout, "legacy-hello\n");
+  assert.ok(Date.now() - t0 < 9000);
+  pass("公式に無応答なら旧プロトコルへ落ちる(旧は JSON をそのまま送る)");
+
+  resetBlenderProtocolCache();
+  process.env.DX12_BLENDER_PROTOCOL = "legacy";
+  assert.equal(await detectBlenderProtocol(off.port), "legacy");
+  process.env.DX12_BLENDER_PROTOCOL = "official";
+  assert.equal(await detectBlenderProtocol(leg.port), "official");
+  delete process.env.DX12_BLENDER_PROTOCOL;
+  pass("DX12_BLENDER_PROTOCOL=official|legacy で判定を固定できる");
+
+  resetBlenderProtocolCache();
+  const dead = await mk("legacy"); const deadPort = dead.port; dead.server.close();
+  await assert.rejects(() => detectBlenderProtocol(deadPort), /応答しない|ECONNREFUSED|connect/);
+  pass("どちらにも繋がらなければ分かる文言で失敗する");
+
+  off.server.close(); leg.server.close();
+}
+
+// DX12_BLENDER_PORT(別ポートの Blender で検証するため)
+console.log("\n[36] DX12_BLENDER_PORT");
+{
+  const { execFileSync } = await import("node:child_process");
+  const out = execFileSync(process.execPath, ["-e", "import('./blenderBridge.ts').then(m=>console.log(m.BLENDER_PORT))"],
+    { env: { ...process.env, DX12_BLENDER_PORT: "9877" }, cwd: path.dirname(fileURLToPath(import.meta.url)) }).toString().trim();
+  assert.equal(out, "9877");
+  const def = execFileSync(process.execPath, ["-e", "import('./blenderBridge.ts').then(m=>console.log(m.BLENDER_PORT))"],
+    { env: { ...process.env, DX12_BLENDER_PORT: "" }, cwd: path.dirname(fileURLToPath(import.meta.url)) }).toString().trim();
+  assert.equal(def, "9876");
+  pass("環境変数でポートを変えられる(既定 9876)");
 }
 
 console.log(`\nOK: ${passed} 件すべて成功`);

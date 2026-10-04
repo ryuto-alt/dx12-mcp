@@ -451,8 +451,8 @@ dx12_blender_ensure()
 # ⑤ ★仕上げる ← ここを飛ばすと「うすぺらい」物ができる
 dx12_blender_polish(objects:["Barrel"])
 
-# ⑥ ★素材を貼る ← ここを飛ばすと【真っ白】になる
-dx12_blender_material(objects:["Barrel"], keyword:"wood")
+# ⑥ ★素材を貼る ← ここを飛ばすと【真っ白】になる（高品質素材は下の「高品質な素材を使う」。旧 dx12_blender_material は PolyHaven 1 素材を貼るだけ）
+dx12_call(name:"dx12_blender_material_apply", args:{objects:["Barrel"], query:"木"})
 
 # ⑦ 規約どおりに書き出して取り込む
 dx12_blender_export(objects:["Barrel"], destPath:"models/barrel/barrel.gltf")
@@ -463,6 +463,45 @@ dx12_spawn_model(path:"models/barrel/barrel.gltf", group:"ENV")
 dx12_validate_layout(fix:"safe")
 ```
 
+### 高品質な素材を使う — `dx12_material_search` → `dx12_blender_material_apply` →(必要なら)`dx12_material_bake` → `dx12_blender_place`
+
+PolyHaven と ambientCG(どちらも CC0・API キー不要)の PBR 素材を、**実寸の縮尺・AO 入り ORM** で Blender のオブジェクトに貼り、エンジンへ持っていく。
+★この 3 本は `tools/list` に出ない(full 面の tools/list は M0 予算が 1KB 足らずのため)。`dx12_tool_search {query:"素材"}` で見つけて **`dx12_call {name, args}`** で撃つ。
+旧 `dx12_blender_material`(legacy・引数固定)ではなくこちらを推奨。★名前の注意: `dx12_material_apply` は別物(エンジン側のエンティティに PBR 4 点セットを当てる legacy ツール)。Blender のオブジェクトに貼るのは **`dx12_blender_material_apply`**。
+
+```
+dx12_call(name:"dx12_material_search", args:{query:"木の床", limit:5})   # → [{source, id, name, sizeM:[w,h]|null, maxRes, thumbnailUrl, license:"CC0", url}](日本語は英訳される。Blender 不要)
+dx12_call(name:"dx12_blender_material_apply", args:{objects:["Floor"], id:"wood_floor"})   # id か query。省略すると選択中に貼る
+dx12_call(name:"dx12_blender_material_apply", args:{objects:["Wall"], query:"レンガ", scaleM:1.2, antiTile:true, weathering:{edgeWear:0.4, dirt:0.6}})   # → needsBake:true
+dx12_call(name:"dx12_material_bake", args:{objects:["Wall"]})            # 数十秒〜数分(Cycles)。焼いた <元の名前>_dx12 が書き出しで自動的に使われる
+dx12_blender_place()                                                     # エンジンへ
+```
+
+- **実寸**: エンジンは `KHR_texture_transform` を読まないので Mapping ノードでは縮尺を合わせない。専用 UV マップ `dx12_uv` を作り(元 UV の辺比が一様なら元 UV を一様拡縮、そうでなければ箱投影 1UV=1m)、ループ UV を `1/scaleM` に拡縮して**先頭の UV マップ**にする(glTF の texCoord は並び順の番号で、エンジンは TEXCOORD_0 しか読まない)。元の UV マップは名前も中身も残る。`scaleM` 省略 = 素材の実寸(不明なら 2m)。
+- **AO**: orm の R を『glTF Material Output』の Occlusion へ。書き出すと `occlusionTexture` と `metallicRoughnessTexture` が同じ 1 枚(ORM)を指す。ORM は R=AO / G=roughness / B=metallic(素材に無いチャンネルは AO=1 / metallic=0)。
+- **needsBake**: antiTile / 箱投影ノード / weathering / bump はノードのままではエンジンへ行かない(書き出しはノードを評価しない)。`dx12_blender_material_apply` が `needsBake:true` と理由を返すので `dx12_material_bake` で焼く。すぐ書き出すなら `displacement:"none"`。
+- **bake は元を壊さない**: 焼くのはマテリアルの複製。元のマテリアル割り当てと元の UV は変えず、オブジェクトのカスタムプロパティ `dx12_baked_material` に焼いた方の名前を書く。`dx12_blender_place` / `dx12_blender_export` は書き出しの間だけ一時コピーのメッシュで差し替える。
+- **キャッシュ**: `%LOCALAPPDATA%\UnoEngine\materials\<source>\<id>\<res>\`(`color` / `roughness` / `metallic` / `normal_gl` / `ao` / `height` / `orm.png` / `meta.json`)。検索の一覧は 24 時間キャッシュ。8k は数百 MB(warnings)。ORM の詰めは窓なしの別 Blender で行いユーザーの Blender は固めない。焼いた PNG は .blend の隣の `dx12_baked\`(未保存なら `...\materials\_baked\untitled\`)。
+- ★PolyHaven の API は User-Agent が無いと 403。ambientCG の zip は Windows 標準の `tar.exe`(bsdtar)で展開する(Git Bash の GNU tar は zip を読めない)。
+
+### Blender で並べた配置をそのまま置く — `dx12_blender_place`
+
+`dx12_blender_export` は 1 つのモデルを出すだけ。**複数のオブジェクトを Blender で配置したなら、こちら 1 回**で同じ配置がエンジンに載る。
+
+```
+dx12_blender_place(dryRun:true)                    # まず計画だけ(spawn / update / 書き出すアセット)
+dx12_blender_place()                               # 選択中(無ければ表示中の全 MESH)を assets/models/blender/<.blend 名>/ へ書き出して group の下に置く
+dx12_blender_place(meshes:false)                   # Blender で動かしただけなら Transform だけ更新(速い)
+dx12_blender_place(prune:true)                     # Blender 側で消したものをエンジンからも消す
+```
+
+- 座標は Blender (x,y,z) → エンジン (x,z,-y)(実機で確認済み)。**group を動かせば全体が動く**。親子は平らにしてワールド変換で置く。
+- モディファイア無しのオブジェクトは mesh データ名で 1 回だけ書き出す(リンク複製 = 1 アセットを複数エンティティで共有)。モディファイア付きはオブジェクト固有。
+- ライト・カメラ・空は `skipped`(理由付き)。画像テクスチャの無いマテリアルは warnings(エンジンで真っ白になる)。
+- Blender のユーザーのオブジェクトは触らない(代表の一時コピーで書き出し、必ず消して選択も戻す)。エンジン側は 1 トランザクション = `dx12_undo` 1 回で戻る。
+- Blender は**公式アドオン(Blender Lab)・旧コミュニティ版のどちらでも**動く(自動判定。`DX12_BLENDER_PROTOCOL` / `DX12_BLENDER_PORT` で固定・変更)。
+- 置いた後は `dx12_validate_layout` と `dx12_screenshot_from`。
+
 ### なぜ「うすぺらい」「安っぽい」のか（2026-09-11 に実物で確かめた）
 
 | 症状 | 原因 | 直し方 |
@@ -470,7 +509,7 @@ dx12_validate_layout(fix:"safe")
 | 紙細工に見える | **角にベベルが無い**。完全に鋭い角は光を一切拾わない | `dx12_blender_polish`（3〜4mm / 2 段 / harden normals） |
 | 模様の大きさが物と合わない | **プリミティブの既定 UV は面ごとに 0..1**。60cm の箱にも 6m の壁にもテクスチャが 1 枚 | polish が実寸で切り直す（1 UV = 1m） |
 | 板が紙に見える / ちらつく | 厚みゼロの面 | polish が Solidify を掛ける |
-| **真っ白な物が出る** | エンジンは glTF の `baseColorFactor` を読まない。テクスチャ無しは白 | `dx12_blender_material`（PolyHaven の CC0 素材） |
+| **真っ白な物が出る** | エンジンは glTF の `baseColorFactor` を読まない。テクスチャ無しは白 | `dx12_blender_material_apply`（PolyHaven / ambientCG の CC0 素材。旧 `dx12_blender_material` は PolyHaven 1 素材のみ） |
 | 木や布が金属に見える | `rough` 単体を metallicRoughness として出すと **B（= metallic）に粗さが入る** | material が `arm` を優先、無ければ B=0 で合成 |
 | 全部に青が乗って彩度が低い | 環境光が既定の**手続き空** | `dx12_scene_env`（PolyHaven の HDRI） |
 | 仕上げてもシルエットが角ばる | **分割が足りない**。ベベルは角を丸めるだけ | 作る時点で 24〜32 分割にする（polish が面数を警告する） |

@@ -243,6 +243,10 @@ export const SEARCH_HINTS: Record<string, string> = {
   blender_export: "Blender 書き出し 取り込み glb 実寸検証",
   blender_polish: "Blender 仕上げ ベベル 法線 スムーズ",
   blender_material: "Blender マテリアル 素材を貼る",
+  material_search: "素材 検索 探す テクスチャ 質感 PBR 高品質 polyhaven ambientcg CC0 木 床 石 金属 錆 布 革 レンガ コンクリ 大理石",
+  blender_material_apply: "素材 貼る マテリアル テクスチャ 質感 PBR 高品質 実寸 縮尺 AO ORM 繰り返し 汚れ 錆 擦れ 風化 箱投影 blender オブジェクト",
+  material_bake: "焼く ベイク 焼き込み テクスチャ マテリアル 高品質 PBR antiTile 風化 汚し 法線 AO ORM cycles エンジン用 手続きマテリアル",
+  blender_place: "Blender 配置 レイアウト 並べた通りに置く 持ってくる 差分更新 リンク複製 インスタンス 並べ直し group モデルを一括で置く",
   // Git / マルチ
   git_status: "Git 状態 変更 差分 未コミット",
   git_branches: "Git ブランチ 一覧",

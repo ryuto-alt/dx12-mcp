@@ -122,7 +122,7 @@ reg(
   "PBR マテリアル設定",
   "エンティティの PBR パラメータ(metallic/roughness/UV スケール/透明/自己発光)を設定する。指定分のみ更新。"
   + "即時反映で {entityId, metallic, roughness, uvScaleU, uvScaleV, alphaMode, alphaCutoff, opacity, "
-  + "emissiveIntensity, emissiveColor} を返す。"
+  + "emissiveIntensity, emissiveColor, aoStrength} を返す。"
   + "透明は alphaMode(auto/opaque/mask/blend) + alphaCutoff + opacity。mask は影も同じ形に抜ける。"
   + "★自己発光(emissive)は emissiveIntensity を上げるだけで光る(色を省くと白)。ライティングも影も "
   + "通さず最終色へ加算するので、1 を超えるとブルームが乗る。天井照明パネル・看板・非常口サイン向け。"
@@ -161,10 +161,14 @@ reg(
       .length(3)
       .optional()
       .describe("自己発光の色 [r,g,b](0..1、リニア)。省略して強度だけ指定すると白になる"),
+    aoStrength: z
+      .number()
+      .optional()
+      .describe("マテリアル AO の強さ 0..1(0=オフ、負=モデルの値)。AO を持つモデル(ORM の R / glTF occlusionTexture)にだけ効き、間接光にだけ掛かる"),
   },
   { idempotentHint: true },
   ({ entity, name, metallic, roughness, uvScaleU, uvScaleV, alphaMode, alphaCutoff, opacity,
-     emissiveIntensity, emissiveColor }) =>
+     emissiveIntensity, emissiveColor, aoStrength }) =>
     run(() =>
       engine.call("set_pbr", {
         entity,
@@ -178,6 +182,7 @@ reg(
         opacity,
         emissiveIntensity,
         emissiveColor,
+        aoStrength,
       }),
     ),
 );

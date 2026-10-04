@@ -47,7 +47,7 @@ function score(pick: (t: (typeof tasks)[number]) => string[]) {
 console.log("[1] 検索の前提");
 check("カタログに旧 220 ツールと shell 5 本がある", shell.catalog.docs.filter((d) => d.tier === "legacy").length === 220 && shell.catalog.docs.filter((d) => d.tier === "shell").length === 5);
 check("エンジンのマニフェスト(同梱スナップショット)が取り込まれている", shell.deps.manifest.current?.source === "snapshot" && shell.deps.manifest.current.count > 150, shell.deps.manifest.current?.source);
-check("付録 A の 30 タスク × (言い換え 2 + holdout 1)", tasks.length === 30 && tasks.every((t) => t.queries.length === 2 && !!t.holdout && t.expect.length > 0));
+check("付録 A の 30 タスク(+ 追加分) × (言い換え 2 + holdout 1)", tasks.length >= 30 && tasks.every((t) => t.queries.length === 2 && !!t.holdout && t.expect.length > 0));
 check("許容ツールがすべて実在する", tasks.every((t) => t.expect.every((n) => shell.catalog.resolve(n))), tasks.flatMap((t) => t.expect).filter((n) => !shell.catalog.resolve(n)));
 {
   const a = JSON.stringify(shell.index.search("ブルームを調整", { limit: 8 }).hits.map((h) => [h.name, h.score]));

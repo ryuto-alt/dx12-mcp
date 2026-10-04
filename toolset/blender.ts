@@ -21,13 +21,18 @@ import { OUT, engine, entityId, jevProjectBaseDir, reg, regRaw, run } from "./co
  */
 async function enableAssetSources(): Promise<Record<string, unknown>> {
   try {
+    // ★旧コミュニティ版アドオンだけがシーンプロパティ blendermcp_use_* を持つ。公式(Blender Lab)版には無いので、
+    //   あれば立てる・無ければ飛ばす(代入すると AttributeError になる)。
     const resp = await blenderCall("execute_code", {
       code: [
         "import bpy, json",
         "sc = bpy.context.scene",
-        "sc.blendermcp_use_polyhaven = True",
+        "legacy = hasattr(sc, 'blendermcp_use_polyhaven')",
+        "if legacy:",
+        "    sc.blendermcp_use_polyhaven = True",
         "print(json.dumps({",
-        "  'polyhaven': sc.blendermcp_use_polyhaven,",
+        "  'legacyAddon': legacy,",
+        "  'polyhaven': sc.blendermcp_use_polyhaven if legacy else None,",
         "  'hyper3d': getattr(sc, 'blendermcp_use_hyper3d', False),",
         "  'sketchfab': getattr(sc, 'blendermcp_use_sketchfab', False),",
         "  'blender': bpy.app.version_string}))",
@@ -35,6 +40,11 @@ async function enableAssetSources(): Promise<Record<string, unknown>> {
     }, { timeoutMs: 30_000 });
     const { json } = parseCodeResult(resp);
     const st = (json ?? {}) as Record<string, unknown>;
+    if (st.legacyAddon === false)
+      return {
+        assetSources: st,
+        assetNote: "公式 Blender アドオンには素材ソースの切替が無い。PolyHaven は dx12_blender_material が直接取りに行く(requests。CC0・キー不要。Blender のオンラインアクセスが ON なら通る)",
+      };
     const off: string[] = [];
     if (!st.hyper3d) off.push("Hyper3D Rodin（テキスト→3D。API キーが要る）");
     if (!st.sketchfab) off.push("Sketchfab（既存モデルの検索。API キーが要る）");

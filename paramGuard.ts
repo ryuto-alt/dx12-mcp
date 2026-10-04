@@ -170,7 +170,9 @@ export const COMPOSITE_TOOLS: ReadonlySet<string> = new Set([
   "dx12_record_playtest", "dx12_run_playtests",
   // Blender 連携: engine method ではなく Blender のソケットとファイル操作。
   "dx12_blender_ensure", "dx12_model_brief", "dx12_blender_export", "dx12_asset_gap",
-  "dx12_blender_polish", "dx12_blender_material", "dx12_scene_env",
+  "dx12_blender_polish", "dx12_blender_material", "dx12_scene_env", "dx12_blender_place",
+  // 素材ライブラリ(PolyHaven / ambientCG)+ Blender への貼り付け・焼き: engine method ではなく Node の fetch と Blender のソケット。
+  "dx12_material_search", "dx12_blender_material_apply", "dx12_material_bake",
   // VFX: レシピ(vfx.ts)を TS 側で解決してから create_entity / add_particle_layer /
   // set_component / step_frames / screenshot_final として届く合成ツール。
   "dx12_vfx_library", "dx12_vfx_apply", "dx12_vfx_preview",
