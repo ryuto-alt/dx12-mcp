@@ -42,6 +42,7 @@ import { interpretPolish, planPolish } from "./polishJudge.ts";
 import { eventsFromSteps, interpretPlay, planPlay, pointsFromTrace } from "./playJudge.ts";
 import { READ_PROBLEMS, interpretRead, planRead, ruleProblem, wordifyRead, type ReadViewpoint } from "./readJudge.ts";
 import { JEV_RULES } from "./rules.ts";
+import { collectOracleItems } from "../oracles.ts";
 import type { Brief } from "./brief.ts";
 
 // ────────────────────────────────────────────────────────────────
@@ -409,6 +410,21 @@ export const PLAYTEST_CHECK: GateCheck = {
   },
 };
 
+/**
+ * (f) 書き換えられない正解(Q2): 固定カメラの金画像・性能予算・封印台帳。AI が正解を書き換えて通すのを検出して blocking にする。
+ * 本体は oracles.ts(純ロジック)。oracles.json が無いプロジェクトでは skipped。playtests の手前に置く(playtests はシーンを開き直すので最後)。
+ */
+export const ORACLE_CHECK: GateCheck = {
+  id: "oracles",
+  title: "書き換えられない正解(金画像・性能予算・封印)の照合",
+  enabled: () => true,
+  async run(ctx) {
+    const r = await collectOracleItems(ctx.call, ctx.baseDir, ctx.mode);
+    // 非 blocking(未封印の警告)はゲートの出力に載らないので、次の一手として見える所にも出す。
+    return { ...r, suggestions: r.items.filter((i) => !i.blocking).map((i) => ({ check: "oracles", text: `${i.code}: ${i.text}${i.fix ? ` → ${i.fix}` : ""}` })) };
+  },
+};
+
 export const MAX_READ_VIEWPOINTS = 4;
 
 /**
@@ -476,7 +492,7 @@ export const READABILITY_CHECK: GateCheck = {
 };
 
 /** ★検査を足す口。順番がそのまま実行順(シーンを開き直す playtests は最後)。 */
-export const GATE_CHECKS: GateCheck[] = [SCENE_CHECK, LAYOUT_CHECK, POLISH_CHECK, UI_CHECK, READABILITY_CHECK, PLAYTEST_CHECK];
+export const GATE_CHECKS: GateCheck[] = [SCENE_CHECK, LAYOUT_CHECK, POLISH_CHECK, UI_CHECK, READABILITY_CHECK, ORACLE_CHECK, PLAYTEST_CHECK];
 
 // ────────────────────────────────────────────────────────────────
 //  本体

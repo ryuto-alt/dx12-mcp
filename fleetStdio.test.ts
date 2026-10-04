@@ -152,7 +152,7 @@ const E: ReturnType<typeof engineOf>[] = [];
   check("attach の貸し出し接続が閉じた後、持ち主のセッションは普通に使える", own0.ok && own0.result.instanceId === E[0].id, own0);
   // full 面の tools/list: 末尾にフリート 6 本
   const fullTools = (await S[3].rpc("tools/list")).result.tools.map((t: any) => t.name);
-  check("full 面の tools/list は shell 5 + 旧 220 + パストレーサー 3 + 仮想ジオメトリ 2 + lua_step 1 + フリート 6 + ジョブ 6 + エディタ操作 5 + シーン仕様 2 本(末尾)", fullTools.length === 250 && JSON.stringify(fullTools.slice(-19, -13)) === JSON.stringify(["dx12_engine_launch", "dx12_engine_list", "dx12_engine_stop", "dx12_engine_attach", "dx12_engine_refresh", "dx12_engine_use"]) && JSON.stringify(fullTools.slice(-13, -7)) === JSON.stringify(["dx12_job_start", "dx12_job_status", "dx12_job_cancel", "dx12_job_list", "dx12_job_result", "dx12_job_logs"]) && JSON.stringify(fullTools.slice(-2)) === JSON.stringify(["dx12_apply_scene_spec", "dx12_scene_spec_export"]) && JSON.stringify(fullTools.slice(-7, -2)) === JSON.stringify(["dx12_editor_command", "dx12_editor_state", "dx12_editor_notify", "dx12_editor_select", "dx12_editor_modal"]), fullTools.length);
+  check("full 面の tools/list は shell 5 + 旧 220 + パストレーサー 3 + 仮想ジオメトリ 2 + lua_step 1 + oracle 1 + フリート 6 + ジョブ 6 + エディタ操作 5 + シーン仕様 2 本(末尾)", fullTools.length === 251 && JSON.stringify(fullTools.slice(-19, -13)) === JSON.stringify(["dx12_engine_launch", "dx12_engine_list", "dx12_engine_stop", "dx12_engine_attach", "dx12_engine_refresh", "dx12_engine_use"]) && JSON.stringify(fullTools.slice(-13, -7)) === JSON.stringify(["dx12_job_start", "dx12_job_status", "dx12_job_cancel", "dx12_job_list", "dx12_job_result", "dx12_job_logs"]) && JSON.stringify(fullTools.slice(-2)) === JSON.stringify(["dx12_apply_scene_spec", "dx12_scene_spec_export"]) && JSON.stringify(fullTools.slice(-7, -2)) === JSON.stringify(["dx12_editor_command", "dx12_editor_state", "dx12_editor_notify", "dx12_editor_select", "dx12_editor_modal"]), fullTools.length);
   await S[3].call("dx12_engine_stop", { engine: `x-${E[0].port}` });
 }
 
@@ -254,7 +254,7 @@ console.log("[5] リソースガード・アイドル自動終了・自動起動
   const s = server(mk("dis"), { DX12_FLEET_DISABLE: "1" }, "full");
   await s.initialize();
   const names = (await s.rpc("tools/list")).result.tools.map((t: any) => t.name);
-  check("DX12_FLEET_DISABLE=1 ならフリートのツールは出ない(full 面は shell 5 + 旧 220 + パストレーサー 3 + 仮想ジオメトリ 2 + lua_step 1 + ジョブ 6 + エディタ操作 5 + シーン仕様 2 のまま)", names.length === 244 && !names.some((n: string) => n.startsWith("dx12_engine_")), names.length);
+  check("DX12_FLEET_DISABLE=1 ならフリートのツールは出ない(full 面は shell 5 + 旧 220 + パストレーサー 3 + 仮想ジオメトリ 2 + lua_step 1 + oracle 1 + ジョブ 6 + エディタ操作 5 + シーン仕様 2 のまま)", names.length === 245 && !names.some((n: string) => n.startsWith("dx12_engine_")), names.length);
   s.proc.stdin!.end();
 }
 

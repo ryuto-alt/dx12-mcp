@@ -50,6 +50,32 @@ console.log("[2] 検査");
   check("エラーがあれば書かない", !bad.written && readBrief(TMP).brief === null);
 }
 
+console.log("[2b] 合格基準(acceptance)");
+{
+  const ok = [
+    { id: "fps", what: "平均 60fps 以上", how: "metric", threshold: 60 },
+    { id: "gate", what: "品質ゲートに blocking が無い", how: "gate" },
+    { id: "dark", what: "廊下は暗く 3 か所に光だまり", how: "look", target: "corridor" },
+  ];
+  const r = validateBrief({ acceptance: ok });
+  check("正しい acceptance はエラー無し", r.errors.length === 0, JSON.stringify(r));
+  check("how:gate は数字が無くても警告しない", !r.warnings.some((x) => x.includes("acceptance[1]")));
+  check("acceptance が無くても従来どおり", validateBrief({ title: "t" }).errors.length === 0);
+  check("配列でないとエラー", validateBrief({ acceptance: {} }).errors.some((e) => e.includes("acceptance")));
+  check("id 重複はエラー", validateBrief({ acceptance: [{ id: "a", what: "1" }, { id: "a", what: "2" }] }).errors.some((e) => e.includes("重複")));
+  check("id 空はエラー", validateBrief({ acceptance: [{ id: " ", what: "1" }] }).errors.some((e) => e.includes(".id")));
+  check("what 欠けはエラー", validateBrief({ acceptance: [{ id: "a" }] }).errors.some((e) => e.includes(".what")));
+  check("how が enum 外ならエラー", validateBrief({ acceptance: [{ id: "a", what: "1", how: "vibes" }] }).errors.some((e) => e.includes(".how")));
+  check("threshold が真偽値ならエラー", validateBrief({ acceptance: [{ id: "a", what: "1", threshold: true }] }).errors.some((e) => e.includes("threshold")));
+  check("数字の無い look は警告", validateBrief({ acceptance: [{ id: "a", what: "雰囲気が良い", how: "look" }] }).warnings.some((x) => x.includes("測れる形")));
+  check("how 未指定で数字無しも警告", validateBrief({ acceptance: [{ id: "a", what: "雰囲気が良い" }] }).warnings.some((x) => x.includes("測れる形")));
+  const many = Array.from({ length: 13 }, (_, i) => ({ id: `c${i}`, what: `${i} 個`, how: "metric" }));
+  check("13 件で件数警告", validateBrief({ acceptance: many }).warnings.some((x) => x.includes("13 件")));
+  const bad = writeBrief(TMP, { acceptance: [{ id: "a", what: "1", how: "x" }] } as any);
+  check("不正な acceptance は書かない", !bad.written);
+  check("patch で acceptance を足せる", mergeBrief({ genre: "x" }, { acceptance: ok }).acceptance?.length === 3);
+}
+
 console.log("[3] 空判定とマージ");
 {
   check("null / undefined は空", isBriefEmpty(null) && isBriefEmpty(undefined));

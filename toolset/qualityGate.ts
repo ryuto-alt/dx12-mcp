@@ -7,13 +7,16 @@ import { v3 } from "../sceneTools.ts";
 import { readBrief } from "../jev/brief.ts";
 import { OUT, engine, jevProjectBaseDir, regRaw, run } from "./core.ts";
 import { replayPlaytest } from "./playtestStore.ts";
+import fs from "node:fs";
+import { manifestPath, readManifest } from "../oracles.ts";
 
 // ════════════════════════════════════════════════════════════════
 //  品質ゲート(作業の区切りで 1 回撃つ): ルールの検査 + 判断段をまとめて 1 つの合否にする
 // ════════════════════════════════════════════════════════════════
 // ★本体は jev/qualityGate.ts(検査は GATE_CHECKS に足す)。ここはエンジン・Brief・再生の口を渡すだけ。
 
-const GATE_CHECK_IDS = GATE_CHECKS.map((c) => c.id) as [string, ...string[]];
+// ★oracles は inputSchema の enum に出さない(旧 220 本の表面を 1 バイトも変えないため)。正解(oracles.json)があれば checks を絞っても必ず走らせる(絞って改ざん検査を避けられない)。
+const GATE_CHECK_IDS = GATE_CHECKS.map((c) => c.id).filter((id) => id !== "oracles") as [string, ...string[]];
 
 regRaw(
   "dx12_quality_gate",
@@ -66,8 +69,21 @@ regRaw(
   (args) => run(async () => {
     const baseDir = await jevProjectBaseDir();
     const brief = baseDir ? readBrief(baseDir).brief : null;
+    // 封印したプレイテスト(oracles.json の playtests)は、呼び出し側が playtests を渡さなくても必ず走らせる。
+    // ★playtests:false や名前の配列で封印分を外せないよう、封印分は常に足す(true = 全部ならそのまま)。
+    let opts = args;
+    if (baseDir && (args as any).playtests !== true) {
+      try {
+        const sealed = readManifest(baseDir)?.playtests ?? [];
+        const asked = Array.isArray((args as any).playtests) ? (args as any).playtests as string[] : [];
+        if (sealed.length) opts = { ...args, playtests: [...new Set([...asked, ...sealed])] };
+      } catch { /* 壊れたマニフェストは oracles 検査が blocking で報告する */ }
+    }
+    // checks を絞っても、正解(oracles.json)があれば照合は必ず走らせる(絞って改ざん検査を避けられないように)。
+    const picked = (args as any).checks as string[] | undefined;
+    if (baseDir && picked && !picked.includes("oracles") && fs.existsSync(manifestPath(baseDir))) opts = { ...opts, checks: [...picked, "oracles"] };
     return runQualityGate({
-      call: (m, p) => engine.call(m, p), baseDir, brief, opts: args,
+      call: (m, p) => engine.call(m, p), baseDir, brief, opts,
       replay: (pt) => replayPlaytest(pt),
     });
   }),

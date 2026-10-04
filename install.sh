@@ -55,6 +55,16 @@ register codex "Codex (~/.codex/config.toml)" || cat <<EOF
       args = ["$index"]
 EOF
 
+# 評価役サブエージェント(agents/*.md)を ~/.claude/agents/ へ。上書きコピー(編集したい場合は別名で置く)。
+if [ -d "$here/agents" ]; then
+  mkdir -p "$HOME/.claude/agents"
+  for f in "$here"/agents/*.md; do
+    [ -e "$f" ] || continue
+    cp -f "$f" "$HOME/.claude/agents/"
+    echo "  OK サブエージェント $(basename "$f") -> $HOME/.claude/agents/"
+  done
+fi
+
 echo
 echo "セットアップ完了。クライアントを再起動すると dx12_* ツールが出ます。"
 echo "接続確認: エディタを起動して dx12_ping"

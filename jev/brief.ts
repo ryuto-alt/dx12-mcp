@@ -14,6 +14,21 @@
 import fs from "node:fs";
 import path from "node:path";
 
+/** 合格基準(sprint contract)。作る前に合意し、評価役(agents/dx12-evaluator.md)が証拠で採点する。 */
+export type AcceptanceCriterion = {
+  id: string;
+  /** 人の言葉の基準。測れる形で(数字・回数・秒など)。 */
+  what: string;
+  /** 証拠の取り方。gate=dx12_quality_gate / oracle=dx12_oracle / playtest / look=スクショ / metric=数値 */
+  how?: "gate" | "oracle" | "playtest" | "look" | "metric";
+  /** 対象(シーン・エンティティ・プレイテスト名・視点名)。 */
+  target?: string;
+  threshold?: number | string;
+};
+
+export const ACCEPTANCE_HOW = ["gate", "oracle", "playtest", "look", "metric"] as const;
+export const ACCEPTANCE_MAX = 12;
+
 export type Brief = {
   title?: string;
   genre?: string;
@@ -26,6 +41,8 @@ export type Brief = {
   light_budget?: string;
   references?: string[];
   notes?: string;
+  /** 合格基準。評価役が新しい文脈でこれに照らして採点する。 */
+  acceptance?: AcceptanceCriterion[];
   [k: string]: unknown;
 };
 
@@ -76,6 +93,7 @@ export function validateBrief(b: unknown): { errors: string[]; warnings: string[
     if (v === undefined) continue;
     if (!Array.isArray(v) || !v.every((x) => typeof x === "string")) errors.push(`${k} は文字列の配列`);
   }
+  validateAcceptance(o.acceptance, errors, warnings);
   for (const k of RECOMMENDED) {
     const v = o[k];
     if (v === undefined || (typeof v === "string" && !v.trim()) || (Array.isArray(v) && v.length === 0)) {
@@ -90,6 +108,33 @@ export function validateBrief(b: unknown): { errors: string[]; warnings: string[
   }
   if (text.length > 6000) warnings.push(`Brief が長い(${text.length} 文字)。長文は判断の精度を落とすので要点に絞ること`);
   return { errors, warnings };
+}
+
+/** acceptance の検査。「測れない」警告はごく単純: how が look / 未指定で、what に数字(全角含む)が 1 つも無い。 */
+function validateAcceptance(v: unknown, errors: string[], warnings: string[]) {
+  if (v === undefined) return;
+  if (!Array.isArray(v)) { errors.push("acceptance は配列"); return; }
+  const seen = new Set<string>();
+  v.forEach((c, i) => {
+    const at = `acceptance[${i}]`;
+    if (!c || typeof c !== "object" || Array.isArray(c)) { errors.push(`${at} はオブジェクト`); return; }
+    const o = c as Record<string, unknown>;
+    if (typeof o.id !== "string" || !o.id.trim()) errors.push(`${at}.id は空でない文字列`);
+    else if (seen.has(o.id)) errors.push(`${at}.id "${o.id}" が重複`);
+    else seen.add(o.id);
+    if (typeof o.what !== "string" || !o.what.trim()) errors.push(`${at}.what は空でない文字列`);
+    if (o.how !== undefined && !(ACCEPTANCE_HOW as readonly unknown[]).includes(o.how)) {
+      errors.push(`${at}.how は ${ACCEPTANCE_HOW.join(" / ")} のどれか`);
+    }
+    if (o.target !== undefined && typeof o.target !== "string") errors.push(`${at}.target は文字列`);
+    if (o.threshold !== undefined && typeof o.threshold !== "number" && typeof o.threshold !== "string") {
+      errors.push(`${at}.threshold は数値か文字列`);
+    }
+    if (typeof o.what === "string" && (o.how === undefined || o.how === "look") && !/[0-9０-９]/.test(o.what)) {
+      warnings.push(`${at}(${String(o.id)}) は数字が無く測れない可能性。測れる形で書くと評価役がぶれない`);
+    }
+  });
+  if (v.length > ACCEPTANCE_MAX) warnings.push(`acceptance が ${v.length} 件ある(${ACCEPTANCE_MAX} 件まで推奨)。多いと採点が散るので絞ること`);
 }
 
 export type BriefRead = { path: string; exists: boolean; brief: Brief | null; error?: string };

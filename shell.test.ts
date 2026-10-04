@@ -177,7 +177,7 @@ console.log("[3] stdio の MCP クライアントで一巡");
     check("initialize: instructions が載る(2,048 字以内)", typeof init.result.instructions === "string" && init.result.instructions.length <= 2048 && init.result.instructions.includes("dx12_tool_search"), init.result.instructions?.length);
     const list = (await rpc("tools/list")).result.tools;
     const names = list.map((t: any) => t.name);
-    check("tools/list: 先頭 5 本が shell(alwaysLoad)で、旧 220 本が続く", JSON.stringify(names.slice(0, 5)) === JSON.stringify(["dx12_tool_search", "dx12_tool_describe", "dx12_call", "dx12_doctor", "dx12_guide"]) && list.slice(0, 5).every((t: any) => t._meta?.["anthropic/alwaysLoad"] === true) && list.length === 250 /* shell 5 + 旧 220 + フリート 6 + ジョブ 6 + パストレーサー 3 + 仮想ジオメトリ 2 + lua_step 1 + エディタ操作 5 + シーン仕様 2 */, { n: list.length });
+    check("tools/list: 先頭 5 本が shell(alwaysLoad)で、旧 220 本が続く", JSON.stringify(names.slice(0, 5)) === JSON.stringify(["dx12_tool_search", "dx12_tool_describe", "dx12_call", "dx12_doctor", "dx12_guide"]) && list.slice(0, 5).every((t: any) => t._meta?.["anthropic/alwaysLoad"] === true) && list.length === 251 /* shell 5 + 旧 220 + フリート 6 + ジョブ 6 + パストレーサー 3 + 仮想ジオメトリ 2 + lua_step 1 + oracle 1 + エディタ操作 5 + シーン仕様 2 */, { n: list.length });
     check("tools/list: shell の outputSchema が無い/alwaysLoad は shell だけ", list.slice(0, 5).every((t: any) => !t.outputSchema) && list.slice(5).every((t: any) => !t._meta), null);
     const call = async (name: string, args: any) => (await rpc("tools/call", { name, arguments: args })).result;
     const sr = await call("dx12_tool_search", { query: "元に戻す" });

@@ -61,6 +61,17 @@ if (-not $codex) {
   Write-Host "      args = [`"$($index -replace '\\','/')`"]"
 }
 
+# 評価役サブエージェント(agents/*.md)を ~/.claude/agents/ へ。上書きコピー(編集したい場合は別名で置く)。
+$agentsSrc = Join-Path $here "agents"
+if (Test-Path $agentsSrc) {
+  $agentsDst = Join-Path $HOME ".claude\agents"
+  New-Item -ItemType Directory -Force $agentsDst | Out-Null
+  Get-ChildItem $agentsSrc -Filter *.md | ForEach-Object {
+    Copy-Item $_.FullName -Destination $agentsDst -Force
+    Write-Host "  OK サブエージェント $($_.Name) -> $agentsDst"
+  }
+}
+
 Write-Host ""
 Write-Host "セットアップ完了。クライアントを再起動すると dx12_* ツールが出ます。"
 Write-Host "接続確認: エディタを起動して dx12_ping"
