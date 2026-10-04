@@ -1,0 +1,26 @@
+{
+  "_doc": "ジョブ API(dx12_job_*)の発見性評価。discovery.test.ts の [6] が読む。各タスクに日本語の言い換え 2 通り(queries)と英語/口語の 1 通り(holdout)、上位 3 件に入っていればよい許容ツール(expect)を置く。core=true は Core 面(tools/list に載る)だけを対象にした検索でも届くべきもの。list / result / logs は長尾(dx12_call)。",
+  "tasks": [
+    { "id": "J1", "expect": ["dx12_job_start"], "core": true,
+      "queries": ["ビルドを裏で走らせて進捗を後で見たい", "長い処理を非同期で開始して id を受け取る"],
+      "holdout": "start a long build in the background and get a job id" },
+    { "id": "J2", "expect": ["dx12_job_status"], "core": true,
+      "queries": ["ジョブの進捗を確認する", "ビルドがどこまで進んだか見たい"],
+      "holdout": "check the progress of a running job" },
+    { "id": "J3", "expect": ["dx12_job_cancel"], "core": true,
+      "queries": ["走っているジョブをキャンセルしたい", "ビルドを途中で止める"],
+      "holdout": "stop a running background job before it finishes" },
+    { "id": "J4", "expect": ["dx12_job_list"], "core": false,
+      "queries": ["ジョブの一覧と履歴を見たい", "再起動前に始めたジョブの id を思い出したい"],
+      "holdout": "list all background jobs" },
+    { "id": "J5", "expect": ["dx12_job_result", "dx12_job_logs"], "core": false,
+      "queries": ["終わったジョブの結果の全文を読みたい", "失敗したジョブのログの末尾を見たい"],
+      "holdout": "read the output log of a finished job" },
+    { "id": "J6", "expect": ["dx12_job_start"], "core": true,
+      "queries": ["ctest を実行して失敗したテストの一覧を得る", "UI 自動テストを走らせて結果を待つ"],
+      "holdout": "run the whole ctest suite as a job" },
+    { "id": "J7", "expect": ["dx12_job_start"], "core": true,
+      "queries": ["複数のカメラと表示倍率でスクショを一括撮影したい", "ベンチを 3 回繰り返して中央値を出す"],
+      "holdout": "batch screenshots across cameras and DPI scales" }
+  ]
+}

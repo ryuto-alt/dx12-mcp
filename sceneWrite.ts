@@ -32,8 +32,21 @@ export const SCENE_ROOT_KEYS = [
   //   「ルートの未知キー」警告が出る。schemaDrift.test.ts [11] が SceneSerializer.cpp の
   //   root["..."] 代入と突き合わせるので、次からは足し忘れた時点でテストが赤くなる。
   "shadowPcss", "raytracing",
+  // 物理ベース大気 A1（既定と同じなら書かない）。BuildSceneJson が root["atmosphere"] を書く。
+  "atmosphere",
   // ナビメッシュの生成パラメータ（焼いた実体はシーンの隣の .nav サイドカー）。
   "navmesh",
+  // 仮想ジオメトリ（既定値のときは書かない）。
+  "virtualGeometry",
+  // シーケンサー: Play 開始時に自動再生するシーケンスの一覧(sequence_autoplay / dx12_sequence {op:"autoplay"} が書く)。
+  "sequencePlayers",
+  // 風(グローバルな風場。BuildSceneJson が root["wind"] を書く)。schemaDrift.test.ts [12] が SceneSerializer.cpp と突き合わせる。
+  "wind",
+  // GI モード(シーン単位)。{"gi":{"mode":"new"}}。キーが無い = legacy。BuildSceneJson は new のときだけ書く。
+  "gi",
+  // 分割保存（docs/SCENE_FORMAT_DESIGN.md §4.3）。partition = {cellSize}（BuildSceneJson が書く。0/無し = 1 ファイル）。
+  // parts = foo.parts/ のセルファイルの目次（保存時にエンジンが書く。手書きするなら seq を付けたセルファイルも要る）。
+  "partition", "parts",
 ] as const;
 
 /** 反射登録されたコア部品の JSON キー(RegisterCoreComponentSerializers の登録順)。 */
@@ -50,6 +63,14 @@ export const REFLECTED_COMPONENT_KEYS = [
   "animatorController", "footIK",
   // ゲーム AI の Brain と音のリバーブ域(どちらも SceneSerializer の反射登録)。
   "brain", "audioReverbZone",
+  // 仮想ジオメトリ（.vgeo）。
+  "virtualGeometry",
+  // ★v2 形式（既定値を省略するのでキーだけのエンティティが増えた）で顕在化した取りこぼし。
+  //   meshCollider は Dead Mall の全エンティティが持つのに「未知キー」と警告されていた。
+  //   エンジンは 3 つとも SceneSerializer.cpp で反射登録している（scene_defaults_v2.json にもキーがある）。
+  "meshCollider", "waterBody", "foliageLayer",
+  // インスタンス群（個数だけ書く。実体は <シーン名>.inst/<guid>.jsonl。手書きするならサイドカーも書くこと。docs/SCENE_FORMAT_DESIGN.md §4.1）。
+  "instanceGroup",
 ] as const;
 
 /** SerializeEntityJson が直接書くキー。 */
@@ -68,6 +89,8 @@ export const ENTITY_OWN_KEYS = [
   "terrain", "sculpt", "gridPlane",
   "gimmick", "audioSource", "particleEmitter", "trigger",
   "convexHullCollider", "luaScript", "tags", "data",
+  // "partition":"root" = 分割保存でも foo.json 側に置く印（§4.3）。
+  "partition",
 ] as const;
 
 export const ENTITY_KEYS: readonly string[] = [...ENTITY_OWN_KEYS, ...REFLECTED_COMPONENT_KEYS];
@@ -162,7 +185,7 @@ export function summarizeScene(root: unknown): SceneSummary {
     if (!isPlainObject(e)) continue;
     const kind = entityKind(e);
     summary.byKind[kind] = (summary.byKind[kind] ?? 0) + 1;
-    if (typeof e.parent === "number") summary.parentedCount++;
+    if (typeof e.parent === "number" || typeof e.parentGuid === "string") summary.parentedCount++;   // v2 は parentGuid だけ
     for (const k of Object.keys(e)) {
       if (k === "name" || k === "transform" || k === "parent") continue;
       summary.byComponent[k] = (summary.byComponent[k] ?? 0) + 1;
@@ -204,8 +227,22 @@ export function validateSceneJson(root: unknown, opts: ValidateOptions = {}): Sc
   }
   if (root.version === undefined) {
     warnings.push('ルートに "version" が無い。SceneSerializer は version:1 を書く。付けておくこと');
-  } else if (root.version !== 1) {
-    warnings.push(`version が ${JSON.stringify(root.version)}。エンジンが書くのは 1`);
+  } else if (root.version !== 1 && root.version !== 2) {
+    warnings.push(`version が ${JSON.stringify(root.version)}。エンジンが読めるのは 1(完全形)と 2(既定値を省略した形。docs/SCENE_FORMAT_DESIGN.md)`);
+  }
+  // 分割保存（§4.3）
+  if (root.partition !== undefined) {
+    const pt = root.partition;
+    if (!isPlainObject(pt) || (pt.cellSize !== undefined && (typeof pt.cellSize !== "number" || !Number.isFinite(pt.cellSize) || pt.cellSize < 0))) {
+      errors.push('"partition" は {cellSize: メートル(0 以上の数値。0 = 分割しない)}');
+    } else if (typeof pt.cellSize === "number" && pt.cellSize > 0 && pt.cellSize < 4) {
+      warnings.push(`partition.cellSize が ${pt.cellSize}。小さすぎるとセルファイルが増えすぎる(目安 64〜256)`);
+    }
+  }
+  if (root.parts !== undefined) {
+    if (!Array.isArray(root.parts)) errors.push('"parts" は配列(foo.parts/ のセルファイルの目次)');
+    else if (root.parts.some((p) => !isPlainObject(p) || typeof p.file !== "string")) errors.push('"parts" の各要素は {file:"cell_0_0.json", ...}');
+    else warnings.push('"parts" はエンジンが保存時に書く目次。手で書くなら foo.parts/ にセルファイル({version,seq,entities})も要る。通常は "parts" を付けず partition:{cellSize} だけにする');
   }
   if (root.shadows !== undefined && typeof root.shadows !== "boolean") {
     errors.push('"shadows" は bool。数値や文字列だと LoadFromString が既定(true)に落ちる');
@@ -228,6 +265,7 @@ export function validateSceneJson(root: unknown, opts: ValidateOptions = {}): Sc
   const entities = Array.isArray(root.entities) ? root.entities : [];
   const assets = opts.knownAssets ? new Set(opts.knownAssets) : null;
   const nameSeen = new Map<string, number>();
+  const guidIndex = guidIndexOf(entities);
 
   entities.forEach((raw, i) => {
     const at = `entities[${i}]`;
@@ -278,6 +316,15 @@ export function validateSceneJson(root: unknown, opts: ValidateOptions = {}): Sc
         errors.push(`${at}.parent = ${e.parent} が範囲外(0..${entities.length - 1})`);
       } else if (e.parent === i) {
         errors.push(`${at}.parent が自分自身を指している`);
+      }
+    }
+
+    // parentGuid(v2 では親参照の正。parent index は書かれない)
+    if (e.parentGuid !== undefined) {
+      if (typeof e.parentGuid !== "string" || !/^[0-9a-fA-F]{1,16}$/.test(e.parentGuid)) {
+        errors.push(`${at}.parentGuid は 16 桁以下の hex 文字列。数値で書くと JS が下位ビットを丸める`);
+      } else if (!guidIndex.has(e.parentGuid.toLowerCase().padStart(16, "0"))) {
+        warnings.push(`${at}.parentGuid "${e.parentGuid}" を guid に持つエンティティが無い。エンジンは parent(index) へフォールバックし、無ければルートのままにする`);
       }
     }
 
@@ -388,7 +435,7 @@ export function validateSceneJson(root: unknown, opts: ValidateOptions = {}): Sc
   });
 
   // 親子の循環(自己参照は上で弾いたので、ここは 2 段以上の輪)
-  const cycle = findParentCycle(entities);
+  const cycle = findParentCycle(entities, guidIndex);
   if (cycle) {
     errors.push(`親子関係が循環している: ${cycle.map((i) => `entities[${i}]`).join(" → ")}`);
   }
@@ -403,10 +450,27 @@ export function validateSceneJson(root: unknown, opts: ValidateOptions = {}): Sc
   return { ok: errors.length === 0, errors, warnings, summary: summarizeScene(root) };
 }
 
+/** guid(16 桁 hex・小文字) → entities の添字。 */
+function guidIndexOf(entities: unknown[]): Map<string, number> {
+  const m = new Map<string, number>();
+  entities.forEach((e, i) => {
+    if (isPlainObject(e) && typeof e.guid === "string") {
+      const g = e.guid.toLowerCase().padStart(16, "0");
+      if (!m.has(g)) m.set(g, i);   // 重複は先勝ち（エンジンと同じ）
+    }
+  });
+  return m;
+}
+
 /** parent チェーンの循環を 1 つ見つける(見つからなければ null)。 */
-function findParentCycle(entities: unknown[]): number[] | null {
+function findParentCycle(entities: unknown[], guidIndex: Map<string, number> = guidIndexOf(entities)): number[] | null {
   const parentOf = entities.map((e) => {
     if (!isPlainObject(e)) return -1;
+    // エンジンと同じ優先順: parentGuid → parent(index)
+    if (typeof e.parentGuid === "string") {
+      const gi = guidIndex.get(e.parentGuid.toLowerCase().padStart(16, "0"));
+      if (gi !== undefined) return gi;
+    }
     const p = e.parent;
     return typeof p === "number" && Number.isInteger(p) && p >= 0 && p < entities.length ? p : -1;
   });

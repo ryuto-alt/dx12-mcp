@@ -20,6 +20,7 @@ import {
   SCULPT_BRUSHES, SCULPT_PRIMITIVES, TERRAIN_BRUSHES, TERRAIN_PRESETS,
 } from "./sceneTools.ts";
 import { SCENE_ROOT_KEYS } from "./sceneWrite.ts";
+import { readToolSource, toolsetFiles } from "./toolSource.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..", "..");
@@ -49,7 +50,7 @@ if (CPP_SOURCES.length === 0 || !fs.existsSync(POST_H)) {
 
 const cpp = CPP_SOURCES.map((f) => fs.readFileSync(f, "utf8")).join("\n");
 const header = fs.readFileSync(POST_H, "utf8");
-const indexSrc = fs.readFileSync(INDEX_TS, "utf8");
+const indexSrc = readToolSource(here);   // index.ts は toolset/*.ts への import だけなので連結して読む
 
 const engine = parseEngineMethods(cpp);
 const tools = parseTsTools(indexSrc);
@@ -59,6 +60,8 @@ const SPREADS: Record<string, string[]> = {
   "...entityRef": ["entity", "name"],
   // dx12_screenshot / dx12_screenshot_final の共通引数($ref 回避でファクトリにしてある)。
   "...captureParams()": ["path", "deterministic", "settleFrames", "gizmos"],
+  // dx12_screenshot_final 専用(Q2 校正): 出力形式と任意解像度。
+  "...finalOnlyParams()": ["format", "formats", "width", "height"],
   // ナビメッシュ: 生成パラメータ(build / settings が共有)と探索の許容ずれ(path / sample / raycast)。
   "...navConfigParams": [
     "cellSize", "cellHeight", "agentHeight", "agentRadius", "agentMaxClimb", "agentMaxSlope",
@@ -88,7 +91,7 @@ const SHARED_BLOCK_KEYS: Record<string, string[]> = {
     "aoDenoise", "aoDenoiseRadius", "maxInstances", "forceBuildTlas",
     "ddgiEnabled", "ddgiSpacing", "ddgiProbeCountX", "ddgiProbeCountY", "ddgiProbeCountZ",
     "ddgiOriginX", "ddgiOriginY", "ddgiOriginZ", "ddgiRayLength", "ddgiHysteresis",
-    "ddgiIntensity", "ddgiNormalBias", "ddgiBounceIntensity",
+    "ddgiIntensity", "ddgiNormalBias", "ddgiBounceIntensity", "ddgiFollowCamera", "ddgiSpacing1", "ddgiBudgetMs",
   ],
   // ApplicationMcp*.cpp(連結):6358 `terrain_paint || terrain_autopaint`
   terrain_paint: [
@@ -438,7 +441,7 @@ console.log("\n[10] 新規ツール(エンジンに実装済みで TS 定義が�
       "aoDenoise", "aoDenoiseRadius", "maxInstances", "forceBuildTlas",
       "ddgiEnabled", "ddgiSpacing", "ddgiProbeCountX", "ddgiProbeCountY", "ddgiProbeCountZ",
       "ddgiOriginX", "ddgiOriginY", "ddgiOriginZ", "ddgiRayLength", "ddgiHysteresis",
-      "ddgiIntensity", "ddgiNormalBias", "ddgiBounceIntensity",
+      "ddgiIntensity", "ddgiNormalBias", "ddgiBounceIntensity", "ddgiFollowCamera", "ddgiSpacing1", "ddgiBudgetMs",
     ],
     dx12_get_dxr: [],
   };
@@ -621,7 +624,7 @@ console.log("\n[13] 遅延同期 method のタイムアウトが engine の待�
   // エンジンが本当に ping で返しているかの裏取り(片側だけ消すと壊れる)。
   // 上限は暴走防止のためだけ。ping のハンドラにフィールドやコメントを足すと
   // すぐ届かなくなるので、handler の実長より十分広く取る（1200 では sceneDirty 追加で切れた）。
-  const ping = cpp.match(/McpDefine\("ping"[\s\S]{0,2400}?\}\);/);
+  const ping = cpp.match(/McpDefine\("ping"[\s\S]{0,4200}?\}\);/);
   check("engine の ping が assetsDir を返している",
     ping != null && /"assetsDir"/.test(ping[0]) && /"protocolVersion"\s*,\s*4/.test(ping[0]),
     "ApplicationMcp*.cpp(連結) の ping に assetsDir / protocolVersion 4 が無い");
@@ -649,7 +652,15 @@ console.log("\n[docs] docs/MCP.md に載っているツールが本当に呼べ�
     // 表のセル先頭に `dx12_xxx` と書かれているものをツール宣言とみなす。
     const declared = new Set<string>();
     for (const m of doc.matchAll(/^\|\s*`(dx12_[a-z0-9_]+)`/gm)) declared.add(m[1]);
+    // reg() / regRaw() で登録するツール(旧 220 本)に加えて、server.registerTool() で直接登録するモジュール(パストレーサー / 仮想ジオメトリ /
+    // フリート / ジョブ / エディタ操作 …。legacy 面には出さないので reg() を使えない)の "dx12_…" 名も登録済みに数える。
+    // 「docs に載っているのに呼べない」を防ぐ趣旨は同じ。
     const registered = new Set(tools.map((t) => t.tool));
+    for (const f of toolsetFiles(here)) {
+      const src = fs.readFileSync(f, "utf8");
+      if (!/\bserver\.registerTool\(/.test(src)) continue;
+      for (const m of src.matchAll(/"(dx12_[a-z0-9_]+)"/g)) registered.add(m[1]);
+    }
     const missing = [...declared].filter((n) => !registered.has(n)).sort();
     check(`docs の全 ${declared.size} ツールが index.ts に登録されている`,
       missing.length === 0,
@@ -659,12 +670,27 @@ console.log("\n[docs] docs/MCP.md に載っているツールが本当に呼べ�
     // docs/MCP.md は「ツール全一覧」を名乗る人間向けリファレンスなので、
     // 穴が開いていると全体像が掴めない。37 本の穴を埋めた時点で 202/202 が揃ったので、
     // ここから先は**増やしたら必ず書く**を機械で守る。
-    const undocumented = [...registered].filter((n) => !declared.has(n)).sort();
+    // (reg() / regRaw() で登録した旧 220 本だけが対象。registerTool() 由来のツールは docs の表に載せる約束だが、他担当の作業中のものでは落とさない)
+    const undocumented = tools.map((t) => t.tool).filter((n) => !declared.has(n)).sort();
     check(`index.ts の全 ${registered.size} ツールが docs にも載っている`,
       undocumented.length === 0,
       undocumented.length ? `docs/MCP.md 未記載: ${undocumented.join(", ")}\n      `
                             + `→ ツールを足したら docs/MCP.md の表にも 1 行足すこと` : undefined);
   }
+}
+
+// ---------------------------------------------------------------------------
+console.log("\n[14] 仮想ジオメトリ(dx12_set_virtual_geometry)の TS スキーマ ⊇ エンジンが読むキー");
+{
+  process.env.DX12_MCP_PORT = process.env.DX12_MCP_PORT ?? "1";
+  const { VG_SET_SHAPE_KEYS } = await import("./toolset/virtualGeometry.ts");
+  const em = engine.get("set_virtual_geometry");
+  check("エンジンに set_virtual_geometry / vg_stats がある", em != null && engine.has("vg_stats"));
+  const missingKeys = (em?.keys ?? []).filter((k) => !VG_SET_SHAPE_KEYS.includes(k));
+  check("エンジンが読む set_virtual_geometry のキーを TS が全部宣言している(渡せないフィールドが無い)", missingKeys.length === 0,
+    `足りない: ${missingKeys.join(", ")}  → toolset/virtualGeometry.ts の SET_SHAPE に足すこと`);
+  const extra = VG_SET_SHAPE_KEYS.filter((k) => !(em?.keys ?? []).includes(k));
+  check("TS が宣言しているのにエンジンが読まないキーが無い", extra.length === 0, extra.join(", "));
 }
 
 console.log(failed === 0

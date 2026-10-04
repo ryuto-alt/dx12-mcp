@@ -1,0 +1,3743 @@
+{
+ "_doc": "旧 220 ツールの tools/list を固定したスナップショット(scripts/gen_legacy_snapshot.mjs で生成/--check で検査)。sha256 は M0 時点の tools/list の 1 ツール分の JSON.stringify(legacy モードと完全一致)。semSha256 は outputSchema と M3 が足した destructiveHint を外した『意味的な同一性』のハッシュ(full / core 面の旧ツールはこちらで比較)。outputSchemaBytes は M3 で削った outputSchema の JSON バイト数。",
+ "count": 220,
+ "totalBytes": 420946,
+ "outputSchemaBytesTotal": 61509,
+ "tools": [
+  {
+   "name": "dx12_ping",
+   "sha256": "853fcc6fd286a135375139daf5551c198cc1d1480fa568e29c6e8bce37afa68c",
+   "semSha256": "fd2cf1f9b9862f0519fbb47cdfa49abad69ffa2e6b195382a1a7455380caf69c",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "疎通確認",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_list_entities",
+   "sha256": "191e0bb43151712e394e1bd79f90d409442a52e28b0465917fd88d3f8c21f2c4",
+   "semSha256": "9f4d1689dd8bcdaf7be9716ebe98ec7b7d75492dc52b7cfce48beec88f895b25",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "verbose",
+    "name_prefix",
+    "component_type",
+    "limit",
+    "offset"
+   ],
+   "annotations": {
+    "title": "エンティティ一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_get_entity",
+   "sha256": "a27e1f7d5d76935e06f08f71ff41c5e71b0e961fe0a68e02cc8bd9a78613aec9",
+   "semSha256": "bf7f944d72c5aea3c3c2ca78baf285a6411594c772faa0f6980254813bc2c780",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "エンティティ詳細",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_find_entity",
+   "sha256": "ee9cb575fd3018d0a3800923f5e536544bff992cead320c908836556aa3e60e8",
+   "semSha256": "8e608660c33320616a877c6ad1596ea0bbbbe7907feaa71cafada43f81e90130",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name"
+   ],
+   "annotations": {
+    "title": "名前でエンティティ検索",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_query_entities",
+   "sha256": "772a368513ff128113417c3998d9b3127d2aff10302958348a666d8c1c7ce289",
+   "semSha256": "16898ba8ee6c5ce267d58d8335354a225e70d6a0948a4033c7a49e434cac6abd",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "tag",
+    "box",
+    "limit",
+    "offset"
+   ],
+   "annotations": {
+    "title": "タグ/領域でエンティティ検索",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_list_scenes",
+   "sha256": "613ab0c1c2af25f099cbf036fcee03ef2bdfc09c94cab45c7b80d1e4b0f4d835",
+   "semSha256": "c3b3b4f3f5968150422f84fb0c9c9aafeb507952bb3607bf42fca6ccafb7dc78",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "シーン一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_list_assets",
+   "sha256": "db0c8487162e471cc4774e39117871054b59a28ede3ba725d2d311d8868c78f5",
+   "semSha256": "1ddc64c2a9f150b9ba69d7f2bf1fe483ec0c6dfd558d652124e3f84eb28c2548",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "type"
+   ],
+   "annotations": {
+    "title": "アセット一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_get_mode",
+   "sha256": "a62f85781bb74e36fb9c7f568a1d6a11e688114cdee8966319310f49ebe256ce",
+   "semSha256": "d39d9c1ddc39697fe81fb3f2624846e9efaffca05ea40fb965025236bb64a1e2",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "モード取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_get_log",
+   "sha256": "d4787519f198c890b1ee5b3a8d55d9e296eb7e666880896ba665de0b54999f2c",
+   "semSha256": "ac960574aaab56324e03eea2e8178da640219c85bb9e42d81fab38d469331884",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "lines"
+   ],
+   "annotations": {
+    "title": "ログ取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_describe_components",
+   "sha256": "6f586a4756ef50bc985f8edf3e8cc7fc18159e69eb5c37b96091bda5f2ecf09f",
+   "semSha256": "0c37345ea63fc32dc91e6d5f9120f46c0351bffafa696ae73f9cb59c81d469b7",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "component"
+   ],
+   "annotations": {
+    "title": "コンポーネント辞書",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_describe_mcp_params",
+   "sha256": "1b82ba0a2f06641c928b59319731debd422808747fe84f042e143821104aef1d",
+   "semSha256": "6fe15d8e651fcffd1c250f75b474531ca523a4cee33cc73f538ae46972c1a813",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "method"
+   ],
+   "annotations": {
+    "title": "MCP引数辞書",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_ui_tree",
+   "sha256": "5c5fbd9d36523dffa446d7ad11c72414f7db4e386c5a691d8e004c7527041b42",
+   "semSha256": "522b3fdea6c72d03943be45419cd0d527d838b407ab8974379d0e8be6ecf7b4e",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "UIツリー取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_ui_design_brief",
+   "sha256": "7d7d2ea395f638e80f9ca2b2d7bb80cb6a0a8c0fedc0ce1fa0f78cf565157544",
+   "semSha256": "d3d0bfc9fe373ba235a71cd6ad261675157e8e62fc5ccc587dbd28d50f7a16d8",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "genre",
+    "screen",
+    "tone"
+   ],
+   "annotations": {
+    "title": "ゲームUIデザイン方針",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_ui_audit",
+   "sha256": "133a19f7cd791348ea0b7dfead3659138d1ebde6dac730d0c073ed280a3a9303",
+   "semSha256": "a672643686cadbf9ace35dd4f07baf3ba6ed7e0f9c2f72ab6ac9f046a2776589",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "strictness",
+    "screen",
+    "judge"
+   ],
+   "annotations": {
+    "title": "ゲームUI品質監査",
+    "readOnlyHint": true,
+    "openWorldHint": true
+   }
+  },
+  {
+   "name": "dx12_ui_compose",
+   "sha256": "ff78096458783c5702dcfeaf7ce158a8373a1436725fc5795893894cc21eb734",
+   "semSha256": "5e3034808ab393a887c8a528d47dd104ba084c4810d5ef7bed1a8bab61e9dc2b",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "blueprint"
+   ],
+   "annotations": {
+    "title": "制約付きゲームUI構築",
+    "openWorldHint": false,
+    "destructiveHint": false
+   }
+  },
+  {
+   "name": "dx12_describe_lua_api",
+   "sha256": "05e213bce7e0d6cf02bcfbdd053af14e858c5c381dcbad1aafb9e85fc457f02f",
+   "semSha256": "ef8ab7f74302c1628e7cdd0b8f8d444f4b5dda77a46ade355791dea2d68bcf0e",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "Lua API 辞書",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_get_lua_component_state",
+   "sha256": "f7ad624d01779a3d5e96d118af5f4c898d9e5474313c1b005fefd086ee5a3378",
+   "semSha256": "9c159e8b6ba908176cbf1a851df5ab154cf36907a1bd56c260dbed8cf3b89b8f",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "Luaプロパティ状態取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_get_script_errors",
+   "sha256": "11b1f097fe18521455d3cbe4e26c87d750d348a212b0a47ec285abdc8bc5e35c",
+   "semSha256": "cf77164b4c1d7080d205fd789f688bc838c0ffa88e5d43ac3b231b367751a68f",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "壊れているLuaを全部出す",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_reload_scripts",
+   "sha256": "f13fad4dae5f7797905596db92e38c15decf2c37151b15ce7eba445b5ac81b10",
+   "semSha256": "96f5b7b3d473fb383f4520e474844581d686f607fd17b38cb0e7f5900d57d658",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "Luaを強制リロード",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_set_lua_property",
+   "sha256": "607da6962d93774bb82c62ca1af268f438319c968511a78a734e54f748e6bf9e",
+   "semSha256": "34cff62768f604741371be6432b829cdf8ded6a0581ea75d2272e33065c0bfb2",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "key",
+    "value"
+   ],
+   "annotations": {
+    "title": "Luaプロパティ設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_project_world_to_screen",
+   "sha256": "b5e3d54a35e31324bbfbbc8ffc9d68724188350a2f6a6c7aa05fb0d77b250cd9",
+   "semSha256": "a9d0b5576d2b8e8d881597296109eb6de8a571659d08d44d03f3240ca6814ad3",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "ワールド→画面投影",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_get_scene_settings",
+   "sha256": "ccaa3ac22ab4ad78c09a001491d4eada1be2d159e15a0b62d56cc848fed1c4a7",
+   "semSha256": "f5ecce3be726fbb4cbd6456c86385df2b67115c03fa7b5a483380ea9b236ef3f",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "シーン設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_transform",
+   "sha256": "31744467a0f3dd1d926d7f0c06119238ed7b2f131a2791e9718edef670eec896",
+   "semSha256": "b2b5569239ab293e4927ccf5616d14f177d8338aff4a7bbceb06751cb8c621fd",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "position",
+    "rotation",
+    "quaternion",
+    "scale"
+   ],
+   "annotations": {
+    "title": "Transform 設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_component",
+   "sha256": "d9bd53f2e3f4ca6a65f18184e66ec47146562ea7705ef7c0176ad8b5faa51069",
+   "semSha256": "e8fe18aa2da7ff4daebec992b4731cbe772b533f696dbd2957d5861b808c60a6",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "component",
+    "data",
+    "layer"
+   ],
+   "annotations": {
+    "title": "コンポーネント設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_remove_component",
+   "sha256": "1270e1eacd5d8102ef11c293835924746f0a9a383c2f16c68d9f00736ad397d1",
+   "semSha256": "1ded52292ad341be29b1ffb7e68b3f8added1000704316165b7efa717349fced",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "component"
+   ],
+   "annotations": {
+    "title": "コンポーネント除去",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_parent",
+   "sha256": "19f94e9eaee663090d3e3dc61813a515cdab83fbd6b7e807d200d2ca08942f73",
+   "semSha256": "606ea03413efe7950f8f96ae16c4debfb97a352c55dcf3dd7fb5683c96660746",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "parent"
+   ],
+   "annotations": {
+    "title": "親子設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_group_entities",
+   "sha256": "8294e4a29c44a3c51445231477757445ff52c94e02b2ab908b210618581aab30",
+   "semSha256": "2be589fc89c8b861e481b0e229af99c8da8e7e941de630ab8735136beb284635",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entities",
+    "names",
+    "name"
+   ],
+   "annotations": {
+    "title": "グループ化",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_rename_entity",
+   "sha256": "576f2b628bfbf2e003ccf1e432482c2e85c627cd3e5cf8d2b3dd08e5777b887d",
+   "semSha256": "803e65d47237674fcdc6a489abe11206f1ada40df81640f23905b2f9d10eb39e",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "リネーム",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_select_entity",
+   "sha256": "bfcdccf511f517ab48c5b67dc47b6a6ef5c9c3b99058e6b7cb9750faa4d48614",
+   "semSha256": "d8512dcff7b6f4e7dcf8d6763e4dfd41a0b90a63b7ad88492db8f55b20d223b6",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "選択",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_focus_camera",
+   "sha256": "28d62e44386bbde5e896c75edf0635f5ca1164853de52f57930c4b5eb5153917",
+   "semSha256": "c2f9aa579894b36539dee9825f68870a08e9c0d42313fd6662835c5a4ae09fea",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "カメラフォーカス",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_pbr",
+   "sha256": "d1484fb9dcc995b0bd175970b539e311e274ac903dcfb3beb56ea4a9fe68ce65",
+   "semSha256": "794df5e29be0b0556651e4e581016c7cff02bd661983ceb14cbda86c71945910",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "metallic",
+    "roughness",
+    "uvScaleU",
+    "uvScaleV",
+    "alphaMode",
+    "alphaCutoff",
+    "opacity",
+    "emissiveIntensity",
+    "emissiveColor"
+   ],
+   "annotations": {
+    "title": "PBR マテリアル設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_color",
+   "sha256": "506ff60b553f4908ad7486d992ef2dabb16bcbbe41cb359a48aa144886151f69",
+   "semSha256": "99dccb8bb55a349ed861a903aabaaea56a674ba30cf95ca24e1878e7259be4a4",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "color"
+   ],
+   "annotations": {
+    "title": "基本色設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_mesh_shader",
+   "sha256": "40c602c612b7472ede9741eff39193261da0f386c7b93cf4603d757671bcda61",
+   "semSha256": "2d5f0912b860f8fd53f826daaa15a758c9c0accd2da8642b95842d5b6e4b88ae",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "shaderPath",
+    "alphaBlend"
+   ],
+   "annotations": {
+    "title": "カスタムシェーダー割当",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_mesh_shader_params",
+   "sha256": "e0dd70d378fdcb58b810765ab0cffc84101eaa0674e1c49bde00fe875f73f229",
+   "semSha256": "d16334dc421adcecea166bfacfdd710710f065fcaa6965ad7c4389dc09e88af2",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "effect",
+    "params",
+    "paramsB"
+   ],
+   "annotations": {
+    "title": "カスタムシェーダーのパラメーターを動かす",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_sprite_shader",
+   "sha256": "d897b4182aa313454ec34b9d885a85fcdfa4d1cf2cc8204e636df83b5dc12b50",
+   "semSha256": "7c164d1ab84a17a251fda3d3179da283cd660e88e74ebdaf961b257d287c057d",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "shaderPath",
+    "alphaBlend"
+   ],
+   "annotations": {
+    "title": "Sprite2Dカスタムシェーダー割当",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_scene_settings",
+   "sha256": "5154afddfde31374fe0b680af8a71a59b5f5b99bdf84ac171aa9c567efafc41f",
+   "semSha256": "403048f689f8424e4e3580e909724d308dfdf430192e099cac5fceae10e86b34",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "decalAtlasPath",
+    "skybox",
+    "partition",
+    "atmosphere"
+   ],
+   "annotations": {
+    "title": "シーン設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_undo",
+   "sha256": "51806a77a8b9b31cda616e935fa2f16d7e894a334d9699be96a3e1d42a9a92fa",
+   "semSha256": "875ea648f92135794c29ae5bbe374a95dd43064fec1ebce72f4770203841cf45",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "onlyAi"
+   ],
+   "annotations": {
+    "title": "Undo",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_redo",
+   "sha256": "2dbb6bb2701f78f497303529ba65a2186d605673ed3299ce71c9369e5359555c",
+   "semSha256": "804e1fa3b8b4efd531885e73b037396b632e30098497661042535acf702bbeda",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "onlyAi"
+   ],
+   "annotations": {
+    "title": "Redo",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_transaction_begin",
+   "sha256": "799a7903f8c662946701a21e8fdb085a20b0d9b0fcb3a14180cd2b61321a3a7d",
+   "semSha256": "0de7dc717bfdf2193b1c070e0d9285e944bad9fe7d1ab60fb3f2af9a43b329d7",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "label"
+   ],
+   "annotations": {
+    "title": "トランザクション開始",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_transaction_commit",
+   "sha256": "615db4aee95e9b0ff2cb74d52b8edfdde414ba8d1058df7a381b6978a383c76a",
+   "semSha256": "d5eacae83c9f3384a781ca66a27575316aa5c7f2e3866b54831c10bbfbb9a964",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "トランザクション確定",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_transaction_rollback",
+   "sha256": "bb52109965a4f8bee49729d9d374c0f9b0e696bf89e01a449b769f6ffd698040",
+   "semSha256": "283dae69b006f79fb0f20f07c19989dba1c8965d253b962f65289b69b0f8c547",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "トランザクション巻き戻し",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_transaction_status",
+   "sha256": "8a72ce04d47841b151c6305c34f5b5f4ef0f1f1ff0993408763a4b601d3f931e",
+   "semSha256": "5a169ee5b3d04b66d27b8ad006e231daac943b134fb18ec4af30541bf4d1bd5a",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "トランザクションの状態",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_save_scene",
+   "sha256": "53604d3706b03f80b27d68d2ee020ab18fbff9019e1716e0ec7b98cec37c3483",
+   "semSha256": "1554d95f1b6bb201642afddcedb56eec66b7a4375f1beb68e9bdcbfd44064f18",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "シーン保存",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_create_lua_component",
+   "sha256": "446abf08175d032eec595106779e63701a1f1b20525bf68d1d12e7f02f5b0a13",
+   "semSha256": "58410a0fe58eb4000ebcdd8986c19c350adb851120c0978794b234ea9636c59b",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "code"
+   ],
+   "annotations": {
+    "title": "Luaコンポーネント作成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_attach_lua_component",
+   "sha256": "b9fd34e6f3519777dd0327669b7ebcb65cf2ba8c3fdc55ec68ef8449e148ae66",
+   "semSha256": "7f7bcbeb2be1cac207e2b2ab4a8e251d24777e0b5407e9ecc1880755066bc0fa",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "script"
+   ],
+   "annotations": {
+    "title": "Luaコンポーネントアタッチ",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_create_shader",
+   "sha256": "c33d259ee1008f04eb5ee53e05a942b71095a66629ffd548c57bfdfe0ac4e7b4",
+   "semSha256": "fd5bfc3bae7043957acc6ca881b3a1f15698eeece5aec4ecbc3abb2dfbb2f131",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "code",
+    "template"
+   ],
+   "annotations": {
+    "title": "カスタムシェーダー作成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_read_shader",
+   "sha256": "b61c7ebcb3f9933c69e406190bb4ca7c0d042df7dc60b90e3b94d4763bc32ef6",
+   "semSha256": "1d0bd71cc9b73dc3f03f0dc45b145cec628c0cdf1cc4a4f9452de09afa64d30a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "カスタムシェーダー読み取り",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_list_shader_templates",
+   "sha256": "e93871239351227cce6a31c643423ea1eea7b46d30962b1a31d3d806e6dfdda4",
+   "semSha256": "a234d5d2eb49a8a0337e0d71aad287b7ff1d3ea4eba0a85f14524d3b182a2014",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "シェーダー雛形一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_describe_shader_contract",
+   "sha256": "d53d2db765b34acd2118e4008ef9c78ee7a7e6728d064f7b997d95bc84b74474",
+   "semSha256": "6be8de46bd68a7449ea9d40152fffc07251b648a04e79befcb21e606101802ef",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "kind"
+   ],
+   "annotations": {
+    "title": "シェーダーの契約を読む",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_create_entity",
+   "sha256": "e39c2a2cb27590852bffe40640eaf5d63a5db5e6445406ae0a1db93fd8eacaa7",
+   "semSha256": "970906e6640f8967a2ced9ee3904a8dadf9ddcdaf39636ef66097a94c0f8ad1a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "type",
+    "name",
+    "position",
+    "parent",
+    "parentName",
+    "idempotency_key",
+    "size",
+    "subdivisions"
+   ],
+   "annotations": {
+    "title": "エンティティ生成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_spawn_box",
+   "sha256": "8fc5691c55bb7722dea96d896cb67a198c821bb6c9a69ece297343e4ee2cecd5",
+   "semSha256": "89ad1787d097e97d69676b1036e056ef28dd55407aa1883d71628a3d02b27073",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "position",
+    "scale",
+    "rotation",
+    "color",
+    "metallic",
+    "roughness",
+    "group"
+   ],
+   "annotations": {
+    "title": "ボックス生成(整形込み)",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_spawn_sphere",
+   "sha256": "b805edd00d5de77963d2d48755df2841fe41b7277c850aa2d7929283bfd56df5",
+   "semSha256": "799a9ec36e771cdca8d883c0188adaeabf63158c68be2b92383d0970ac4d42d3",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "position",
+    "scale",
+    "rotation",
+    "color",
+    "metallic",
+    "roughness",
+    "group"
+   ],
+   "annotations": {
+    "title": "スフィア生成(整形込み)",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_spawn_coin",
+   "sha256": "7304e20749b3629c679bde0d2c692d2bdcef8c5fc8db3433881f47a77279bfb4",
+   "semSha256": "56b21af83c171d37937ea2a1c772ead91933cb39fb640e209574846fb1821db2",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "position"
+   ],
+   "annotations": {
+    "title": "コイン生成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_spawn_model",
+   "sha256": "1aedb0faf6ba23906e6b5d29f732c8dad5ecf3c7e30c9b1be04c24eeaa81a7bc",
+   "semSha256": "8aabf342e8c9bea03256016ce4e98f5b1369e13c2cfc7e6696b909ccc15dd715",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path",
+    "position",
+    "name",
+    "idempotency_key"
+   ],
+   "annotations": {
+    "title": "モデル生成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_spawn_prefab",
+   "sha256": "b2cfe5014c3baa045472aee7d6fa80c238eab2e35efd9ae6b14c8c8b95dd56dd",
+   "semSha256": "4743498888afd9648dee620ce3604e60bedc106700be051b56e2d6e1fb9d0673",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path",
+    "position",
+    "name",
+    "idempotency_key"
+   ],
+   "annotations": {
+    "title": "プレハブ生成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_duplicate_entity",
+   "sha256": "304f252d9b9b2df6dea32248020d52bb415200db3daed8a37547ac3502ba7e63",
+   "semSha256": "1261c1f0e13e3b8b15d8fe2e3cc29397928da833e629eead401238fc04f9dd9a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "複製",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_delete_entity",
+   "sha256": "1561a5d0102e8a6c4fc78de0e2e060725e1ba3989976e272f95ef689a2f9ad65",
+   "semSha256": "ffa6b56176d4dd82c5a122e847ff2a98e4a4e89dcaa5981cf962190e3ff6556a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "削除",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_open_scene",
+   "sha256": "0762a7d32014caa0ac1f20f45c2b45849ef2581cdd2369e863a192b70a0822af",
+   "semSha256": "fcddbd41f8b57c047a7bbc077695a5faa76b9cf0672aad336fdbcba73a17f91f",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "シーンを開く",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_open_project",
+   "sha256": "b1299691b8e24056dbc0e63577ea3cf1686f92c446f842c3f7918445d9159f1b",
+   "semSha256": "911dd2ca2e46440dd363131a0f727f912f5bc510dbc84619e1d8e1028482b1d4",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "プロジェクトを開く",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_new_scene",
+   "sha256": "d48a6e1fc806479b97d429fd057c585c2d0f4feb4a0890e2c516b86d0bcd8bca",
+   "semSha256": "913e0db8345de1abe288dd87cb7933feb3fb338bbe6976473e4bba9974c801c8",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "savePath"
+   ],
+   "annotations": {
+    "title": "新規シーン",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_play",
+   "sha256": "57335ad00707bccf4d8adccc544e1cb97af9545a0bade0247c4a538b96f3e225",
+   "semSha256": "b6de6bb6998ac50f53e0a17c008ab1f8622e05b25651e19458b2cd8a8c662e2f",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "再生開始",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_stop",
+   "sha256": "728f96fbd97309a025aeac0f10556d3049fe4c211004cad71ae68bdf9ca14da6",
+   "semSha256": "9c22265235b945dc3effd0df7f5bffb7f6c13c416a468405b9f700c01408f5a5",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "再生停止",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_get_play_session",
+   "sha256": "d5989e3110b1e7b41a61cacfe13301b924d356db58a859c25f07c9994e4a7b76",
+   "semSha256": "8e0c8883475656287dcff9002849910c243fc9205a093e0884fadc4556fa4079",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "maxEvents",
+    "maxSamples",
+    "goal",
+    "goalName",
+    "judge"
+   ],
+   "annotations": {
+    "title": "人間のプレイ記録を取る",
+    "readOnlyHint": true,
+    "openWorldHint": true
+   }
+  },
+  {
+   "name": "dx12_key_down",
+   "sha256": "b78752a03631d13d3a1d327d22311e4e295f254eef1100541cdd44766a7f7826",
+   "semSha256": "69aef7db98ede9dc6807f4f9c0c14454ec283a9aa164e664b41fb1d059fff356",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "key"
+   ],
+   "annotations": {
+    "title": "キー押下(保持)",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_key_up",
+   "sha256": "9a2e244721c9543a883fce6c9dbc760042edbb89c3594d55d0b3f43647c994ba",
+   "semSha256": "b914fb83db066701d5294d8dbff38dd5d111b7329c508653aff93d4ded4f9685",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "key"
+   ],
+   "annotations": {
+    "title": "キー離す",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_key_press",
+   "sha256": "e1e45a3fdd83a64b53d48871409e5cd18b47d2a8d4984a5b5fe4590ae8688cc6",
+   "semSha256": "2292f222bd1797191f6708d77cf3493219b601834974879ca5165be45f3f7cb7",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "key"
+   ],
+   "annotations": {
+    "title": "キータップ(1フレーム)",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_mouse_move",
+   "sha256": "8540b9a6a361e045840a5cd2a0d6a91b786aeb3829613d57df6889b0fac4268b",
+   "semSha256": "03545fccb8a3dde86a4f217f15c6a6c2c07dd87f72107bc3a84cc9b53b3f0383",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "dx",
+    "dy"
+   ],
+   "annotations": {
+    "title": "マウス移動の注入",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_imgui_virtual_input",
+   "sha256": "0d5da1ac329eb798c7d6d605803a37c68834fbe28845d08ac158862594a41de0",
+   "semSha256": "d262a21ab84e5a53c3f5600e0fb7479c1776e26174f962bb3d0249a5658bc9fc",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enable"
+   ],
+   "annotations": {
+    "title": "仮想入力モード切替",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_imgui_pointer",
+   "sha256": "2b78bb24b3327cbf9a7ae8bbd0af86bc51295eee8b017e1388ae7120813c0efc",
+   "semSha256": "3d686d31a3308e18b37913dec183a2f9da52754b9600a2066d1b0d51c7bea9db",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "action",
+    "x",
+    "y",
+    "button",
+    "toX",
+    "toY",
+    "steps",
+    "dx",
+    "dy"
+   ],
+   "annotations": {
+    "title": "仮想ポインタ操作",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_imgui_key",
+   "sha256": "e3b61c98632503ba296e8b264a2fcab0eb22fdb3fadd697e8ccfa87abb9339b1",
+   "semSha256": "4c9427f3fc0835f1c2c513fd8d897b390b7c647b72edc1ce71070e99998c7d80",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "key",
+    "text",
+    "hold"
+   ],
+   "annotations": {
+    "title": "仮想キー入力",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_imgui_find",
+   "sha256": "b20bd8bd2d7723ea366eaf918c361d02d43f3865c51dc9e5c5d00fc6b06cf502",
+   "semSha256": "2e7390de98f51cdf5a345e4b0b74ca8014f7eb751267696ba023c7b705d9be89",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "label",
+    "contains"
+   ],
+   "annotations": {
+    "title": "UI要素を名前で探す",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_imgui_screenshot",
+   "sha256": "aafb4c6621134243de1e1af3135631937fcae599bd0f61097ac3fbada2506042",
+   "semSha256": "aafb4c6621134243de1e1af3135631937fcae599bd0f61097ac3fbada2506042",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "ImGui込みスクリーンショット",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_step_frames",
+   "sha256": "c6da58726b9c0a78b90412ce461c41ae1a3a03ed1fe8e5bba7481dafe38ca73f",
+   "semSha256": "d5d9c9ad81c028140f38a5cf68d1daa20f348859851c70872c8d8a0091483c55",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "frames",
+    "deterministic",
+    "dt",
+    "hold"
+   ],
+   "annotations": {
+    "title": "Nフレーム進める",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_perf_stats",
+   "sha256": "b1a88ca82483b5a091317ec7edc067ac78ea0987d95de45fba5f8ef1cdbf52e4",
+   "semSha256": "b6eb6720e416375227a79c30134dd9898d89e1fea7ed22498d13092831539c93",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "window"
+   ],
+   "annotations": {
+    "title": "パフォーマンス統計",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_benchmark",
+   "sha256": "a9668b3479a3fd274ce30d8b75cdb6b04d2660ba1a279cd3663ec0e599b5f964",
+   "semSha256": "9d01007499ca2cff593f983d5a1a9c25788470b8a7016b08be35d86007b31210",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "frames",
+    "uncap"
+   ],
+   "annotations": {
+    "title": "ベンチマーク実行",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_raycast",
+   "sha256": "592128c0d2eeb30d7a84777c3d8ef6493bbfa8dde399ca7df09e86b11739d8b3",
+   "semSha256": "608571c54c9c0eacb28aab346e9ffc18e95be0d3a05acdd6648b665777323f78",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "origin",
+    "direction",
+    "maxDistance"
+   ],
+   "annotations": {
+    "title": "レイキャスト",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_overlap_box",
+   "sha256": "d1daff0519ecc9e8702d55a8674c68a9d9e45675def27ff576e668a9d2e9cc19",
+   "semSha256": "4feb50cce2aaa76bc933bdfd722fd2ce1ac500d2805db47d0d7379f76136ec7b",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "center",
+    "halfExtents",
+    "maxResults"
+   ],
+   "annotations": {
+    "title": "ボックス範囲の物理クエリ",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_overlap_sphere",
+   "sha256": "36fa2ae914152ed90d1ccbe974d5e7883bcc810251a17eaa949e8a01f41ca810",
+   "semSha256": "aaf09bb8b3f7b92adfe6122f79a0547a39c1224c895d0dab23290ad95c127e0a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "center",
+    "radius",
+    "maxResults"
+   ],
+   "annotations": {
+    "title": "球範囲の物理クエリ",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_get_physics_state",
+   "sha256": "c0451629b42d22e34add2ee41fe0da59d405bf6c0304bc5fb11fd9bda1200298",
+   "semSha256": "3feb757ab01182ad9a198bf1b6fc385d16b8cea3cb48016828b838388add1bdb",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "物理ランタイム状態取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_audio_state",
+   "sha256": "5d88a0c1fe1de4ce0bd20ea66eb16469d34cfc568ac273577d5f0d92ad37ba29",
+   "semSha256": "e11fa6d0d28682509907ef2243fcd61e31fc1ec8bcbbcea8752c392b0f48d4e8",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "音の状態を観測",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_brain_state",
+   "sha256": "93e31f81eea632c6ea19fe7cd9d26535f6af05c3f08596957d7650a7872dde5d",
+   "semSha256": "ac57fe48e0a1efd37793871a4613211e1dd4873ee4183c4343341bb6645964a8",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "ゲームAI(Brain)の状態を観測",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_read_lua_component",
+   "sha256": "9c5e1e16be71b8992c1975d91a9e46de49a07ef07b157dfa7562a9208994138d",
+   "semSha256": "5e3cb9c62a0e16487340bf426e555af1a86cb188f0b5189eb15f146596a02931",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "Luaコンポーネント読み取り",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_create_prefab",
+   "sha256": "e19d8933650f00618ecdd693221c30d844b4f112768fbff597b1a9887c43d4e0",
+   "semSha256": "ab34da0fe8b9bd4fc3181c63ed694a71c4993c8ede6e2b3f49ea978b3af85964",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "path"
+   ],
+   "annotations": {
+    "title": "プレハブ化",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_get_post_process",
+   "sha256": "2fd35a520073f3c74beab411b60041fe867b5959275a2235a7ff33c3479a4b8c",
+   "semSha256": "38f1b7e130dbfcdd830f3556b8dd6d7f3d3e50bc08baa9b20f186088bf32056d",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "ポストプロセス設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_post_process",
+   "sha256": "2ffac83edd179e86a09b979068bf7dadd29c07c59d1b07438a905698fe082f83",
+   "semSha256": "d65c357076ebdc6dda5a999ac793d77047d8374bc72a13084bc63fe87fdae9aa",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "tonemapper",
+    "filmSlope",
+    "filmToe",
+    "filmShoulder",
+    "filmBlackClip",
+    "filmWhiteClip",
+    "exposureMode",
+    "ev100",
+    "evComp",
+    "aeMinEv100",
+    "aeMaxEv100",
+    "aeSpeedUp",
+    "aeSpeedDown",
+    "aeLowPercent",
+    "aeHighPercent",
+    "lightingUnits",
+    "exposureOn",
+    "exposure",
+    "contrastOn",
+    "contrast",
+    "brightnessOn",
+    "brightness",
+    "saturationOn",
+    "saturation",
+    "warmthOn",
+    "warmth",
+    "hueOn",
+    "hueShift",
+    "tintOn",
+    "tint",
+    "bloomOn",
+    "bloom",
+    "bloomThreshold",
+    "bloomKnee",
+    "bloomRadius",
+    "vignetteOn",
+    "vignette",
+    "vignetteRadius",
+    "vignetteSoftness",
+    "vignetteRoundness",
+    "vignetteColor",
+    "autoExposureOn",
+    "aeSpeed",
+    "aeEvComp",
+    "aeLogMin",
+    "aeLogMax",
+    "lutOn",
+    "lutPath",
+    "lutAmount",
+    "godraysOn",
+    "grIntensity",
+    "grDensity",
+    "grDecay",
+    "lensflareOn",
+    "lfIntensity",
+    "lfGhosts",
+    "lfDispersal",
+    "lfHalo",
+    "lfChroma",
+    "dofOn",
+    "dofFocusDist",
+    "dofFocusRange",
+    "dofBlurSize",
+    "dofFocusName",
+    "dofAperture",
+    "dofFocalLength",
+    "motionBlurOn",
+    "mbStrength",
+    "mbSamples",
+    "chromaticOn",
+    "chromatic",
+    "chromaMode",
+    "pixelizeOn",
+    "pixelSize",
+    "posterizeOn",
+    "posterize",
+    "ditherOn",
+    "ditherLevels",
+    "scanlineOn",
+    "scanline",
+    "scanCount",
+    "scanCurve",
+    "sharpenOn",
+    "sharpen",
+    "grainOn",
+    "grain",
+    "grainSize",
+    "grainColored",
+    "invertOn",
+    "invert",
+    "sepiaOn",
+    "sepia",
+    "grayscaleOn",
+    "grayscale",
+    "lensOn",
+    "lens",
+    "lensMode",
+    "lensK2",
+    "lensZoom",
+    "lensCircular",
+    "lensEdge",
+    "lensChroma",
+    "waveOn",
+    "waveAmp",
+    "waveFreq",
+    "waveSpeed",
+    "radialOn",
+    "radial",
+    "radialSamples",
+    "radialCenterX",
+    "radialCenterY",
+    "glitchOn",
+    "glitch",
+    "glitchBlocks",
+    "glitchSpeed",
+    "glitchColor",
+    "outlineOn",
+    "outline",
+    "outlineColor",
+    "outlineThickness",
+    "outlineThreshold",
+    "outlineOnly",
+    "outlineBg",
+    "fxaaOn",
+    "debandOn"
+   ],
+   "annotations": {
+    "title": "ポストプロセス設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_ssao",
+   "sha256": "15b0a94e57be5cd7ea0b8309fb8671dc192b4599302830d8b0b85fc1e209f424",
+   "semSha256": "71be75cc336a0e9687ca169f60526b9ed446e5018377b8a5a3875508888d2569",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "SSAO設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_ssao",
+   "sha256": "9d7fb12486c100727086cb57c92d241749833856b6dd579e81f16fe4990bff99",
+   "semSha256": "789076b059232d7b8df8f7c16951cbf81e5ffbb068a7423fc93cf2b59a8ee524",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "radius",
+    "bias",
+    "intensity",
+    "power",
+    "sampleCount",
+    "blur"
+   ],
+   "annotations": {
+    "title": "SSAO設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_occlusion",
+   "sha256": "50e1330b3cdc0278249c12b0a403182b5713683d8da188265e47e4129d58af28",
+   "semSha256": "3ac10b52560a770b4666a754a474defb9eed6d94700ec1fd667301cea59bfbc4",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "オクルージョンカリング取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_occlusion",
+   "sha256": "6771155b31181bb813450865ff1264435bbbea5a95cfc06067b93f421e66b66a",
+   "semSha256": "1da85b63b3ce9375538c20c8563e587336633fdfb542ae7b342e20ca010783d9",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled"
+   ],
+   "annotations": {
+    "title": "オクルージョンカリング切替",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_ui_click",
+   "sha256": "dd334ce721fc470c26d40c3b0b2f24577d785d4cd194d52eeb2ad98f2859b927",
+   "semSha256": "18f40199dcf11b8a2ee3779c17d334a5039cba5ae0f3eab015340dd0f7b0df67",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "x",
+    "y",
+    "move"
+   ],
+   "annotations": {
+    "title": "ゲーム内UIを押す",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_get_render_scale",
+   "sha256": "eb67f3406ff5a5768bcfad6349cdd309f8df430321ec6a2d4a11bb57e9543d53",
+   "semSha256": "0a6688717ca7b847d75a06c98d6d558f527e847804430e955f2feb7b68373380",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "内部解像度スケール取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_render_scale",
+   "sha256": "1893edf6194e2fd4aa30f248f592a57e01d6fec638e227eb3dd0d671c4c7530c",
+   "semSha256": "02b2df726d12072cd89bd725fd5daa22948207711b28ad40ab8d37f82983ccf4",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "scale"
+   ],
+   "annotations": {
+    "title": "内部解像度スケール変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_depth_prepass",
+   "sha256": "048c4886de55d7ca028583e823f7c65592e4eb73bbab75099b5758ccb96af75d",
+   "semSha256": "a79fdfa4c897efddcd65baf944ecd1a4bff06235c6429a683f2944b638d39639",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "深度プリパス単独トグル取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_depth_prepass",
+   "sha256": "d4ddfad063e32cb01b1b1277eb5f708d2b6666bcc4bf0c55e68a109b37a0dceb",
+   "semSha256": "44917d447b954927d6648a431f10873ad02ed4978a229ff8a9cc7519a33f79e7",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled"
+   ],
+   "annotations": {
+    "title": "深度プリパス単独トグル",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_ssr",
+   "sha256": "a8738b06899e172332f7ed9b85af7ab10410d40eda23990c507660456f623320",
+   "semSha256": "bba47030d9fc2336a1987e4cde7a655d87c6d3e7f045078e5543065a7997f387",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "SSR設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_ssr",
+   "sha256": "95f398c962e8fe1be5c9ec4d9f4a7dcb15c2901e43e7dfa1d785c5ed226ed555",
+   "semSha256": "dd6cc467694d4ea91d1b47401cea17d6c7d6b34ab4a037da115aff19e5530309",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "intensity",
+    "maxDistance",
+    "thickness",
+    "maxSteps",
+    "stride",
+    "roughnessCutoff",
+    "edgeFade",
+    "bias"
+   ],
+   "annotations": {
+    "title": "SSR設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_ssgi",
+   "sha256": "bfea780dd8fb57aa5e4ff4ac56eb68d361e34eac2aade039d6796012529032eb",
+   "semSha256": "76ceb32554cbe77e9f9fd5b7853fcbedae8b75e575891ab3a267724e29176335",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "SSGI設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_ssgi",
+   "sha256": "1cea4ae711d32535a3ed42f052f83817c5d5f2eb94d4708fce3fe4bb3cb98618",
+   "semSha256": "65a8196ba7cbed3533b16a65c16f6cdc53eb8e6baef937290ca18ab46f91ae13",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "intensity",
+    "radius",
+    "thickness",
+    "rayCount",
+    "stepCount",
+    "clampValue",
+    "feedback",
+    "iblFallback"
+   ],
+   "annotations": {
+    "title": "SSGI設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_contact_shadow",
+   "sha256": "a88fa77698c092be3389410bad57a916e7355ba8cdac788563d422bb6f183063",
+   "semSha256": "1576e2efd659a0190e430b27c8ea942e0124fd6f9ca58790bba999c43e5e2af6",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "コンタクトシャドウ設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_contact_shadow",
+   "sha256": "42566f4d6f21b891d21cd6fde40a25f4bf32ff591206870c89e1aeaefb568346",
+   "semSha256": "a4c2527d499ed1acf16f34a276e22293aba97ad9d9664b19017b04583f87ddc6",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "rayLength",
+    "thickness",
+    "bias",
+    "intensity",
+    "steps",
+    "maxDistance",
+    "fadeDistance"
+   ],
+   "annotations": {
+    "title": "コンタクトシャドウ設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_normal_filter",
+   "sha256": "7674ee7708dbdbd837440df2357b441a4fe0fb12415ee1a6341e9bc31c942cf4",
+   "semSha256": "4f30e13c983301d33f836ab9761c38b56fab5592d24240d034a422d3b70a7b2c",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "法線マップフィルタリング設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_normal_filter",
+   "sha256": "6eeb72f9164883c4200d5ed5b55148374709fa76b88dd63b7f39c54b5b697764",
+   "semSha256": "133869fafe52bf7a83342ba13a6979014401cab0b939acb924591e9ac1ca0dd1",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "strength",
+    "varianceClamp",
+    "geometricBlend"
+   ],
+   "annotations": {
+    "title": "法線マップフィルタリング設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_shadow_pcss",
+   "sha256": "e48c29d08bb0fc9c84f7fb586603b94cc0eba87097e5778d70d41bb835333158",
+   "semSha256": "ddd5cd6ec432db56c594abb182fe79f493e98e060df0369a2c2ca83e2b1582ef",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "PCSSソフトシャドウ設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_shadow_pcss",
+   "sha256": "8e920eaa513f4af7b34aa8cc93c0e95df1e17efe40a1d6b4337e64cf9cc82f50",
+   "semSha256": "eac0eaca7950c852b99340a8eabd68c2e15580e0dc49fa2bda129ce7f372f57c",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "lightTanAngle",
+    "maxPenumbraTexels",
+    "blockerSearchTexels",
+    "temporalDither"
+   ],
+   "annotations": {
+    "title": "PCSSソフトシャドウ設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_dxr",
+   "sha256": "77ac45e9dfa278738d727c0c0c316486f7862b6f5474eaf6661bff1a7e40a958",
+   "semSha256": "6cfd79c2b7545da82872b6c8e55f48fb8d1fc478d3a0f274e5773d94688b209c",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "DXR設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_dxr",
+   "sha256": "8057e462743a19469ebd481d046529f91b03ea570810eb0a17a1bf0f671c456c",
+   "semSha256": "c3d4489f2ae169015ab268de7f56b8c9f441d8ac513c20723377b4842b662a9a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "shadowEnabled",
+    "shadowSunAngle",
+    "shadowNormalBias",
+    "shadowMaxDistance",
+    "shadowIntensity",
+    "aoEnabled",
+    "aoRadius",
+    "aoRayCount",
+    "aoIntensity",
+    "aoPower",
+    "aoCombineWithSsao",
+    "aoDenoise",
+    "aoDenoiseRadius",
+    "maxInstances",
+    "forceBuildTlas",
+    "ddgiEnabled",
+    "ddgiSpacing",
+    "ddgiProbeCountX",
+    "ddgiProbeCountY",
+    "ddgiProbeCountZ",
+    "ddgiOriginX",
+    "ddgiOriginY",
+    "ddgiOriginZ",
+    "ddgiRayLength",
+    "ddgiHysteresis",
+    "ddgiIntensity",
+    "ddgiNormalBias",
+    "ddgiBounceIntensity",
+    "ddgiFollowCamera",
+    "ddgiSpacing1",
+    "ddgiBudgetMs"
+   ],
+   "annotations": {
+    "title": "DXR設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_taa",
+   "sha256": "c0874ef9fd056b6e64e80215d727947fa2b6d3030e6b979661f2556a5d731075",
+   "semSha256": "8d9f651d7d76d2bb48cc64007994a5bc1e2bd7553911270396a688f9f7b7fdce",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "TAA設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_taa",
+   "sha256": "1fea9c48d0d455ed464c9c2928baef4939aac326cb2d6114f1dbafa17489b57a",
+   "semSha256": "fe0b839cb1239cea77262830f28cf6fb2bfa88165914c974633b24d9e0069def",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "sampleCount",
+    "feedbackMin",
+    "feedbackMax",
+    "varianceGamma",
+    "jitterScale",
+    "debugVelocity"
+   ],
+   "annotations": {
+    "title": "TAA設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_volumetric_fog",
+   "sha256": "1df814fa05cea77e6a35d03d0577b5116de5c28f10398e021c6018638f9e6676",
+   "semSha256": "2a9e29fcec329006892c9c11d39a1425aa681008c523d64e7a4c0a53e00d640f",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "ボリュメトリックフォグ設定取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_volumetric_fog",
+   "sha256": "73159c3415fbd4cfa4cc75f91caf6a57629ab5e5c03a3aea00fc9aeb9c1ab1ba",
+   "semSha256": "0508ad03e599fe67621198f79f1fe57b8c1b9707016cd836bcffd9aa11d5a3a9",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled",
+    "density",
+    "albedo",
+    "anisotropy",
+    "heightFalloff",
+    "heightRef",
+    "distance",
+    "depthDistribution",
+    "ambient",
+    "sunIntensity",
+    "lightScattering",
+    "temporal",
+    "temporalBlend",
+    "extendBeyondRange",
+    "debugMode"
+   ],
+   "annotations": {
+    "title": "ボリュメトリックフォグ設定変更",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_validate_scene",
+   "sha256": "cdf7ea2ab2fe1ce70921f3dcf542ebe98c5776ee3c5a9efbc6ce83145785dac5",
+   "semSha256": "379b21ccb4ddb883b936e8a1fe0ae138b834896a2f46d6ce00f16f24e9aa1cb3",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "シーン検証",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_scene_scaffold",
+   "sha256": "c1bb6b97ca7c5db252c3cfbcf9da2bdbaa7535ff8c59d68a3449435d585bc877",
+   "semSha256": "4861d1bb8248bba2b355ba0a0e5dd1e44e651694616ebd46987f25f1e01f7ddd",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "only"
+   ],
+   "annotations": {
+    "title": "シーン骨格の生成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_organize_scene",
+   "sha256": "7629d6c551788fee18aea69e844982ddfb82e6e6cd02b218118a7c385daacb2a",
+   "semSha256": "e0d62c8b18d56918f9bb94c3b3e517247bec6fad47ad9e42f1f81e0ccb0e5039",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "dryRun",
+    "rename"
+   ],
+   "annotations": {
+    "title": "シーンの整理(グループ分け+改名)",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_validate_naming",
+   "sha256": "f6be4f7618dd2c278b4603c2f43146ee0d2e148712163270af11db18dd82cfd3",
+   "semSha256": "71d79054edc6c5c724037c3a4ef065b776ceb2ad3bba058155ee381ca93dd161",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "命名規約の検査",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_play_script",
+   "sha256": "b4c8027289bdaec917f35a65c8f6b19a4bd43636283dde19593eb850c50112aa",
+   "semSha256": "ffd6b2030e4db033d0464d4c2eb4dce0b4cd6898357f3fd36eafb66498f17ec3",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "steps",
+    "expect",
+    "player",
+    "until",
+    "sampleHz",
+    "dt",
+    "autoPlay"
+   ],
+   "annotations": {
+    "title": "台本プレイ(決定論)",
+    "openWorldHint": false,
+    "destructiveHint": false
+   }
+  },
+  {
+   "name": "dx12_measure_player",
+   "sha256": "e9c7a8801a4774b35a4abfae22c44af18835ea32ea2615e3d8b9856ef6a787dc",
+   "semSha256": "e4ab37eb3a332b822be18c6b98f8ae14b7668eb53a4e8194968ce051c49d12f4",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "player",
+    "forwardKey",
+    "jumpKey",
+    "save"
+   ],
+   "annotations": {
+    "title": "移動能力の実測",
+    "openWorldHint": false,
+    "destructiveHint": false
+   }
+  },
+  {
+   "name": "dx12_check_reachable",
+   "sha256": "881d52bf6f29993860b789796c4c4c6e24022baef82075c4d03b6a9d6a72194f",
+   "semSha256": "44b557f64812c72a1bc522636486e0201dd6005fef778746943ff8d9fbb970de",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "from",
+    "fromName",
+    "to",
+    "toName"
+   ],
+   "annotations": {
+    "title": "到達性の検査",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_autoplay",
+   "sha256": "d183a5b6b474b48b37b63374ec0581437c94a0356f0acb6e51e1d790c3ff6920",
+   "semSha256": "bb959d66da8f9824c4badca8727fd01ce845f64d24358b3be5c1ba226e03a89e",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "goal",
+    "goalName",
+    "player",
+    "forwardKey",
+    "jumpKey",
+    "arriveRadius",
+    "timeoutSec",
+    "judge"
+   ],
+   "annotations": {
+    "title": "自動走破(クリアできるかの実証)",
+    "openWorldHint": false,
+    "destructiveHint": false
+   }
+  },
+  {
+   "name": "dx12_record_playtest",
+   "sha256": "ba31db1add7d79b0a6e6960b4c1afc2bff08e3b78681438ce2ba7d7c255d5833",
+   "semSha256": "61e2f3e144ea5f1dc5e63340817cce013cac1c09d4004bbde690e1d2cdb64973",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "endTolerance",
+    "pathTolerance",
+    "note",
+    "goalName",
+    "judge"
+   ],
+   "annotations": {
+    "title": "プレイを回帰テストとして保存",
+    "openWorldHint": false,
+    "destructiveHint": false
+   }
+  },
+  {
+   "name": "dx12_run_playtests",
+   "sha256": "c65d70eb38063692fccf4fe5c0392b760fcd0554e5a5b9a8beece339a5a80d2d",
+   "semSha256": "99770402a7f8f3ad3294803fc171a2be52c89506c1f9fcf3cbed887783123999",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "judge"
+   ],
+   "annotations": {
+    "title": "回帰テストの再生",
+    "openWorldHint": false,
+    "destructiveHint": false
+   }
+  },
+  {
+   "name": "dx12_blender_polish",
+   "sha256": "8fe119a1a0162d8b3515afc9d191bcb96eb8efdfef57169c4cbe9c1995f87e10",
+   "semSha256": "c703cad0620b53746b89023c02f8363c54938ad43e01ea745860798b68867402",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "objects",
+    "bevelWidth",
+    "bevelSegments",
+    "smoothAngle",
+    "uvMeters",
+    "minThickness"
+   ],
+   "annotations": {
+    "title": "モデルの仕上げ（うすぺらいを消す）",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_blender_material",
+   "sha256": "8a2d7f4dc2bb1bd86774e7e2e36f9ca0bdf09692a1edd04503d387d2e6cd7273",
+   "semSha256": "4a1af553881314140b4554e19127c0ec160ba1ad56fff27eef2c8d9417f1199f",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "objects",
+    "assetId",
+    "keyword",
+    "resolution",
+    "uvMeters"
+   ],
+   "annotations": {
+    "title": "PolyHaven の PBR 素材を貼る",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_scene_env",
+   "sha256": "9094171822a3164605f6cc8c213d385e2412f81296e4b9686da4f71f8c792369",
+   "semSha256": "be0da08b54a7c81ffd800fd76790cbb726b4524e836870df9a90e0e1407a55d5",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "assetId",
+    "keyword",
+    "resolution",
+    "iblIntensity",
+    "skyboxIntensity",
+    "drawSkybox"
+   ],
+   "annotations": {
+    "title": "環境光を HDRI にする",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_blender_ensure",
+   "sha256": "f92dcd92804b689c2b10eccffee170c74ee651083ee044d4172af23a61fe6477",
+   "semSha256": "4f7480325ae771597f194a36e12163709c8e59b5d4e9b825c1270592ec4f2be6",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "blenderPath",
+    "timeoutMs"
+   ],
+   "annotations": {
+    "title": "Blenderの起動確認/起動",
+    "openWorldHint": false,
+    "destructiveHint": false
+   }
+  },
+  {
+   "name": "dx12_model_brief",
+   "sha256": "fe8fc0178fe9635d78875cedb00f27e2cea4ba036fe8f952d8eb098edc59a29c",
+   "semSha256": "7455aaeeb6ddc79b84aa19119a3e53540d6918840b581aa707157f3ba8387f81",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "kind"
+   ],
+   "annotations": {
+    "title": "モデリング規約",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_blender_export",
+   "sha256": "1d5f6ab378baf388be00548feb2a74d466580a6d0fec90e03e7bc0206563f785",
+   "semSha256": "664af46cf4ff6a53b964afd751afe6e888b97a09dffa9b552ede693578289932",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "objects",
+    "destPath",
+    "clearShapeKeys",
+    "applyModifiers"
+   ],
+   "annotations": {
+    "title": "Blenderから規約どおり書き出して取り込む",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_asset_gap",
+   "sha256": "3aaf071785dbaddbb4ce56ca741e0e39e216587aeda05fca1ebdf3e217316d56",
+   "semSha256": "cb8daef6cb9f72c49234ece493bbe266cb08f570c2b002300d905a9662e63cab",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "includePlaceholders"
+   ],
+   "annotations": {
+    "title": "足りないモデルの洗い出し",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_validate_layout",
+   "sha256": "cb25aae0326996fee94a1e224be7908b4b9d8839fe9c410a26ffa744685fe4ba",
+   "semSha256": "e98bb6b3e95eb3a2e82c7a6113415bff28247b290f18146e687ddaa1af49e6c3",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "fix",
+    "tolerance",
+    "limit",
+    "offset",
+    "judge"
+   ],
+   "annotations": {
+    "title": "配置検査",
+    "destructiveHint": false,
+    "openWorldHint": true
+   }
+  },
+  {
+   "name": "dx12_build_game",
+   "sha256": "c1f75d20acea6f83fac06d592c8fe7edcca6c9513c152175243618be9bfb5225",
+   "semSha256": "6a70e0b9db7118a9e5de7cde87427a8ab96f72f82f7b968d889de788462ea7ed",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "waitSec",
+    "wait"
+   ],
+   "annotations": {
+    "title": "ゲームビルド",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_eval_lua",
+   "sha256": "1759a863e57fa0ffd4ef245bfcdded2c375e853f09139a1ca390924581567b2a",
+   "semSha256": "18c23f74388bd122cfb7c5d1f5b1fffa39a88a500166f72d958599f86f5c77ec",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "code"
+   ],
+   "annotations": {
+    "title": "Lua即時実行",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_set_texture",
+   "sha256": "cee966fbcb2976636bc458292206bfef2eeab7f8f7911545f1e80533aaa03440",
+   "semSha256": "c3299d000e036a9260ee9d8f19c1cebc1903fd90b7e179cfb217a4918b7ae76a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "path",
+    "slot",
+    "submesh"
+   ],
+   "annotations": {
+    "title": "テクスチャ上書き割当",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_material_apply",
+   "sha256": "b9471b4d0f6be3626ae4e7d61db5c991cc5ca7c218bcf13dd1bb4f7493f689df",
+   "semSha256": "99512a95d4ec1df8b15d9587b4b43d512450d72f12be5cd40eeae62a4dcf7377",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "entities",
+    "dir",
+    "baseColor",
+    "normal",
+    "orm",
+    "metalRoughness",
+    "height",
+    "submesh",
+    "uvScale",
+    "uvScaleU",
+    "uvScaleV",
+    "metallic",
+    "roughness"
+   ],
+   "annotations": {
+    "title": "PBRマテリアル一括割当",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_play_anim",
+   "sha256": "38e8b98d39b27c3126b9beb204bf449672e7505d1c6e1966cf160eed669cc689",
+   "semSha256": "bcdf9cf39b672171688ca6bc4e57bc95f8a858bc1bc8858320860169531318ad",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "clip",
+    "clipName",
+    "blend",
+    "loop",
+    "speed",
+    "state",
+    "layer"
+   ],
+   "annotations": {
+    "title": "アニメーション再生",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_get_anim_state",
+   "sha256": "4a07af9b0ad8c30983a1bc7be379950d88644e6bd42e493fdbd88a8fae90e117",
+   "semSha256": "04b8f3fcb6b8adc165fd8c8f35cb18ef015948fdc9c572c49a4b99136ae5a209",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "アニメーション状態取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_describe_anim_graph",
+   "sha256": "4f9d11189d20f60b6a2d8aa5e3197d8fd897f444662de44a2d315ec396b63a38",
+   "semSha256": "4f870d5ff314e2fa72e938939fa134404f999ce5096463ced2e76cfe37e566e3",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "path"
+   ],
+   "annotations": {
+    "title": "アニメグラフ構造取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_anim_param",
+   "sha256": "9461d32324dac4ecea28a52e98892233a9729911bc921911e43e05111fd64b0c",
+   "semSha256": "be71a8f8df0e8c695d19ded3744fa5827992ada6b0516a86b243da318e1a6dc1",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "param",
+    "value",
+    "trigger"
+   ],
+   "annotations": {
+    "title": "アニメパラメータ設定",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_net_status",
+   "sha256": "2f3d40ee5241ccf62c5af390169eb6420c8f5d8a6b14a7a6163bfc45150d6c2a",
+   "semSha256": "32d3c611c8028517075cf654a21ba0ffc3c24fac3f071ad1f441e28fb027c9a3",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "ネットワーク状態取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_net_setup",
+   "sha256": "7d2f95c2b657f5d62b6f1899b5d395e71e43445e568e75769d4fefb57cd03c48",
+   "semSha256": "19b7100770b4b7401a3f81b23c248f30cf33b02ca5883d0b4c7a01663098e6d5",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "role",
+    "address",
+    "port"
+   ],
+   "annotations": {
+    "title": "ネットワークテストロール設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_net_launch_test_client",
+   "sha256": "302fce61f5f13f288188733fc4210cf4b345c7b62410d03cf4e0534820e006fa",
+   "semSha256": "90426ee5c9ebc183413a60c9546695db9445bd8b9426b661698bdeea0b4f2cc3",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "テストクライアント起動",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_get_editor_camera",
+   "sha256": "6850348c6b9bdcb0c09959c98a52e2842411653cded6cd32de320e598e46229f",
+   "semSha256": "12c690bc5aa81d4bb63c1d6a0d86033625a45057b4228c3aed1c6aa2714ed6d8",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "targetDistance"
+   ],
+   "annotations": {
+    "title": "エディタカメラ取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_set_editor_camera",
+   "sha256": "bf567c1f99c657d30640c343c309b99499401705855fc92f2c1dde416fae1743",
+   "semSha256": "d308c8a2153d4c1f1d76f2dd30e9897f395ce679c97396da3f2228c744ca9e75",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "position",
+    "target",
+    "yawDeg",
+    "pitchDeg",
+    "release"
+   ],
+   "annotations": {
+    "title": "エディタカメラ設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_bounds",
+   "sha256": "025c19a22891257312deee99caa2c7f739e0b38a266ae43ee3caabca1cca7e57",
+   "semSha256": "1bb7b2f67259cacaec462a340e0bf7af9f76617323f2aee6439461667d0d867c",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "includeChildren",
+    "perSubmesh"
+   ],
+   "annotations": {
+    "title": "ワールドAABB取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_look_at",
+   "sha256": "f6f4485c642d5605b1f08402f98026b3d05b2b84fdaa9d599362dd2cafefc2ac",
+   "semSha256": "5e0a4130161b186752aea36c3d0b28d0343197d0bb42f2ec0d36d01b23659abf",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "target",
+    "targetEntity",
+    "targetName",
+    "upright"
+   ],
+   "annotations": {
+    "title": "エンティティを向ける",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_snap_to_ground",
+   "sha256": "6020b5cf65aa70c390fb049d52f4cff2a45b9a9c3605b199986557fb36e542f2",
+   "semSha256": "c62d7f88dd6e00b8b9285325ac3c563309eb59ace4562610b058f3305e07eadc",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "offset",
+    "precise"
+   ],
+   "annotations": {
+    "title": "接地(下の面に置く)",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_get_hierarchy",
+   "sha256": "8fc6ee1148c78585ed863a975dd75a3bf69c0dcd930d405ef20f80fc886207f8",
+   "semSha256": "47a3e6eda322341f63d219fa3b519a8e472c88bb86c765100caf21cf8dbb4d53",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "limit",
+    "rootOffset",
+    "root",
+    "maxDepth"
+   ],
+   "annotations": {
+    "title": "シーン階層ツリー取得",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_import_asset",
+   "sha256": "eed971502680d4b59260178cd4b313013e71b7b5d7526720d1f7b12aa24ae102",
+   "semSha256": "b0901104f07a923cfd42490bbd06f5a1790ec5c73cdeaf96ac83e63c71be121f",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "sourcePath",
+    "destPath",
+    "overwrite"
+   ],
+   "annotations": {
+    "title": "外部アセット取り込み",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_asset_info",
+   "sha256": "2836800f0476d377a6369b3cff5c940bd05a218a3a5610bd5e6373fa9fdfc7e8",
+   "semSha256": "8b15ed41f53991f8011515d92b03cbb9faaf2ce63550871d58ee3f3d312cec22",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "アセットのメタ情報",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_reload_assets",
+   "sha256": "339608dcdf7ff62a6e47d7853cd4fe0158f4964b0cea871af5c08f0cefed6120",
+   "semSha256": "c52e67fc91d3295df0a85d0569f1af96ba1bdc2771d94baf681b524c52cabdab",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path",
+    "force"
+   ],
+   "annotations": {
+    "title": "アセットを読み直す",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_move_asset",
+   "sha256": "5c21b49c0b87af38234db439ef200cb57647025ea077c4c3d3bcdb0d6874a60e",
+   "semSha256": "7ebc7614a9ea5ffaf1df8df8d3e8e51c5daf4d038d9a3b9d7e0133a7eab6800a",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "from",
+    "to",
+    "overwrite",
+    "updateFiles"
+   ],
+   "annotations": {
+    "title": "アセット移動/リネーム",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_delete_asset",
+   "sha256": "0a130876da98c0637a88df3d1ea2bbc649611b13cbcef1b35f60cb4f27158d59",
+   "semSha256": "b6852de2c2b06c83196e0ed03eabff46730e0e75102968f8dfdd070503e4cb35",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "path",
+    "recursive"
+   ],
+   "annotations": {
+    "title": "アセット削除",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_scatter",
+   "sha256": "dc09cc98d6a006b4e0197c997a3b12212e97bfc342d7d76413d807d06f4f2d83",
+   "semSha256": "e13c34faa01ee7c8a5d200c9b56a39fe99eb3a1f42bfaeb5db73ce06ae3d6552",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "type",
+    "model",
+    "prefab",
+    "count",
+    "area",
+    "y",
+    "placement",
+    "seed",
+    "randomYaw",
+    "scaleRange",
+    "snapToGround",
+    "namePrefix"
+   ],
+   "annotations": {
+    "title": "一括配置(散布/グリッド)",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_batch",
+   "sha256": "c595d06f3a6a38f1aec0d2ace037aa76fb15e432df9b3314fc844e57965f5ca8",
+   "semSha256": "c919c95740c7c017a4b28104287ce2e32f0ae078f4205d5fade47508009fe4e2",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "ops",
+    "stopOnError",
+    "atomic",
+    "label"
+   ],
+   "annotations": {
+    "title": "一括実行",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_focus_and_screenshot",
+   "sha256": "b1604fff0b8274348921f02a290be0ee24056cb2614371093ee53bfa015cb252",
+   "semSha256": "b1604fff0b8274348921f02a290be0ee24056cb2614371093ee53bfa015cb252",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "entity",
+    "name",
+    "gizmos"
+   ],
+   "annotations": {
+    "title": "寄せて撮影",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_screenshot",
+   "sha256": "a711b9f9bf52ead7f9826c406552d2398dbe7fa95ccb8f8a5a317e6f3d4d26d4",
+   "semSha256": "a711b9f9bf52ead7f9826c406552d2398dbe7fa95ccb8f8a5a317e6f3d4d26d4",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "path",
+    "deterministic",
+    "settleFrames",
+    "gizmos"
+   ],
+   "annotations": {
+    "title": "スクリーンショット(ポスト前)",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_screenshot_final",
+   "sha256": "8c27a2e0511bebc3f7355135e6472e06a568e2870a2a835a0526a01d8b74ab0e",
+   "semSha256": "8c27a2e0511bebc3f7355135e6472e06a568e2870a2a835a0526a01d8b74ab0e",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "path",
+    "deterministic",
+    "settleFrames",
+    "gizmos",
+    "format",
+    "formats",
+    "width",
+    "height"
+   ],
+   "annotations": {
+    "title": "最終画スクリーンショット(ポスト後)",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_ui_screenshot",
+   "sha256": "76d234d318ff4266555c243644ab95d04ea325b343391467e6ba029cdd8c044a",
+   "semSha256": "76d234d318ff4266555c243644ab95d04ea325b343391467e6ba029cdd8c044a",
+   "outputSchemaBytes": 0,
+   "argKeys": [],
+   "annotations": {
+    "title": "UIスクリーンショット",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_render_debug",
+   "sha256": "3ace6456e4f0ddb72bf39cffd8c1453c0334a2f12635701195f1c984b9e3a8f6",
+   "semSha256": "3ace6456e4f0ddb72bf39cffd8c1453c0334a2f12635701195f1c984b9e3a8f6",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "mode",
+    "frames",
+    "gain",
+    "depthRange",
+    "exposure",
+    "path"
+   ],
+   "annotations": {
+    "title": "中間バッファ可視化",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_ui_compare",
+   "sha256": "ae03db543fbe12940634e67a3d86496998601de8cdd47bc2eeff5a448970ba23",
+   "semSha256": "ae03db543fbe12940634e67a3d86496998601de8cdd47bc2eeff5a448970ba23",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "referencePath",
+    "grid"
+   ],
+   "annotations": {
+    "title": "参照UIとの比較",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_install_font",
+   "sha256": "478653fa2d202f4bcdecddef6a55d9707ae576cc2153aa3f8fa3e9bfc1084d1e",
+   "semSha256": "dfc47341f5dfc987b6872e1b4ccbc8e6bdd6bab5ed23c6a097042c8147b8e34d",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "family",
+    "weight"
+   ],
+   "annotations": {
+    "title": "Google Fonts からフォント導入",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_screenshot_game_view",
+   "sha256": "e5bd62ad20dcf332d05626c107f5beecd3fd1c5d1e9d20233ec9fbcba5463876",
+   "semSha256": "e5bd62ad20dcf332d05626c107f5beecd3fd1c5d1e9d20233ec9fbcba5463876",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "ゲーム画面スクショ",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_screenshot_from",
+   "sha256": "8ba7bc530d2d7fb54bf82a269e4d0a6ca4b627ed6286c96ea9f5e4d8417c59dc",
+   "semSha256": "8ba7bc530d2d7fb54bf82a269e4d0a6ca4b627ed6286c96ea9f5e4d8417c59dc",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "position",
+    "target",
+    "gizmos"
+   ],
+   "annotations": {
+    "title": "任意視点スクショ",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_view_texture",
+   "sha256": "e75d6a2a3606b197bd57bb8f9980a8e20f049ec2ca0bd3f63d37ae7011307108",
+   "semSha256": "e75d6a2a3606b197bd57bb8f9980a8e20f049ec2ca0bd3f63d37ae7011307108",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "path",
+    "maxSize"
+   ],
+   "annotations": {
+    "title": "テクスチャを見る",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_preview_model",
+   "sha256": "67d724e48657eaf553a5a5f6c0ad99b053f7e5fc54573d576933e7ff0d14cac2",
+   "semSha256": "67d724e48657eaf553a5a5f6c0ad99b053f7e5fc54573d576933e7ff0d14cac2",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "path"
+   ],
+   "annotations": {
+    "title": "モデルプレビュー",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_pick",
+   "sha256": "9efa039cdad24cb2a88817bc7f1d6cafc1d2802c45ee87d979032216c2f58b13",
+   "semSha256": "217b029d67fdbb20a1a372dfa08df8cfbcc9eeed274c0739ac6f708c67784f58",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "x",
+    "y",
+    "u",
+    "v",
+    "all",
+    "maxHits",
+    "includeIcons",
+    "trianglePrecise",
+    "maxCandidates"
+   ],
+   "annotations": {
+    "title": "画面座標でピック(三角形精密)",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_raycast_precise",
+   "sha256": "2b1d9f0bb40f48f4d35a99d091b6af031806775ec961cec788fb97d80658c00b",
+   "semSha256": "1f569fdedfa515b780d16844af710a6cd8fca4809adbe91496b04afc73dcc01b",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "origin",
+    "direction",
+    "maxDistance",
+    "all",
+    "maxHits",
+    "trianglePrecise",
+    "maxCandidates"
+   ],
+   "annotations": {
+    "title": "ワールドレイキャスト(三角形精密)",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_terrain_create",
+   "sha256": "45731d40be45a412a041e19c317cc65003b880eda25304824cf50e3e35847954",
+   "semSha256": "58b612f771525c4a433974911c7061fb08de349498bcd9ce8d750e9914dd57c5",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "resolution",
+    "worldSize",
+    "maxHeight",
+    "position",
+    "uvScale",
+    "color"
+   ],
+   "annotations": {
+    "title": "地形を作る/設定を更新",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_terrain_generate",
+   "sha256": "2a978b3c77c97bbc534d67b33fbefd826dc3e0d42c3233947f9574faeca2fdc6",
+   "semSha256": "7047eb3ed4e325706ecb3d8fbc274ea4af53091f87204c82ea8a8f7bad82f202",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "preset",
+    "seed",
+    "frequency",
+    "octaves",
+    "amplitude",
+    "ridged",
+    "baseHeight",
+    "edgeFalloff",
+    "valleyDepth"
+   ],
+   "annotations": {
+    "title": "地形を一発生成(fBm)",
+    "openWorldHint": false,
+    "idempotentHint": true,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_terrain_sculpt",
+   "sha256": "e689e4e2587a34dbadc334362ea6f88c251d1f33d754ee858e25ae0e59b10e12",
+   "semSha256": "e0af777c6ea212a8f12fc48241031d412efc1cc8d96a4a70f9ad741393fb15f9",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "brush",
+    "point",
+    "points",
+    "worldPos",
+    "radius",
+    "strength",
+    "falloff",
+    "flattenHeight",
+    "mirrorX",
+    "mirrorZ",
+    "noiseFrequency",
+    "noiseOctaves",
+    "noiseRidged",
+    "seed"
+   ],
+   "annotations": {
+    "title": "地形をブラシで彫る",
+    "openWorldHint": false,
+    "idempotentHint": false
+   }
+  },
+  {
+   "name": "dx12_terrain_erode",
+   "sha256": "177318a48ecc3b4921b8ae035baf8ee55c2e1b6316c7d2824a118e15bc372548",
+   "semSha256": "5ac609548a284dbc27bc178b506459e014626d59abe975a29f81769eddb1ee11",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "iterations",
+    "talusDeg",
+    "region"
+   ],
+   "annotations": {
+    "title": "地形を浸食させる",
+    "openWorldHint": false,
+    "idempotentHint": false
+   }
+  },
+  {
+   "name": "dx12_terrain_paint",
+   "sha256": "a11d09ff8fac74c6a239fa2b3ac3a478011d30ac5df8e25cb126e10c12b4e4cb",
+   "semSha256": "d4cd972a4da637f740c21a4a519cd78eb14ac36403bdb77923c2a65e16a37019",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "layer",
+    "point",
+    "points",
+    "worldPos",
+    "radius",
+    "strength",
+    "falloff"
+   ],
+   "annotations": {
+    "title": "地形レイヤーを塗る",
+    "openWorldHint": false,
+    "idempotentHint": false
+   }
+  },
+  {
+   "name": "dx12_terrain_autopaint",
+   "sha256": "8d400b9050d223299493cbd4ccac9862b7446ec5297192d4251f3c667ea3bdd2",
+   "semSha256": "b83f5f3944f69fadbfa6b3b60bf9e7872cc377fac44b0cbe3f21acda8dd7f173",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "rockSlopeStart",
+    "rockSlopeEnd",
+    "dirtSlopeStart",
+    "dirtSlopeEnd",
+    "snowHeightStart",
+    "snowHeightEnd",
+    "noiseStrength"
+   ],
+   "annotations": {
+    "title": "地形レイヤーを自動で焼き直す",
+    "openWorldHint": false,
+    "idempotentHint": true,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_terrain_set_layers",
+   "sha256": "07f47813be6a50c8c20d1514e726a76041a05abf57a90947398ea167331171af",
+   "semSha256": "1287f80ee53c5163cff47074c899892b49b0860b245a1f9ef32b5d26f6912a95",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "layerSetPath",
+    "splatResolution",
+    "autopaint",
+    "uvScale",
+    "heightBlendDepth",
+    "triplanarSharpness",
+    "normalStrength",
+    "macroScale",
+    "macroStrength",
+    "distTilingStart",
+    "distTilingFarScale",
+    "pomHeightScale",
+    "pomFadeStart",
+    "pomFadeEnd",
+    "triplanar",
+    "pom",
+    "macro",
+    "distTiling"
+   ],
+   "annotations": {
+    "title": "地形にテクスチャレイヤーを割り当てる",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_terrain_splat_info",
+   "sha256": "77d26b40344ca0e28c7b84e4f3a60272e2bcc6878562fc5e4674dbe830d53f1b",
+   "semSha256": "e537baa5aae14e48622328bad8634279b9da8fa701b7e16e2704ce2b114c53bf",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "gridSize",
+    "point",
+    "points"
+   ],
+   "annotations": {
+    "title": "地形スプラットの要約を読む",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_terrain_sample",
+   "sha256": "53fe199f2a41fbdcd53c26affaf246630531830badec10e4f84ffffa4f0c5b06",
+   "semSha256": "d39a5ff8b7167736476e80929d8b038dcd0fd9ee61e8fd620502344e38488c2d",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "points"
+   ],
+   "annotations": {
+    "title": "地形の高さ/法線を問い合わせ",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_sculpt_create",
+   "sha256": "ac6f8310ee3928c500e1e2ba05afe878f1b6f1dc4ace6305c5b626e4ed11a8a6",
+   "semSha256": "d2231dd0c1655a256aae89e74860860800e1d7a9fb932e8fcd4c82214ecd38a5",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "primitive",
+    "subdivisions",
+    "size",
+    "position",
+    "uvScale",
+    "color",
+    "collision"
+   ],
+   "annotations": {
+    "title": "スカルプト素体を作る",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_sculpt_make_editable",
+   "sha256": "4e78b15c9cf6692a18662ead2faa913a3b0ba811194dad7eba9d3bdd89db783a",
+   "semSha256": "0ce4c5198df16813458e0a9cbc455796f5d6210f3848a8b7677ca4cdd14ba702",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "既存モデルを彫れるようにする",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_sculpt_brush",
+   "sha256": "d369c17b9ecd30d92647aede06b3de0b9d123b7571b25ef9ec280a0db0011737",
+   "semSha256": "e89f1b73b4fa830a9d3d208673c246258c2667c01e0343a2a3226fce61e2ad17",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "brush",
+    "position",
+    "localPosition",
+    "radius",
+    "strength",
+    "falloff",
+    "direction",
+    "grabDelta",
+    "symmetryX",
+    "symmetryY",
+    "symmetryZ",
+    "noiseFrequency",
+    "noiseOctaves",
+    "noiseRidged",
+    "seed"
+   ],
+   "annotations": {
+    "title": "スカルプトを彫る",
+    "openWorldHint": false,
+    "idempotentHint": false
+   }
+  },
+  {
+   "name": "dx12_list_particle_layers",
+   "sha256": "f5966bbeb18d8b34da8c703c72f811a37050ea6e663927bea686c4f0766293db",
+   "semSha256": "9cbedc4705b275add434b84b5bbbef41bc0b9cd3486b40ad5ba7f3029fa5e1ef",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name"
+   ],
+   "annotations": {
+    "title": "パーティクルのレイヤー一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_add_particle_layer",
+   "sha256": "b60bb87a8981d7f21b0ea82dfc5062eb26ac616be106630289b927e23ffe938d",
+   "semSha256": "a00e818af8327d294a6307b539494467268bfde48cdfdbddeb2baf48d35ce678",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "layerName"
+   ],
+   "annotations": {
+    "title": "パーティクルのレイヤーを追加",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_remove_particle_layer",
+   "sha256": "a41885f1aa24d92ea090d7a45a90a2445990de1eaa8cbe3f09f9c891d06c7f21",
+   "semSha256": "e947111aee100593787930b8fe5fe077653e8eaf7161261d87b7abf689a101aa",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "entity",
+    "name",
+    "layer"
+   ],
+   "annotations": {
+    "title": "パーティクルのレイヤーを削除",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_vfx_library",
+   "sha256": "d543ec2c432b88752aa8199b26cea6da9652567f5db9f6c8002e27bdb4980cb0",
+   "semSha256": "4a2427b04f27f31acb88e5b27b109d0cc4f5bf92969a08ec4ed75aac4b1da515",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "tag",
+    "id"
+   ],
+   "annotations": {
+    "title": "VFX レシピ一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_vfx_apply",
+   "sha256": "2db37cef1a0260192eb481af8b682fd24c9a117f2c2bacec0450342b5942a01d",
+   "semSha256": "47317ddf7d14783d37d0b3b94cfc1f5f1d943fe8c0b46b4f11d5d9998e01dc07",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "preset",
+    "entity",
+    "name",
+    "position",
+    "entityName",
+    "parentName",
+    "scale",
+    "rate",
+    "intensity",
+    "color",
+    "oneShot",
+    "duration",
+    "life",
+    "light",
+    "replaceLayers",
+    "dryRun"
+   ],
+   "annotations": {
+    "title": "VFX レシピを置く / 貼る",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_vfx_preview",
+   "sha256": "d52dc84f0e924fe62e932a44a1aaebbe4237e6f8a30fed5f1d1c22d6a3382e87",
+   "semSha256": "d52dc84f0e924fe62e932a44a1aaebbe4237e6f8a30fed5f1d1c22d6a3382e87",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "entity",
+    "name",
+    "seconds",
+    "frames",
+    "distance",
+    "height",
+    "fire",
+    "columns",
+    "additive",
+    "baseline"
+   ],
+   "annotations": {
+    "title": "VFX を時間で見る",
+    "openWorldHint": false,
+    "readOnlyHint": false
+   }
+  },
+  {
+   "name": "dx12_list_lights",
+   "sha256": "2e70e74f00a08b204ec357dcbe0c13f56f761f1dde626eff36171c65046bc247",
+   "semSha256": "c0eba1500ac787046c77b833cf7381753f7716e7186543c864eade6e131dc447",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "limit",
+    "cursor"
+   ],
+   "annotations": {
+    "title": "ライト一覧と灯数バジェット",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_set_sun",
+   "sha256": "11391dc5d1dcfae519b10eb667664353d1156f232f6269632a8155b5af3f17f9",
+   "semSha256": "db0abcc59ba8d128a9d6491b0465fb0d43971f84dfd3b9c1baa8229d367f06f4",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "timeOfDay",
+    "azimuth",
+    "elevation",
+    "color",
+    "kelvin",
+    "intensity",
+    "ambient"
+   ],
+   "annotations": {
+    "title": "太陽(平行光)を設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_apply_lighting_preset",
+   "sha256": "c734600d2cdd2c038b6da00ccd3a33bf5b0923197d20b786269429cb714be795",
+   "semSha256": "d66a9983fa4cd2dbf0efed7e7717d9d1ef9528545c9d58e745d5d6a598311a14",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "preset"
+   ],
+   "annotations": {
+    "title": "ライティング・プリセット適用",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_look_library",
+   "sha256": "753b8556de74728ed309369879b1132937ef5682d3914c55546e597742aa8fc9",
+   "semSha256": "78a98c2ecea7607bef7924eb29d4fc8e59eed11b873be12b334b8d6e9f924d6b",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "tag",
+    "id"
+   ],
+   "annotations": {
+    "title": "ルック(絵作り)一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_look_apply",
+   "sha256": "56df0aab96eae417066ce7c4e10cba23d61ee00e69c33f8b8ca28511e1477d3d",
+   "semSha256": "c63dd4e85737f2f3b6d4b4a0c8cabe470dac6dc3f99858b7d3911d5550deeb2b",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "preset",
+    "strength",
+    "parts",
+    "dryRun"
+   ],
+   "annotations": {
+    "title": "ルック(絵作り)を当てる",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_sequence_author",
+   "sha256": "1984fdb135eb2cec7098dcbb350b43e44d469206e5a3815f1995d9c40dda7458",
+   "semSha256": "f0770a9387cbcf8f43bbffe0116b9df9a22fd8a4e906ac64f197908c856c7eb2",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "tracks",
+    "camera",
+    "loop",
+    "attachTo",
+    "doneEvent",
+    "activateCamera",
+    "dryRun"
+   ],
+   "annotations": {
+    "title": "演出(カットシーン)を台本から作る",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_sequence_preview",
+   "sha256": "8b2c861cb849f968871a2a270a1fe11567b7d86dba3a6009ace15970db40a9a9",
+   "semSha256": "8b2c861cb849f968871a2a270a1fe11567b7d86dba3a6009ace15970db40a9a9",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "seconds",
+    "frames",
+    "startDelay",
+    "columns",
+    "name"
+   ],
+   "annotations": {
+    "title": "演出を流して見る",
+    "openWorldHint": false,
+    "readOnlyHint": false
+   }
+  },
+  {
+   "name": "dx12_polish_audit",
+   "sha256": "e3256c976d633ca035c9c5f7d5ae4b24fe8585c7fdd31bc4199b3cc4f06d17d1",
+   "semSha256": "e3256c976d633ca035c9c5f7d5ae4b24fe8585c7fdd31bc4199b3cc4f06d17d1",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "screenshot",
+    "only",
+    "sampleMeshes",
+    "judge"
+   ],
+   "annotations": {
+    "title": "絵の仕上がりを検査する",
+    "openWorldHint": true,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_decal_library",
+   "sha256": "9095dcdce003efc6a75ef006a99a5d1983bd0a61468b3ed70792636af4daa90c",
+   "semSha256": "6e99e03612f3ad11e89a3a7dc93cba6e95125c28b8dc1b2eed552ffbf5710579",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "デカール一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_decal_apply",
+   "sha256": "15a78c1e721cf0805258f017263f88f0e84e5362c3d742d3077a5ff6854cb5cd",
+   "semSha256": "cd68d80e58a2c73077e955547c9b8a9e47e3dbf0c5c15205d2dc4e4c37e00023",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "preset",
+    "position",
+    "normal",
+    "size",
+    "depth",
+    "rotationDeg",
+    "opacity",
+    "tint",
+    "sortOrder",
+    "count",
+    "spread",
+    "seed",
+    "entityName",
+    "parentName",
+    "dryRun"
+   ],
+   "annotations": {
+    "title": "デカールを貼る",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_navmesh_build",
+   "sha256": "39bdd1db1b74ceecfbf5eb8d665c2cb4d9a3903628753b61a6fcd3456dcdedec",
+   "semSha256": "ece23e9d2003d40af104bda86c2c2c95231e72532caead7cba2ebd0c07152906",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "cellSize",
+    "cellHeight",
+    "agentHeight",
+    "agentRadius",
+    "agentMaxClimb",
+    "agentMaxSlope",
+    "minRegionArea",
+    "mergeRegionArea",
+    "maxEdgeLen",
+    "maxSimplificationErr",
+    "maxVertsPerPoly",
+    "monotonePartition",
+    "filterLedgeSpans",
+    "filterLowHanging",
+    "useBounds",
+    "boundsMin",
+    "boundsMax"
+   ],
+   "annotations": {
+    "title": "ナビメッシュ生成",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_navmesh_settings",
+   "sha256": "54162d87bc52089dab92053fa741bf3d213bf2474e02323b45bea695dafcc678",
+   "semSha256": "4ac38ea35a01ca73680ee30de4e6d2606607e54f6e9e8bddc73a2df36e8105f6",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "cellSize",
+    "cellHeight",
+    "agentHeight",
+    "agentRadius",
+    "agentMaxClimb",
+    "agentMaxSlope",
+    "minRegionArea",
+    "mergeRegionArea",
+    "maxEdgeLen",
+    "maxSimplificationErr",
+    "maxVertsPerPoly",
+    "monotonePartition",
+    "filterLedgeSpans",
+    "filterLowHanging",
+    "useBounds",
+    "boundsMin",
+    "boundsMax"
+   ],
+   "annotations": {
+    "title": "ナビメッシュ設定",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_navmesh_info",
+   "sha256": "36e011778b9509e5143b769d24b3bac6595b2854faa9bdd37e7b7e1c78047b11",
+   "semSha256": "6a786d2a5100683fd7957e80e5ce4adea240dd2b46b3f004af3c96a628781f68",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "ナビメッシュ情報",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_navmesh_path",
+   "sha256": "f5fc47881e8492ed4d954ce24ac73aeb3ecff686cd558af56cf079f0183c6186",
+   "semSha256": "743fa5ff657f221cd1c61c1d1d2bacca5556130be0d2aa01041a3308d1b0ab04",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "from",
+    "to",
+    "searchRadius",
+    "searchHeight"
+   ],
+   "annotations": {
+    "title": "経路探索",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_navmesh_sample",
+   "sha256": "a62d1bfc25701178c144ac33d82c7ac3a6b4cfd0aa506e9bb8897c81d8ad9ac9",
+   "semSha256": "366cc4fee88bd09741836ba3de4243c8ea07637671dc4dcb1a4f15e34c9dff75",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "point",
+    "searchRadius",
+    "searchHeight"
+   ],
+   "annotations": {
+    "title": "ナビメッシュへ落とす",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_navmesh_raycast",
+   "sha256": "246b260cf5974f9777076269050dee18d62964b3c7dedc6c5df0a7524d96a8d3",
+   "semSha256": "cc71b50570bfa2b64530ae9563771b7075e52020c03efb9e64e9805021066a42",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "from",
+    "to",
+    "searchRadius",
+    "searchHeight"
+   ],
+   "annotations": {
+    "title": "ナビメッシュのレイキャスト",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_navmesh_debug",
+   "sha256": "226a7565c9e9ab23fbcee52f0c400c27de995d15f50704d76d0aa7374f452aae",
+   "semSha256": "5df0c2362c4ec8aeba4ce6e767840e207b97c32dc880d2db6cb322073c0f49d7",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "enabled"
+   ],
+   "annotations": {
+    "title": "ナビメッシュ可視化",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_navmesh_clear",
+   "sha256": "3083feec0d819a8b75ecc68ee41c1efb3195f88a80d05a0228c6c4d39ef7f520",
+   "semSha256": "0596f0c845f41dda173340d841806b17066581317529f3f71150077cb80866d7",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "ナビメッシュ破棄",
+    "openWorldHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_diagnose",
+   "sha256": "8efec6932619a98351b5b0b9ce43627f218043e7cb63aad228cd55b1694f8572",
+   "semSha256": "330778c471bdadb5c87bead6bf2fc0b79f2dbe56ee709c42d670bde16116a451",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "only",
+    "fast"
+   ],
+   "annotations": {
+    "title": "エンジン診断(機械可読)",
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_look_compare",
+   "sha256": "8be51be6c206e60cf5c660a5903222f30c346d1aeb463ad1fb5c10d14f221d97",
+   "semSha256": "8be51be6c206e60cf5c660a5903222f30c346d1aeb463ad1fb5c10d14f221d97",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "referencePath",
+    "source",
+    "position",
+    "target",
+    "gameView",
+    "settleFrames",
+    "bins",
+    "minEV",
+    "maxEV",
+    "blackLevel",
+    "whiteLevel",
+    "diffThreshold"
+   ],
+   "annotations": {
+    "title": "参照画像との絵づくり比較(測光)",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_camera_path",
+   "sha256": "ea4ff39b67d74edc9bf08019c709226225c1a5aed62c867425b1ed344a1382c9",
+   "semSha256": "ea4ff39b67d74edc9bf08019c709226225c1a5aed62c867425b1ed344a1382c9",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "mode",
+    "source",
+    "frames",
+    "columns",
+    "from",
+    "to",
+    "fromTarget",
+    "toTarget",
+    "target",
+    "radius",
+    "height",
+    "startAngleDeg",
+    "endAngleDeg",
+    "settleFrames",
+    "tileWidth",
+    "diffThreshold",
+    "restore"
+   ],
+   "annotations": {
+    "title": "カメラを動かして連写(コンタクトシート)",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_scene_write",
+   "sha256": "e74400c04f4c06482fddedfa5a32f39be729bca724e3123f97c1d7ebaadd055a",
+   "semSha256": "e74400c04f4c06482fddedfa5a32f39be729bca724e3123f97c1d7ebaadd055a",
+   "outputSchemaBytes": 0,
+   "argKeys": [
+    "path",
+    "sceneJson",
+    "assetsDir",
+    "open",
+    "overwrite",
+    "skipAssetCheck",
+    "force"
+   ],
+   "annotations": {
+    "title": "シーンJSONを直接書き出す",
+    "openWorldHint": false,
+    "destructiveHint": true
+   }
+  },
+  {
+   "name": "dx12_git_status",
+   "sha256": "c82b22a4e5640b851fc9cb562f50d0ef3b7b066f055b0d9c50dc525fed585ca9",
+   "semSha256": "8be47b64f51b170053309e80e76c07cf347808c0eb401cac2e9a67d876158067",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "Git 状態",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_git_branches",
+   "sha256": "18359cd0ee113dd5420ffa37a79894fce48187878f2c48d7c24ed2830f3cbda1",
+   "semSha256": "bdb8b9413d2c67520666a91e5fa360e3ce51fd2ca824c532ff3589929bd62d89",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "ブランチ一覧",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_git_checkout",
+   "sha256": "38e034e43c128db4e77164d5174b91f71d50d210e520e46e83b0ed882f541a1a",
+   "semSha256": "808a07fd54de1760192fd02db25adbb83125e1ff7b8bf159a87df10b1beca759",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "create"
+   ],
+   "annotations": {
+    "title": "ブランチ切替/作成",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_git_merge",
+   "sha256": "85678cc71fdbf53f5459b4f170d6fb2fc77bba5a4da252dbeb63a47f76d1e642",
+   "semSha256": "7115a76b5ad11b3b29cced890e0987ede527499025870728fa61562d705e7d09",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "name",
+    "noFastForward"
+   ],
+   "annotations": {
+    "title": "ブランチをマージ",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_git_merge_abort",
+   "sha256": "9916532db818ac1d74ed8836ec748b2e364802972e5ac31d5149fcd9e440d71d",
+   "semSha256": "d3eca818c9c14b6f7313e1b12ab27de78f2e18ebccde1c06a6e5756fd58fb72f",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "マージを中止",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_git_commit",
+   "sha256": "32244767a2f6508d41632a918634c4e96e05eaf8a37fbd0578a06af36693daa1",
+   "semSha256": "4538072b963214fffad4838305e5c77c6c533b453b1482fd91b84e95b7332cba",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "message"
+   ],
+   "annotations": {
+    "title": "コミット",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_git_push",
+   "sha256": "422b13d8beb78c588c6419196c86c4ca2a83c8a39e02af9756a7b6e71b19aa32",
+   "semSha256": "516c9807977b8f721aa827c67b3889b2e7f1bdfdc6fabbd34a48b124cf0a349b",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "プッシュ",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_git_pull",
+   "sha256": "313aa72795b32d85d8db458fb66601391bc0e95ca99e83bbe2cbb2943871c3b4",
+   "semSha256": "14bf9a99dd8db45c26433287f8afb08970f624e610f790730c9c6a0e175b0588",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "プル",
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "dx12_git_fetch",
+   "sha256": "42fadc3c9295e057d45b12e640381f44c3c4406074facb4988e6e47780997654",
+   "semSha256": "13cf2e767e54522099e0f6d3488b85d54e738855554a740ce08b7cdaad34cd6e",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "フェッチ",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_brief",
+   "sha256": "b11965e9c5d81dc587db224c48bfadd7f37186fffbbbd25246c33bfa2040a17a",
+   "semSha256": "138687361f7ddd2822462ec73bf454e1e46c078b68204ef1868bccaa43d72ec6",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "action",
+    "brief"
+   ],
+   "annotations": {
+    "title": "作品の意図(Brief)",
+    "openWorldHint": false,
+    "idempotentHint": true
+   }
+  },
+  {
+   "name": "dx12_jev_ask",
+   "sha256": "961012222f7c7bd0fdc47843e50800d4de78eeb4168462968cfd5616708c300d",
+   "semSha256": "c43dbef680b9865602dcdd9639dbb11650e65eca237af3ecbdf1e67149395d74",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "question",
+    "questions",
+    "vars",
+    "context",
+    "raw",
+    "cache"
+   ],
+   "annotations": {
+    "title": "Jev に判断を聞く",
+    "readOnlyHint": true,
+    "openWorldHint": true
+   }
+  },
+  {
+   "name": "dx12_jev_eval",
+   "sha256": "01dee6fe3c5cf3a7245697597af03698d65950327bf063d551996c673a692f78",
+   "semSha256": "9289b84846e570430ce47a4fa9ff18199a2b122dcce3df9b5183c51d0596fc22",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "question",
+    "casesPath",
+    "cache"
+   ],
+   "annotations": {
+    "title": "Jev の質問を評価する",
+    "readOnlyHint": true,
+    "openWorldHint": true
+   }
+  },
+  {
+   "name": "dx12_jev_status",
+   "sha256": "3fe9c4cfa4bb52f364d4e8e2daa7535b7a5652a1ef147c00818ccb8796ccfc34",
+   "semSha256": "e2a9e855dfff1e658a7bde62a61e4fe0b3ef22e40a5d465a7e6a88ed0feb9e24",
+   "outputSchemaBytes": 303,
+   "argKeys": [],
+   "annotations": {
+    "title": "Jev の状態",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_perceive",
+   "sha256": "ed0ecc4f5938cc6dbbcba518d0dd512cb5def8a5d1d4ef5e1c6361c523d43127",
+   "semSha256": "c1db690228522b3ede73b9930faf31a799d2f7516d9d95fa59075b31abde761e",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "camera",
+    "targets",
+    "top",
+    "width",
+    "height",
+    "settleFrames",
+    "path",
+    "includeTransparent"
+   ],
+   "annotations": {
+    "title": "知覚(プレイヤーの目から見た事実)",
+    "openWorldHint": false,
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "dx12_quality_gate",
+   "sha256": "e4a639587d76bc2fb329320bbb4c6eea0368db0c8294ad3b9b44dabc21cc3cb9",
+   "semSha256": "f6a68c909048a0d3048b71c079a21f64547d361f5d4f7f12938ad2d5f8c08811",
+   "outputSchemaBytes": 303,
+   "argKeys": [
+    "checks",
+    "heavy",
+    "screenshot",
+    "strictness",
+    "screen",
+    "playtests",
+    "judge",
+    "bundle",
+    "readability"
+   ],
+   "annotations": {
+    "title": "品質ゲート",
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "openWorldHint": true
+   }
+  }
+ ]
+}

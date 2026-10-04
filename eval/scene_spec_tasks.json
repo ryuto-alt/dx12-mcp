@@ -1,0 +1,29 @@
+{
+  "_doc": "宣言的シーン生成(M11: dx12_apply_scene_spec / dx12_scene_spec_export)の発見性評価。discovery.test.ts の [8] が読む。各タスクに日本語の言い換え 2 通り(queries)と英語/口語の 1 通り(holdout)、上位 3 件に入っていればよい許容ツール(expect)を置く。core=true は Core 面(tools/list に載る)だけを対象にした検索でも届くべきもの。dx12_scene_spec_export は長尾(dx12_call)なので core=false。★検索語(toolset/sceneSpec.ts の KEYWORDS・search.ts の同義語)は、この eval と付録 A の #15 #16 を見ながら調整した(調整後の数字)。",
+  "tasks": [
+    { "id": "S1", "expect": ["dx12_apply_scene_spec"], "core": true,
+      "queries": ["FPS のステージを作って", "遊べるアリーナ一式をまとめて生成したい"],
+      "holdout": "build me a level with walls and cover in one shot" },
+    { "id": "S2", "expect": ["dx12_apply_scene_spec"], "core": true,
+      "queries": ["街を並べて", "建物を格子状にたくさん配置する"],
+      "holdout": "lay out a town with buildings in a grid" },
+    { "id": "S3", "expect": ["dx12_apply_scene_spec"], "core": true,
+      "queries": ["柱を円形に 8 本並べる", "中心のまわりに等間隔でオブジェクトを配置したい"],
+      "holdout": "place eight pillars in a circle around the center" },
+    { "id": "S4", "expect": ["dx12_apply_scene_spec"], "core": true,
+      "queries": ["壁に沿ってランプを等間隔に置く", "テーブルの右に椅子を置いて、上にランプを載せる"],
+      "holdout": "put a lamp on top of the table and a chair to its right" },
+    { "id": "S5", "expect": ["dx12_apply_scene_spec"], "core": true,
+      "queries": ["仕様 JSON を差分だけ適用して、同じものを 2 回撃っても変わらないようにしたい", "何を作って何を更新するかの計画だけ先に見たい"],
+      "holdout": "apply a declarative scene spec and only show the diff plan first" },
+    { "id": "S6", "expect": ["dx12_apply_scene_spec"], "core": true,
+      "queries": ["散歩できる庭を作る(木・花・池・ベンチ)", "ホラーの廊下を作って、突き当たりまで行けるか検証する"],
+      "holdout": "make a walkable garden with trees and a bench and check reachability" },
+    { "id": "S7", "expect": ["dx12_apply_scene_spec"], "core": true,
+      "queries": ["台の上に商品を置いてライトを 3 灯、カメラで狙うショーケースを作る", "配置の失敗を specPatch で直して撃ち直したい"],
+      "holdout": "create a product showcase with a pedestal three lights and a camera" },
+    { "id": "S8", "expect": ["dx12_scene_spec_export"], "core": false,
+      "queries": ["今のシーンを仕様 JSON に書き出したい", "手で作ったシーンを宣言的な仕様に起こして再現できるようにする"],
+      "holdout": "export the current scene as a declarative spec json" }
+  ]
+}

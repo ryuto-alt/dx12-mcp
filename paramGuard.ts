@@ -49,7 +49,7 @@ export function nearestKey(key: string, known: readonly string[]): string | null
  * どの method でもエンジンが先頭で読む共通キー(Application.cpp の McpDeferred 構築)。
  * ツール個別のスキーマに無くても弾かない。
  */
-export const GLOBAL_PARAM_KEYS: readonly string[] = ["idempotency_key"];
+export const GLOBAL_PARAM_KEYS: readonly string[] = ["idempotency_key", "expectGeneration"];
 
 /** args のうち declared にも GLOBAL_PARAM_KEYS にも無いキー(=このままだと黙って捨てられる分)。 */
 export function unknownParamKeys(args: unknown, declared: readonly string[]): string[] {
@@ -77,7 +77,7 @@ export function unknownKeyError(where: string, unknown: readonly string[], decla
     ? "このツールは引数を取らない。args は空 {} で呼ぶ"
     : declared.length > MAX_LISTED_KEYS
     ? `使えるキーは ${declared.length} 個ある。対になる dx12_get_* を呼ぶと現在値つきで全部返る`
-    : "下の有効な値のどれかに直して呼び直してくれ";
+    : "下の有効な値のどれかに直して呼び直すこと";
   return argError(
     `${where}: 知らない引数 ${parts.join(", ")} が来た(このまま実行すると黙って無視される)`,
     hint,

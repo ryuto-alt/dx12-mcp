@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "name": "showcase",
+  "comment": "ショーケース: 暗いスタジオの床、台の上の金属球と箱、3 灯(キー・フィル・リム)を台からの相対位置で、カメラは台を向く。",
+  "lighting": { "preset": "studio" },
+  "scene": { "skybox": { "drawSkybox": false, "iblIntensity": 0.45 } },
+  "entities": [
+    { "name": "LVL_Floor", "kind": "box", "size": [40, 0.4, 40], "group": "LVL", "at": [0, -0.2, 0], "color": "#1b1c21", "material": { "roughness": 0.6, "metallic": 0.1 } },
+    { "name": "LVL_Backdrop", "kind": "box", "size": [40, 8, 0.3], "group": "LVL", "at": [0, null, 7], "place": { "on": "LVL_Floor" }, "color": "#22242b", "material": { "roughness": 0.9 } },
+    { "name": "ENV_Pedestal", "kind": "box", "size": [1.4, 0.9, 1.4], "group": "ENV", "at": [0, null, 0], "place": { "on": "LVL_Floor" }, "color": "#e8e6e0", "material": { "roughness": 0.4 } },
+    { "name": "ENV_Sphere", "kind": "sphere", "size": 0.9, "group": "ENV", "place": { "on": "ENV_Pedestal" }, "color": "#c9a24a", "material": { "metallic": 1, "roughness": 0.18 } },
+    { "name": "ENV_Cube", "kind": "box", "size": 0.5, "group": "ENV", "rotation": [0, 35, 0], "place": { "relativeTo": "ENV_Pedestal", "side": "right", "gap": 0.9 }, "color": "#4a7bd0", "material": { "metallic": 0.2, "roughness": 0.3 } },
+    { "name": "ENV_Orb", "kind": "sphere", "size": 0.16, "group": "ENV", "color": "#dddddd", "material": { "metallic": 0.9, "roughness": 0.2 },
+      "pattern": { "type": "ring", "count": 8, "radius": 2.6, "origin": [0, 0, 0] }, "place": { "on": "LVL_Floor" } },
+    { "name": "LGT_Key", "kind": "light", "light": "point", "group": "LGT", "place": { "relativeTo": "ENV_Sphere", "side": "front", "gap": 1.8, "offset": [1.6, 1.4, 0] }, "components": { "pointLight": { "intensity": 12, "range": 12, "color": [1, 0.95, 0.85] } } },
+    { "name": "LGT_Fill", "kind": "light", "light": "point", "group": "LGT", "place": { "relativeTo": "ENV_Sphere", "side": "front", "gap": 2.2, "offset": [-2.2, 0.6, 0] }, "components": { "pointLight": { "intensity": 4, "range": 12, "color": [0.6, 0.75, 1] } } },
+    { "name": "LGT_Rim", "kind": "light", "light": "point", "group": "LGT", "place": { "relativeTo": "ENV_Sphere", "side": "back", "gap": 1.6, "offset": [0.6, 1.2, 0] }, "components": { "pointLight": { "intensity": 10, "range": 10, "color": [0.8, 0.9, 1] } } },
+    { "name": "CAM_Main", "kind": "camera", "group": "CAM", "at": [2.4, 1.8, -5.2], "lookAt": "ENV_Sphere", "components": { "camera": { "fovDegrees": 40 } } }
+  ]
+}

@@ -269,9 +269,10 @@ await mcp.init();
   const final = tools.find((t: any) => t.name === "dx12_screenshot_final");
   assert.ok(final, "dx12_screenshot_final が登録されていない");
   const want = ["deterministic", "gizmos", "path", "settleFrames"];
-  assert.deepEqual(Object.keys(final.inputSchema?.properties ?? {}).sort(), want);
+  // dx12_screenshot_final だけが Q2(校正)の出力形式 / 任意解像度(format, formats, width, height)を持つ。dx12_screenshot(ポスト前)には付けない。
+  assert.deepEqual(Object.keys(final.inputSchema?.properties ?? {}).sort(), [...want, "format", "formats", "height", "width"].sort());
   assert.deepEqual(Object.keys(shot.inputSchema?.properties ?? {}).sort(), want);
-  pass("dx12_screenshot / dx12_screenshot_final が {path, deterministic, settleFrames, gizmos} を宣言");
+  pass("dx12_screenshot / dx12_screenshot_final が {path, deterministic, settleFrames, gizmos} を宣言(final は + format/formats/width/height)");
 
   // gizmos:false は「この 1 枚だけ」= 撮り終われば必ず元へ戻る、が説明に書かれていること。
   // (戻し方を探して余計な呼び出しをされると、それこそ元の痛みが残る)

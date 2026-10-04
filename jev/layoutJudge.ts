@@ -132,8 +132,8 @@ export async function collectLayoutContext(call: EngineCall, issues: LayoutIssue
     if (Array.isArray(b?.size)) ctx.sizes.set(id, [Number(b.size[0]), Number(b.size[1]), Number(b.size[2])]);
   }
   try {
-    const list = await call("list_entities", { verbose: true });
-    const hier = await call("get_hierarchy", {});
+    const list = await call("list_entities", { verbose: true, limit: 0 });
+    const hier = await call("get_hierarchy", { limit: 0 });
     const parentOf = new Map<number, number>();
     const walk = (node: any, parent?: number) => {
       if (parent != null) parentOf.set(node.entityId, parent);

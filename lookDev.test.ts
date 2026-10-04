@@ -13,6 +13,7 @@ import {
   blendPost, describeLooks, findLook, resolveLook,
 } from "./lookDev.ts";
 import { parseFieldMacro, parseTsTools } from "./schemaDrift.ts";
+import { readToolSource } from "./toolSource.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..", "..");
@@ -54,7 +55,7 @@ console.log("[1] エンジンの名前表との突き合わせ");
   console.log("  (上に NG が無ければスイッチの立て忘れも無い)");
 
   // フォグのキーは dx12_set_volumetric_fog が宣言しているものだけ使う
-  const indexSrc = fs.readFileSync(path.join(here, "index.ts"), "utf8");
+  const indexSrc = readToolSource(here);
   const fogTool = parseTsTools(indexSrc).find((t) => t.tool === "dx12_set_volumetric_fog");
   check("dx12_set_volumetric_fog のスキーマを読めている", !!fogTool);
   if (fogTool) {

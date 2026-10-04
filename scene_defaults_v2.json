@@ -1,0 +1,671 @@
+{
+  "animatorController": {
+    "applyRootMotion": false,
+    "eventChannel": "",
+    "graphPath": "",
+    "playOnStart": true,
+    "speed": 1.0
+  },
+  "audioReverbZone": {
+    "enabled": true,
+    "fadeDistance": 2.0,
+    "halfExtents": [
+      4.0,
+      2.5,
+      4.0
+    ],
+    "preset": "room",
+    "priority": 0,
+    "radius": 5.0,
+    "shape": 0,
+    "wet": 0.5
+  },
+  "boxCollider": {
+    "halfExtents": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "offset": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "brain": {
+    "agentRadius": 0.5,
+    "confirmTime": 0.3,
+    "debugDraw": true,
+    "enabled": true,
+    "eyeHeight": 1.6,
+    "hearingScale": 1.0,
+    "hysteresis": 0.1,
+    "maxAccel": 20.0,
+    "maxSpeed": 3.5,
+    "memoryTime": 10.0,
+    "minCommitTime": 0.3,
+    "nearSense": 2.0,
+    "occlusion": 0.5,
+    "seed": 1,
+    "separation": 2.0,
+    "sightFov": 140.0,
+    "sightInterval": 0.1,
+    "sightRange": 20.0,
+    "targetHeight": 1.0,
+    "targets": "MainCamera",
+    "thinkInterval": 0.1,
+    "turnRate": 10.0,
+    "useCrowd": true,
+    "wallMargin": 0.0
+  },
+  "camera": {
+    "farClip": 1000.0,
+    "fovDegrees": 60.0,
+    "isActive": false,
+    "nearClip": 0.1,
+    "orthoSize": 10.0,
+    "projection": 0,
+    "screenShaderEnabled": true,
+    "screenShaderParams": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "screenShaderPath": ""
+  },
+  "capsuleCollider": {
+    "halfHeight": 1.0,
+    "offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "radius": 0.5
+  },
+  "characterController": {
+    "gravityScale": 1.0,
+    "halfHeight": 0.6,
+    "jumpSpeed": 6.0,
+    "mass": 70.0,
+    "maxSlopeDeg": 50.0,
+    "offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "radius": 0.4,
+    "stepHeight": 0.3
+  },
+  "decal": {
+    "angleFadeDeg": 60.0,
+    "atlasUV": [
+      0.0,
+      0.0,
+      1.0,
+      1.0
+    ],
+    "atlasUVNormal": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "emissive": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "fadeEdge": 0.1,
+    "metallic": -1.0,
+    "normalStrength": 1.0,
+    "opacity": 1.0,
+    "roughness": -1.0,
+    "sortOrder": 0,
+    "tint": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "directionalLight": {
+    "ambient": 0.25,
+    "color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "direction": [
+      0.0,
+      -1.0,
+      0.0
+    ],
+    "intensity": 1.0
+  },
+  "foliageLayer": {
+    "aoStrength": 1.0,
+    "castShadow": true,
+    "cullDistance": 250.0,
+    "enabled": true,
+    "hzbCulling": true,
+    "instancePath": "",
+    "lodDist0": 25.0,
+    "lodDist1": 60.0,
+    "lodDist2": 120.0,
+    "lodFade": 0.1,
+    "maxVisible": 131072,
+    "shadowDistance": 60.0,
+    "shadowMaxLod": 1,
+    "thinStart": 0.6,
+    "tint": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "variant0": "",
+    "variant1": "",
+    "variant2": "",
+    "variant3": "",
+    "windBend": 1.0,
+    "windBendExp": 2.0,
+    "windEnabled": true,
+    "windFlutter": 0.0
+  },
+  "footIK": {
+    "alignToNormal": true,
+    "enabled": true,
+    "fadeOutTime": 0.15,
+    "footHeight": 0.1,
+    "kneeForward": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "leftFootBone": "",
+    "leftHipBone": "",
+    "leftKneeBone": "",
+    "leftToeBone": "",
+    "maxFootPitchDeg": 45.0,
+    "maxPelvisDrop": 0.5,
+    "pelvisBone": "",
+    "rayLength": 1.0,
+    "rayUpOffset": 0.5,
+    "rightFootBone": "",
+    "rightHipBone": "",
+    "rightKneeBone": "",
+    "rightToeBone": "",
+    "smoothTime": 0.1,
+    "weight": 1.0
+  },
+  "meshCollider": {
+    "offset": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "networkIdentity": {
+    "interestRadius": 0.0,
+    "serverAuthority": true
+  },
+  "networkTransform": {
+    "interpDelayMs": 100.0,
+    "snapDistance": 5.0,
+    "syncMode": 0,
+    "syncPosition": true,
+    "syncRotation": true,
+    "syncScale": false
+  },
+  "pointLight": {
+    "castShadows": false,
+    "color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "intensity": 1.0,
+    "range": 10.0,
+    "sourceRadius": 0.0
+  },
+  "prefabLink": {
+    "sourcePath": ""
+  },
+  "rigidBody": {
+    "angularDamping": 0.01,
+    "continuousCollision": false,
+    "friction": 0.8,
+    "linearDamping": 0.02,
+    "mass": 0.0,
+    "motionType": 0,
+    "restitution": 0.0,
+    "useGravity": false
+  },
+  "sphereCollider": {
+    "offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "radius": 0.5
+  },
+  "spotLight": {
+    "castShadows": false,
+    "color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "direction": [
+      0.0,
+      -1.0,
+      0.0
+    ],
+    "innerConeDeg": 18.0,
+    "intensity": 3.0,
+    "outerConeDeg": 28.0,
+    "range": 15.0,
+    "sourceRadius": 0.0
+  },
+  "sprite2d": {
+    "animCols": 0,
+    "animFps": 8.0,
+    "animFrames": 0,
+    "animMode": 0,
+    "animRow": 0,
+    "animRows": 0,
+    "billboard": false,
+    "color": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "effectValue": 0.0,
+    "layer": 0,
+    "scrollU": 0.0,
+    "scrollV": 0.0,
+    "shaderAlphaBlend": false,
+    "shaderParams": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shaderPath": "",
+    "size": [
+      1.0,
+      1.0
+    ],
+    "texturePath": "",
+    "uvMax": [
+      1.0,
+      1.0
+    ],
+    "uvMin": [
+      0.0,
+      0.0
+    ],
+    "worldSpace": true
+  },
+  "spriteAnimator": {
+    "applyTexture": true,
+    "currentSeq": "",
+    "playOnStart": true,
+    "sheetPath": "",
+    "speed": 1.0
+  },
+  "trailRenderer": {
+    "blend": 0,
+    "color": [
+      0.4,
+      0.8,
+      1.0
+    ],
+    "colorEnd": [
+      0.1,
+      0.2,
+      1.0
+    ],
+    "emitting": true,
+    "intensity": 2.0,
+    "life": 0.5,
+    "minDist": 0.03,
+    "width": 0.25
+  },
+  "transform": {
+    "rotation": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "uiAnimPlayer": {
+    "clipPath": "",
+    "finishEvent": "",
+    "loop": false,
+    "playOnStart": true,
+    "speed": 1.0
+  },
+  "uiAnimator": {
+    "hoverScale": 1.05,
+    "hoverSpeed": 14.0,
+    "loopAmount": 8.0,
+    "loopAnim": 0,
+    "loopSpeed": 1.0,
+    "pressScale": 0.95,
+    "showAnim": 1,
+    "showDelay": 0.0,
+    "showDuration": 0.35,
+    "showEasing": 2,
+    "slideOffset": 80.0
+  },
+  "uiButton": {
+    "clickSound": "",
+    "hoverColor": [
+      0.85,
+      0.85,
+      0.85,
+      1.0
+    ],
+    "hoverSound": "",
+    "interactable": true,
+    "normalColor": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "onClickEvent": "",
+    "pressedColor": [
+      0.65,
+      0.65,
+      0.65,
+      1.0
+    ]
+  },
+  "uiCanvas": {
+    "refHeight": 1080.0,
+    "refWidth": 1920.0,
+    "scaleMode": 0,
+    "sortOrder": 0,
+    "visible": true
+  },
+  "uiImage": {
+    "animCols": 0,
+    "animFps": 8.0,
+    "animFrames": 0,
+    "animMode": 0,
+    "animRow": 0,
+    "animRows": 0,
+    "color": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "cornerRadius": 0.0,
+    "fillAmount": 1.0,
+    "fillDir": 0,
+    "fillOrigin": 0.0,
+    "gradientColor2": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "gradientDir": 0,
+    "gradientScrollSpeed": 0.0,
+    "outlineColor": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "outlineDash": 12.0,
+    "outlineStyle": 0,
+    "outlineWidth": 0.0,
+    "raycastBlock": true,
+    "ringThickness": 8.0,
+    "segmentColor": [
+      0.0,
+      0.0,
+      0.0,
+      0.7
+    ],
+    "segmentGap": 3.0,
+    "segments": 0,
+    "shadowColor": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shadowOffset": [
+      2.0,
+      2.0
+    ],
+    "shadowSoftness": 4.0,
+    "shape": 0,
+    "sliceBorder": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "texturePath": "",
+    "uvMax": [
+      1.0,
+      1.0
+    ],
+    "uvMin": [
+      0.0,
+      0.0
+    ],
+    "uvScroll": [
+      0.0,
+      0.0
+    ]
+  },
+  "uiLayout": {
+    "cellH": 60.0,
+    "cellW": 200.0,
+    "gridCols": 4,
+    "mode": 0,
+    "padding": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "spacing": 8.0
+  },
+  "uiRect": {
+    "alpha": 1.0,
+    "anchorMax": [
+      0.5,
+      0.5
+    ],
+    "anchorMin": [
+      0.5,
+      0.5
+    ],
+    "clipChildren": false,
+    "offsetMax": [
+      50.0,
+      50.0
+    ],
+    "offsetMin": [
+      -50.0,
+      -50.0
+    ],
+    "order": 0,
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "rotation": 0.0,
+    "scaleX": 1.0,
+    "scaleY": 1.0,
+    "skewX": 0.0,
+    "visible": true
+  },
+  "uiScrollView": {
+    "barColor": [
+      1.0,
+      1.0,
+      1.0,
+      0.35
+    ],
+    "dragScroll": true,
+    "flickDecay": 4.0,
+    "horizontal": false,
+    "scrollX": 0.0,
+    "scrollY": 0.0,
+    "showBar": true,
+    "vertical": true,
+    "wheelSpeed": 48.0
+  },
+  "uiSlider": {
+    "fillColor": [
+      0.3,
+      0.55,
+      1.0,
+      1.0
+    ],
+    "interactable": true,
+    "knobColor": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "maxValue": 1.0,
+    "minValue": 0.0,
+    "onChangeEvent": "",
+    "step": 0.0,
+    "trackColor": [
+      0.22,
+      0.22,
+      0.27,
+      1.0
+    ],
+    "value": 0.5
+  },
+  "uiText": {
+    "alignH": 1,
+    "alignV": 1,
+    "charAnim": 0,
+    "charAnimAmount": 4.0,
+    "charAnimSpeed": 2.0,
+    "color": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "fontPath": "",
+    "fontSize": 24.0,
+    "gradientColor2": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "gradientDir": 0,
+    "letterSpacing": 0.0,
+    "outlineColor": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "outlineWidth": 0.0,
+    "rich": false,
+    "shadowColor": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shadowOffset": [
+      1.0,
+      1.0
+    ],
+    "text": "テキスト",
+    "typewriterSpeed": 0.0,
+    "wrap": false
+  },
+  "uiToggle": {
+    "boxColor": [
+      0.22,
+      0.22,
+      0.27,
+      1.0
+    ],
+    "checkColor": [
+      0.3,
+      0.55,
+      1.0,
+      1.0
+    ],
+    "interactable": true,
+    "isOn": false,
+    "onChangeEvent": ""
+  },
+  "virtualGeometry": {
+    "enabled": true,
+    "vgeoPath": ""
+  },
+  "waterBody": {
+    "absorption": [
+      0.45,
+      0.075,
+      0.03
+    ],
+    "causticIntensity": 0.4,
+    "choppiness": 0.5,
+    "detailSpeed": 0.06,
+    "detailStrength": 0.5,
+    "detailTile": 3.0,
+    "directionSpread": 30.0,
+    "enabled": true,
+    "flow": [
+      0.0,
+      0.0
+    ],
+    "foamCrest": 0.5,
+    "foamShore": 0.6,
+    "foamWidth": 0.8,
+    "heightOffset": 0.0,
+    "ior": 1.333,
+    "polygon": "",
+    "refractionStrength": 1.0,
+    "roughness": 0.02,
+    "scatterColor": [
+      0.03,
+      0.11,
+      0.14
+    ],
+    "shape": 1,
+    "shoreFade": 0.35,
+    "size": [
+      200.0,
+      200.0
+    ],
+    "ssr": true,
+    "timeOffset": 0.0,
+    "timeScale": 1.0,
+    "turbidity": 0.0,
+    "waveAmplitude": 0.35,
+    "waveCount": 8,
+    "waveSeed": 1,
+    "waveSpeed": 1.0,
+    "wavelength": 14.0,
+    "windDirection": 30.0
+  }
+}

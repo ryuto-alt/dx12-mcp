@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "fps_arena",
+  "comment": "FPS のアリーナ: 40m 四方の床と壁、中央の柱の輪、散らした遮蔽物、スタートとゴール。到達性を検証する。",
+  "lighting": { "preset": "day" },
+  "navmesh": { "build": true },
+  "verify": { "reachable": { "from": "GP_Player", "to": "GP_Goal" } },
+  "entities": [
+    { "name": "LVL_Floor", "kind": "box", "size": [40, 1, 40], "group": "LVL", "at": [0, -0.5, 0], "color": "#8c8a80", "material": { "roughness": 0.9 }, "collider": "static" },
+    { "name": "LVL_Wall_N", "kind": "box", "size": [40, 4, 1], "group": "LVL", "at": [0, null, 20.5], "place": { "on": "LVL_Floor" }, "color": "#a8a49a", "collider": "static" },
+    { "name": "LVL_Wall_S", "kind": "box", "size": [40, 4, 1], "group": "LVL", "at": [0, null, -20.5], "place": { "on": "LVL_Floor" }, "color": "#a8a49a", "collider": "static" },
+    { "name": "LVL_Wall_E", "kind": "box", "size": [1, 4, 42], "group": "LVL", "at": [20.5, null, 0], "place": { "on": "LVL_Floor" }, "color": "#a8a49a", "collider": "static" },
+    { "name": "LVL_Wall_W", "kind": "box", "size": [1, 4, 42], "group": "LVL", "at": [-20.5, null, 0], "place": { "on": "LVL_Floor" }, "color": "#a8a49a", "collider": "static" },
+    { "name": "LVL_Pillar", "kind": "box", "size": [1.4, 5, 1.4], "group": "LVL", "color": "#b0745a",
+      "pattern": { "type": "ring", "count": 6, "radius": 7, "origin": [0, 0, 0] }, "place": { "on": "LVL_Floor" }, "collider": "static" },
+    { "name": "ENV_Crate", "kind": "box", "size": 1.2, "group": "ENV", "color": "#d2a45c",
+      "pattern": { "type": "scatter", "count": 12, "area": [-17, -12, 17, 12], "seed": 7, "minSpacing": 3.5, "yaw": "random",
+                   "exclude": ["LVL_Pillar_01", "LVL_Pillar_02", "LVL_Pillar_03", "LVL_Pillar_04", "LVL_Pillar_05", "LVL_Pillar_06"] },
+      "place": { "on": "LVL_Floor" }, "collider": "static" },
+    { "name": "GP_Player", "kind": "fps_player", "group": "GP", "at": [0, null, -17] },
+    { "name": "GP_Goal", "kind": "box", "size": [1.5, 0.02, 1.5], "group": "GP", "at": [0, null, 17], "place": { "on": "LVL_Floor" },
+      "color": "#33ff88", "material": { "emissive": [0.1, 1, 0.4], "emissiveIntensity": 2 }, "tags": ["goal"], "collider": "static" },
+    { "name": "LGT_Sun", "kind": "light", "light": "directional", "group": "LGT", "at": [0, 20, 0], "rotation": [-55, 25, 0], "components": { "directionalLight": { "intensity": 1.6, "ambient": 0.35 } } }
+  ]
+}

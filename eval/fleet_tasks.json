@@ -1,0 +1,23 @@
+{
+  "_doc": "フリート(専用エンジンの管理)ツールの発見性評価。discovery.test.ts の [5] が読む。各タスクに日本語の言い換え 2 通り(queries)と英語/口語の 1 通り(holdout)、上位 3 件に入っていればよい許容ツール(expect)を置く。core=true は Core 面(tools/list に載る)だけを対象にした検索でも届くべきもの。F4(attach)・F5(refresh)・F6(use)は M6 で、F2(list)は M7 で長尾(dx12_call)へ移した。",
+  "tasks": [
+    { "id": "F1", "expect": ["dx12_engine_launch"], "core": true,
+      "queries": ["自分専用のエンジンを起動したい", "他のエージェントと衝突しないようにエンジンを立ち上げる"],
+      "holdout": "start my own engine instance so agents do not collide" },
+    { "id": "F2", "expect": ["dx12_engine_list"], "core": false,
+      "queries": ["起動中のエンジンの一覧と空き VRAM を見たい", "どのエンジンを止めればいいか候補を知りたい"],
+      "holdout": "list running engines and free VRAM" },
+    { "id": "F3", "expect": ["dx12_engine_stop"], "core": true,
+      "queries": ["自分のエンジンを止めて片付ける", "使い終わったエンジンを終了して枠を空ける"],
+      "holdout": "stop and shut down my engine" },
+    { "id": "F4", "expect": ["dx12_engine_attach"], "core": false,
+      "queries": ["手動で起動したエンジンを読み取り専用で見たい", "他のエージェントのエンジンの中身を閲覧だけする"],
+      "holdout": "attach to an existing engine read-only" },
+    { "id": "F5", "expect": ["dx12_engine_refresh"], "core": false,
+      "queries": ["ビルドしたので古い exe コピーを最新にして再起動したい", "エンジンを最新のビルドに更新する"],
+      "holdout": "refresh the engine after rebuilding" },
+    { "id": "F6", "expect": ["dx12_engine_use"], "core": false,
+      "queries": ["既定のエンジンを切り替えたい", "複数のエンジンのうち向き先を選び直す"],
+      "holdout": "switch the default engine" }
+  ]
+}

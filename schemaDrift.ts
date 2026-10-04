@@ -187,10 +187,17 @@ function parseMcpDefineTable(cppSource: string): Map<string, EngineMethod> | nul
     const names = cppStringLiteral(args[0]);
     // method 名は英小文字/数字/_ と、get/set をまとめる '|' だけ(コメント例や日本語を弾く保険)。
     if (!names || !/^[a-z0-9_]+(\|[a-z0-9_]+)*$/.test(names)) continue;
-    const spec = cppStringLiteral(args[1]);
+    // M1: McpDefine(names, McpMeta{...}, fn) は第 2 引数が meta 構造体(先頭の文字列は summary なので spec ではない)。
+    //     params は P("名前", "型", ...) の並びで宣言されているので、そこから申告表を組む。
+    const isMeta = /^\s*McpMeta\s*\{/.test(args[1]);
+    const spec = isMeta ? null : cppStringLiteral(args[1]);
     const body = args.slice(2).join(",");
     const scanned = scanHandlerBody(body);
-    const declared = spec == null ? null : parseParamSpec(spec);
+    let declared = spec == null ? null : parseParamSpec(spec);
+    if (isMeta) {
+      declared = {};
+      for (const pm of args[1].matchAll(/\bP\(\s*"([A-Za-z0-9_.]+)"\s*,\s*"([A-Za-z0-9]+)"/g)) declared[pm[1]] = pm[2];
+    }
     // ★和集合。申告表(describe_mcp_params が返すもの)と本文のどちらに出てきても
     //   「エンジンが受け付けるキー」として扱う＝どちらの書き忘れでも取りこぼさない。
     const keys = new Set(scanned.keys);

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# DX12 Engine MCP サーバのセットアップ(Linux / macOS)。install.ps1 と同等。
+# Uno Engine MCP サーバのセットアップ(Linux / macOS)。install.ps1 と同等。
 # Node v24+ を確認 -> npm install -> npm test(エンジン不要)-> Claude Code と Codex に自動登録。
 # 注: エディタ本体は Windows 専用。他OSからは env DX12_MCP_HOST で別マシンの Windows エディタを遠隔操作する用途。
 set -euo pipefail

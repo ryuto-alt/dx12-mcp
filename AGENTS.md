@@ -5,6 +5,65 @@ Claude Code と Codex の両方が読む運用ルール集。
 
 ---
 
+## ★ 最重要ルール: エディタ UI を触るときは【仮想入力モード + `--background`】。実マウス/キーボード/フォーカスは触らない
+
+過去に AI がエディタを操作してユーザーのカーソルを奪い、PC を操作不能にした。以下は**絶対**:
+
+- **やらない**: `SendInput` / `mouse_event` / `SetCursorPos` / `SetForegroundWindow` / computer-use / PowerShell での前面化とクリック、
+  エディタ窓を前面に出す・最大化する・PrintWindow で撮る、といった実マウス/実キーボード/フォーカスを動かす操作全部。
+- **やる**: エディタを `DX12Engine.exe --background --project <dir>`(必要なら `--mcp-port N`)で起動する。窓は手前に出ない(既定は画面外)。
+  仮想入力モードも自動で ON。起動済みなら `dx12_imgui_virtual_input {enable:true}`。
+  - 操作: `dx12_imgui_pointer`(move / down / up / click / double_click / drag / wheel。座標はクライアント px)、`dx12_imgui_key`(`"Ctrl+S"` / `text`)
+  - 狙う場所: `dx12_imgui_find {label}`(ウィンドウ・ドックのタブ・プロパティ行/見出し/ツールバー/メニュー/Hierarchy 行の矩形。座標を推測しない)
+  - 見る: `dx12_imgui_screenshot`(ImGui 込み。背面/画面外でも撮れる。仮想カーソルが写る)。`dx12_ui_screenshot` も仮想入力モード中は同じ経路。
+- 効果の確認は `dx12_imgui_virtual_input` の `osCursor` / `window.isForegroundWindow`(読み取り専用の値)で「人のカーソルと前面が動いていない」を確かめられる。
+- **梯子の順(M7)**: エディタ操作はまず **`dx12_editor_command`**(コマンド表を名前で実行: 窓の開閉 `window.*`・作成 `create.*`・Undo/Redo・複製・ビュー・Play。`op:"list"` で id と「いま実行できるか」を引く。表はエンジンが持つので id を推測しない)と **`dx12_editor_state`**(選択・開いている窓・**モーダルの有無**・Play・未保存・直近の通知)→ 専用ツール(`dx12_set_component` など)→ `dx12_imgui_*`(ウィジェットだけ)。
+  モーダルが開くと `E_MODAL_OPEN`(`dx12_editor_state {scope:"modal"}` で確認 → `dx12_call {name:"dx12_editor_modal", args:{action:"dismiss"}}` で閉じる。**ImGui のモーダルは Esc では閉じない**。未保存の確認などは `dx12_imgui` でボタンを押す。コマンドパレットだけ Esc)。削除・保存の上書き・ファイルダイアログは guarded(`E_GUARDED` の `fix` に従う。OS ダイアログは背景モードでは承認しても拒否)。複数選択は `dx12_editor_select`、人への通知は `dx12_editor_notify`、モーダルを閉じるのは `dx12_editor_modal`(いずれも長尾 = `dx12_call`)。詳細は `dx12_guide {topic:"editor"}` / `docs/MCP.md` §0-9。
+- 詳細・制限は `docs/MCP.md` §4-18。Play 中のゲーム入力(`dx12_key_down` / `dx12_key_press` / `dx12_mouse_move` / `dx12_ui_click`)は従来どおり合成入力で、OS には触れない。
+
+---
+
+## ★ エンジンは「自分専用」を起動する: `dx12_engine_launch`(複数のエージェントが同じエンジンに繋がない)
+
+エンジンの TCP ブリッジは**単一クライアント**。他のエージェントと同じエンジンに繋ぐとハングする/奪い合う。最初に自分専用のエンジンを起動する:
+
+```
+dx12_engine_launch {}                       → {engineId, port, pid, dir}   ★このセッションの既定エンジンに束縛される(以後の全ツールがそこへ向く)
+dx12_list_entities {}                       → 自分のエンジンのシーン
+dx12_engine_stop {}                         → 終わったら止める(閉じ忘れても 10 分操作が無ければ自動終了。MCP サーバが終わっても残らない)
+```
+
+- **上限**: 全体で最大 3 台(他のエージェントの分も数える)。空き VRAM 2 GB / RAM 3 GB 未満でも断る。`E_FLEET_LIMIT` / `E_FLEET_RESOURCE` の `fix` は「自分の idle なエンジンを止める」。**他のセッションのエンジンは止めない**(`details.others` に持ち主が出る。ユーザーに確認)。
+- **ビルドの後**: `tools\build.ps1` は `build\release\DX12Engine.exe` を自由に上書きできる(専用エンジンは別の場所のコピーを動かしている)。ビルドは**ジョブで**(`dx12_job_start {kind:"build", args:{refreshEngines:true}, waitSec:60}`。全セッションで直列化され、成功後に古い専用エンジンを最新へ入れ替える)。`dx12_doctor` が「古い exe コピー」と警告したら `dx12_call {name:"dx12_engine_refresh"}`(core 面では長尾)。
+- **長い処理はジョブ**(M6): ビルド・ctest・UI テスト・スクショの一括撮影・ベンチ・プレイテスト・cook は `dx12_job_start` → `dx12_job_status {id, waitSec:30}`。サブエージェントでも 2 分で切れない。詳細 `dx12_guide {topic:"jobs"}`・`docs/MCP.md` §0-8。MCP サーバを再起動してもジョブは残る(`dx12_job_list`)。UI テストは既定で `build_game`(Game.exe を前面起動する)を除外する。
+- **副作用の安全性**(M5): `dx12_call {idempotency_key}` で write 系の再送が安全(省略しても自動採番・タイムアウト時に自動再送)。`dryRun:true` はエンジンが実際の影響を返す。`dx12_batch` の失敗はファイルも戻す(journal)。後から戻すのは `journal_list` / `journal_restore`。guarded はエンジン側の確認トークンでも止まる。詳細 `docs/MCP.md` §13。
+- **起動モード**: `background`(既定。窓は画面外・前面化しない)/ `headless`(窓なし・画面が要らない検証)。**`visible` は使わない**(既定で拒否。`DX12_MCP_ALLOW_VISIBLE=1` と `confirm:true` が要り、それでも実マウスとフォーカスを奪い得る。人の PC 操作を妨げる)。
+- **プロジェクト**: 省略すると使い捨てを自動生成(停止後 24 時間は残る)。実プロジェクトを渡すと MCP の自動保存でそのフォルダに書き込まれる(同じフォルダを別のエンジンが使っていれば断る)。
+- **他のエンジンを見る**: `dx12_engine_attach {port|engine}` は**読み取り専用**(`effect:"read"` の method だけ)。持ち主が接続している間は `E_ENGINE_BUSY`(単一クライアントの枠を奪わない)。書き込みが要るなら自分専用を起動する。
+- **複数持つとき**: `dx12_call {name, args, engine:"<id|name|port>"}` でその 1 回だけ別のエンジンへ。既定の切替は `dx12_call {name:"dx12_engine_use", args:{engine}}`(`"none"` で従来の探索へ)。
+- **従来どおりの運用**(ユーザーが手で起動して繋ぐ)も動く: 束縛が無ければ `DX12_MCP_PORT` → ポートファイル → 8787 の順に探す。
+- Codex CLI など**ツール検索が無いクライアント**は `DX12_MCP_SURFACE=core`(40 本にフリート 2 本とジョブ 3 本とエディタ操作 2 本を含む)を使い、Core に無い操作は `dx12_call {name, args}`。設定例は README と `docs/MCP.md` §0-7。手順は `dx12_guide {topic:"fleet"}`。
+
+---
+
+## ★ ツールの探し方: shell 5 本(220 本の名前を推測しない)
+
+- 最初に `dx12_doctor`(接続と版の確認。エンジンが落ちていれば原因と起動手順を返す)。
+- 目的の操作の名前が分からなければ `dx12_tool_search {query}`(日本語/英語)→ `dx12_tool_describe {name}`(引数・副作用・`callTemplate`)→ `dx12_call {name, args}`。
+  旧ツール名(`dx12_set_ssao`)もエンジンの method 名も渡せる。**エンジンに足した method は MCP の再起動なしで使える。**
+- `dx12_call {dryRun:true}` は副作用のある操作を実行せず、対象・破壊性・Undo 可否を返す(`look_apply` などは native dryRun)。
+  guarded(`git_*` の書き込み系 / `eval_lua` / `delete_asset` / `build_game`)は `confirm:true` が要る(core 面は `dx12_call_guarded`)= **人の承認を取ってから**。
+- **エラーは `error_code` / `fix` / `didYouMean` / `validValues` を読み、`fix[0]`(tool + args)をそのまま `dx12_call` に渡して撃ち直す。同じ呼び出しを繰り返さない。**
+  `retryable:false` は引数か状態を直さない限り通らない。`E_ENGINE_TIMEOUT` はエンジンが処理を続けている可能性があるので、`dx12_ping` と結果を確認してから撃ち直す(遅れて届いた結果は次の `meta.lateResults`)。
+- 手順は `dx12_guide {topic}`(`build_scene` `test` `lighting` `ui` `editor` `safety` `errors` `perf` `engine_dev`)。コード表は `docs/MCP.md` §0-2。
+- **ツール面(`DX12_MCP_SURFACE`)**: 既定 `full` は従来どおり shell 5 + 旧 220。**`core`** は shell 5 + フリート 2 + ジョブ 3 + **Core 28 本**(エディタ操作 2 本を含む。+ `dx12_batch` + `dx12_call_guarded`)だけを `tools/list` に出す。
+  Core に無い操作(undo・アニメ・ナビ・Blender・アセット・git …)は `dx12_tool_search` → `dx12_call {name:"dx12_undo"}` のように**旧名・旧引数のまま**呼ぶ。統合ツール(`dx12_set_render_settings {target, values}` / `dx12_capture {view}` /
+  `dx12_edit_terrain {op}` / `dx12_imgui {op}` / `dx12_get_perf {mode}`)の引数は `dx12_tool_describe {name, target:"<target|op|view>"}` で引く。**core 面の guarded は `dx12_call_guarded` から**(`dx12_call` の `confirm:true` では通らない。先に `dryRun:true`)。
+  一覧・alias 表・命名規約は `docs/MCP.md` §0-5。エンジンに method を足す最短手順は §0-6 / `dx12_guide {topic:"engine_dev"}`。
+- **演出(シーケンサー .dxseq)**: Core の `dx12_sequence {op}`(list / load / save / get / eval / scrub / play / stop / edit / autoplay)が、エンジンの `sequence_*`(edit だけ `sequence_apply_op`)へ引数をそのまま渡す。`eval` は非破壊、`scrub` はエディタ上に適用(保存・Play で自動的に元へ戻る)。`dryRun:true` は edit / save / scrub / play で実際の影響を返す。autoplay の下位操作は `action`(list|set|add|remove|clear)。引数は `dx12_tool_describe {name:"dx12_sequence", target:"<op>"}`。旧 `dx12_sequence_author`(台本 JSON → Lua)/ `dx12_sequence_preview` は別物で、名前・引数・返り値は不変。Core を 40 本に収めるため `dx12_get_script_errors` は長尾へ移した(`dx12_call {name:"dx12_get_script_errors"}`)。実装は `sequenceOps.ts`(純ロジック)+ `toolset/sequenceCore.ts`、テストは `sequenceCore.test.ts`。
+
+---
+
 ## ★ 最重要ルール: entityId は「同じ sceneGeneration の間だけ」安定。
 
 `dx12_create_entity` / `dx12_spawn_model` などの遅延同期ツールは、
@@ -61,6 +120,8 @@ DX12Engine.exe --headless --project <dir> --mcp-port 8850 --scene scenes/main.js
 | `--mcp-port N` | 待受ポートを固定。**指定すると `%TEMP%/dx12_mcp.port` を書き換えない**＝人が開いているエディタの接続を奪わない |
 | `--scene <rel>` | プロジェクトを開いた直後にこのシーンを開く（assets 相対） |
 | `--allow-autosave` | ヘッドレスでもディスクへ書く。**既定は読み取り専用** |
+| `--background[=offscreen\|minimized\|noactivate\|hidden][,tool\|notool]` | 窓は出す（画面外 / 最小化 / 最背面）が**手前に出ない静かな起動**。仮想入力モードを含意。`--headless` と違い描画・自動保存・ImGui の操作(`dx12_imgui_*`)が普通に動く。既定 `offscreen`。人が使う PC でエディタを AI に触らせるときはこちら（上の「★最重要ルール」参照） |
+| `--virtual-input` | 仮想入力モードだけ ON（実マウス/キーボードを ImGui に渡さず OS のカーソルに触れない）。窓は普通に出る |
 
 - ★**撮影系は `path` を明示する**: `dx12_screenshot` / `dx12_screenshot_final` / `dx12_render_debug` / `dx12_screenshot_game_view` は省略するとエンジンの CWD へ書くので、書けない場所（`C:\Windows\System32` 等）で起動していると `WIC stream open failed` で撮影ごと失敗する。
 - **ヘッドレスは既定でディスクへ書かない。** 検証しただけでプロジェクトが書き換わるのは事故なので、
@@ -702,7 +763,25 @@ dx12_camera_path(mode:"orbit", target:[0,1,0], radius:12, height:4, frames:8, co
 
 ---
 
-## 大量配置はシーン JSON を直接書く — `dx12_scene_write`
+## ★ 部屋・ステージ・街は「仕様 JSON」で作る — `dx12_apply_scene_spec`(M11)
+
+数体以上のまとまった配置は、`create_entity` を 1 体ずつ撃つ代わりに **SceneSpec(JSON)を 1 回渡す**。書き方・例 5 本は `dx12_guide {topic:"scene_spec"}`(`guides/scene_spec.md`)。
+
+1. **まず `mode:"plan"`**: 作成 / 更新 / 削除 / 変更なしの計画(理由・変更前後・コスト)。何も書かない。
+2. **`{spec}` で適用**: 1 トランザクション。検証(配置・命名・到達性)が通ればコミット、落ちれば**全体をロールバック**(部分適用は残らない)。
+3. **失敗したら `fix[0]` をそのまま撃つ**: `{specRef, patch}`(patch は RFC 6902 の specPatch)。issue の `path` は仕様のルートからの JSON Pointer(`/entities/3/model`)。仕様の全文を送り直さない・同じ呼び出しを繰り返さない。
+4. **冪等**: 同じ仕様の再適用は何も変えない。仕様を 1 行直すと、その分の差分だけが動く(`plan` で確認できる)。キーは `name`(改名しても追従させたいときは `id`)。
+5. **消すときは `prune:true`**(この仕様=同じ `name` が作った物で、いまの仕様に無いものだけ。手で置いた物は消さない)。削除なので承認が要る(core 面 `dx12_call_guarded`、full 面 `dx12_call {confirm:true}`)。先に plan。
+
+守ること:
+- **単位はメートル**。モデルは読み込み時に実寸 m(`scale` は倍率)。cm と取り違えると `W_UNIT_SUSPECT`。
+- 位置は座標を暗算せず **`place`** で書く(`{on:"LVL_Floor"}` `{relativeTo:"A", side:"right", gap:2}`)。y は `null` にして place に決めさせる。
+- 床・壁は `collider:"static"`(rigidBody が無いとコライダーは効かない)。名前は `<PREFIX>_<Kind>`(LVL_ ENV_ LGT_ GP_ FX_ UI_ CAM_)+ `group`。
+- 到達できるかは `verify:{reachable:{from,to}}` + `navmesh:{build:true}`。目標は**薄いパッド**にする(段差のある箱を目標にすると `dx12_check_reachable` の登り判定に引っかかる)。
+- 天井の下に立つ壁・柱は、エンジンの `validate_layout` が天井を地面と誤認して BURIED と言うことがある(仕様の中の床で測り直して誤検出は除いている)。床は壁・柱の足元より広く敷く。
+- 生のシーン JSON を書く低レベルの経路(`dx12_scene_write`。M11 で長尾へ)は残っている(`dx12_call {name:"dx12_scene_write"}`)。
+
+## 大量配置はシーン JSON を直接書く — `dx12_scene_write`(低レベルの経路。まとまった配置は上の `dx12_apply_scene_spec` が先。M11 で長尾へ)
 
 `dx12_create_entity` / `dx12_spawn_model` は**遅延同期＝1 体につき 1 フレーム**かかる。
 数十体以上を並べるなら JSON を書いて `open_scene` 1 回の方が桁違いに速い。
@@ -833,6 +912,17 @@ dx12_project_world_to_screen(name:"Player")
 
 key は VK 整数か名前(`"W"`,`"D"`,`"SPACE"`,`"UP"`,`"F1"` 等)。
 `dx12_step_frames` は決定論ステッパではない(各フレーム dt は実時間)。frames は 1..600。
+
+**Lua で確かめるなら `dx12_lua_step` で 1 回にまとめる。** `eval_lua` → `step_frames` → `eval_lua` を別々に撃つと、
+往復のたびにターンを 1 つ使う(エンジンの応答は 1 回 17ms なのに、ターンは 1 回数秒かかる)。
+
+```
+dx12_lua_step(before:"P=scene:findEntity('Player')", keys:["D"], frames:30, deterministic:true,
+              every:10, after:"return P.transform.position.x")
+# → samples:[{frame:10,result:…},{frame:20,…},{frame:30,…}]。キーは終わったら必ず離される
+```
+
+`eval_lua` と同じく任意の Lua を走らせるので guarded(承認が要る)。core / shell 面では `dx12_call_guarded` から呼ぶ。
 
 ---
 

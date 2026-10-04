@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "name": "garden",
+  "comment": "散歩できる庭: 芝の地面、中央の飛び石の小道、左右の木(幹と葉を同じ seed の散布で重ねる)、花、池、ベンチ。一人称で歩けて、ベンチへ到達できる。",
+  "lighting": { "preset": "day" },
+  "navmesh": { "build": true },
+  "verify": { "reachable": { "from": "GP_Player", "to": "GP_Goal" } },
+  "entities": [
+    { "name": "LVL_Ground", "kind": "box", "size": [34, 1, 34], "group": "LVL", "at": [0, -0.5, 0], "color": "#4d7a3a", "material": { "roughness": 1 }, "collider": "static" },
+    { "name": "LVL_Stone", "kind": "box", "size": [1.2, 0.06, 0.8], "group": "LVL", "color": "#9a9a92",
+      "pattern": { "type": "line", "count": 9, "from": [0, null, -13], "to": [0, null, 9] }, "place": { "on": "LVL_Ground" }, "collider": "static" },
+    { "name": "LVL_Pond", "kind": "box", "size": [6, 0.06, 4], "group": "LVL", "at": [8, null, 2], "place": { "on": "LVL_Ground" },
+      "color": "#2f6f9f", "material": { "roughness": 0.05, "metallic": 0.2, "emissive": [0.05, 0.2, 0.35], "emissiveIntensity": 0.6 } },
+    { "name": "GP_Bench", "kind": "box", "size": [1.8, 0.45, 0.6], "group": "GP", "at": [-3.2, null, 9], "place": { "on": "LVL_Ground" }, "color": "#8a5a30", "collider": "static" },
+    { "name": "GP_Goal", "kind": "box", "size": [1.2, 0.02, 1.2], "group": "GP", "at": [-3.2, null, 7.4], "place": { "on": "LVL_Ground" }, "color": "#ffd24a", "material": { "emissive": [1, 0.8, 0.2], "emissiveIntensity": 1.5 } },
+    { "name": "ENV_BenchBack", "kind": "box", "size": [1.8, 0.6, 0.1], "group": "ENV", "place": { "relativeTo": "GP_Bench", "side": "above", "align": { "z": "max" } }, "color": "#8a5a30" },
+    { "name": "ENV_TreeTrunkL", "kind": "box", "size": [0.5, 3.4, 0.5], "group": "ENV", "color": "#6b4a2b",
+      "pattern": { "type": "scatter", "count": 6, "area": [-15, -15, -4.5, 15], "seed": 11, "minSpacing": 5, "exclude": ["GP_Bench"], "yaw": "random" }, "place": { "on": "LVL_Ground" } },
+    { "name": "ENV_TreeLeavesL", "kind": "sphere", "size": 3.2, "group": "ENV", "color": "#2f7a3a", "material": { "roughness": 0.9 },
+      "pattern": { "type": "scatter", "count": 6, "area": [-15, -15, -4.5, 15], "seed": 11, "minSpacing": 5, "exclude": ["GP_Bench"], "y": 4.4 } },
+    { "name": "ENV_TreeTrunkR", "kind": "box", "size": [0.5, 3.4, 0.5], "group": "ENV", "color": "#6b4a2b",
+      "pattern": { "type": "scatter", "count": 6, "area": [4.5, -15, 15, 15], "seed": 12, "minSpacing": 5, "exclude": ["LVL_Pond"], "yaw": "random" }, "place": { "on": "LVL_Ground" } },
+    { "name": "ENV_TreeLeavesR", "kind": "sphere", "size": 3.2, "group": "ENV", "color": "#2f7a3a", "material": { "roughness": 0.9 },
+      "pattern": { "type": "scatter", "count": 6, "area": [4.5, -15, 15, 15], "seed": 12, "minSpacing": 5, "exclude": ["LVL_Pond"], "y": 4.4 } },
+    { "name": "ENV_FlowerL", "kind": "sphere", "size": 0.25, "group": "ENV", "color": "#ff6f9f",
+      "pattern": { "type": "scatter", "count": 14, "area": [-15, -15, -2.5, 15], "seed": 3, "minSpacing": 1.6, "scaleRange": [0.7, 1.3], "exclude": ["GP_Bench"] }, "place": { "on": "LVL_Ground" } },
+    { "name": "ENV_FlowerR", "kind": "sphere", "size": 0.25, "group": "ENV", "color": "#ffd24a",
+      "pattern": { "type": "scatter", "count": 14, "area": [2.5, -15, 15, 15], "seed": 4, "minSpacing": 1.6, "scaleRange": [0.7, 1.3], "exclude": ["LVL_Pond"] }, "place": { "on": "LVL_Ground" } },
+    { "name": "GP_Player", "kind": "fps_player", "group": "GP", "at": [0, null, -15] },
+    { "name": "LGT_Sun", "kind": "light", "light": "directional", "group": "LGT", "at": [0, 20, 0], "rotation": [-48, 35, 0], "components": { "directionalLight": { "intensity": 1.8, "ambient": 0.4 } } }
+  ]
+}

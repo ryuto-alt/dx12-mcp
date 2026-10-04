@@ -1,0 +1,87 @@
+{
+  "_doc": "エラー再現ケース(設計書 §5.2 M2)。errors.test.ts が偽エンジンに対して dx12_call を撃ち、期待コード・空でない fix・タイポ系の didYouMean[0] が正解であることを見る。env: normal=通常 / playing=Play 中 / stale=世代が古い / old=構造化エラーを持たない旧エンジン / down=ポートが閉じている / silent=応答しない。",
+  "cases": [
+    { "id": "tool-typo-1", "group": "tool-name", "env": "normal", "call": { "name": "dx12_screnshot_final", "args": {} }, "expect": { "code": "E_UNKNOWN_TOOL", "didYouMean0": "dx12_screenshot_final" } },
+    { "id": "tool-typo-2", "group": "tool-name", "env": "normal", "call": { "name": "dx12_get_entiy", "args": { "name": "Player" } }, "expect": { "code": "E_UNKNOWN_TOOL", "didYouMean0": "dx12_get_entity" } },
+    { "id": "tool-typo-3", "group": "tool-name", "env": "normal", "call": { "name": "set_post_proces", "args": {} }, "expect": { "code": "E_UNKNOWN_TOOL", "didYouMean0": "dx12_set_post_process" } },
+    { "id": "tool-typo-4", "group": "tool-name", "env": "normal", "call": { "name": "dx12_listentities", "args": {} }, "expect": { "code": "E_UNKNOWN_TOOL", "didYouMean0": "dx12_list_entities" } },
+    { "id": "tool-none", "group": "tool-name", "env": "normal", "call": { "name": "dx12_teleport_player", "args": {} }, "expect": { "code": "E_UNKNOWN_TOOL", "fixTool": "dx12_tool_search" } },
+    { "id": "method-typo", "group": "tool-name", "env": "normal", "call": { "name": "describe_mcp_manifes", "args": {} }, "expect": { "code": "E_UNKNOWN_TOOL", "didYouMean0": "describe_mcp_manifest" } },
+    { "id": "tool-empty", "group": "tool-name", "env": "normal", "call": { "name": "", "args": {} }, "expect": { "code": "E_MISSING_PARAM" } },
+
+    { "id": "param-unknown-1", "group": "unknown-param", "env": "normal", "call": { "name": "dx12_set_transform", "args": { "name": "Floor", "postion": [0, 0, 0] } }, "expect": { "code": "E_UNKNOWN_PARAM", "didYouMean0": "position" } },
+    { "id": "param-unknown-2", "group": "unknown-param", "env": "normal", "call": { "name": "dx12_spawn_box", "args": { "scal": [1, 1, 1] } }, "expect": { "code": "E_UNKNOWN_PARAM", "didYouMean0": "scale" } },
+    { "id": "param-unknown-3", "group": "unknown-param", "env": "normal", "call": { "name": "dx12_get_entity", "args": { "nmae": "Player" } }, "expect": { "code": "E_UNKNOWN_PARAM", "didYouMean0": "name" } },
+    { "id": "param-unknown-4", "group": "unknown-param", "env": "normal", "call": { "name": "dx12_set_sun", "args": { "intesity": 2 } }, "expect": { "code": "E_UNKNOWN_PARAM", "didYouMean0": "intensity" } },
+    { "id": "param-unknown-5", "group": "unknown-param", "env": "normal", "call": { "name": "mock_spin", "args": { "name": "Player", "spd": 2 } }, "expect": { "code": "E_UNKNOWN_PARAM", "didYouMean0": "speed" } },
+
+    { "id": "param-missing-1", "group": "missing-param", "env": "normal", "call": { "name": "dx12_find_entity", "args": {} }, "expect": { "code": "E_MISSING_PARAM" } },
+    { "id": "param-missing-2", "group": "missing-param", "env": "normal", "call": { "name": "dx12_set_component", "args": { "name": "Floor" } }, "expect": { "code": "E_MISSING_PARAM" } },
+    { "id": "param-missing-3", "group": "missing-param", "env": "normal", "call": { "name": "dx12_open_scene", "args": {} }, "expect": { "code": "E_MISSING_PARAM" } },
+    { "id": "param-missing-4", "group": "missing-param", "env": "normal", "call": { "name": "mock_spin", "args": {} }, "expect": { "code": "E_MISSING_PARAM" } },
+
+    { "id": "type-1", "group": "bad-type", "env": "normal", "call": { "name": "dx12_set_transform", "args": { "name": "Floor", "position": "0,1,0" } }, "expect": { "code": "E_BAD_TYPE" } },
+    { "id": "type-2", "group": "bad-type", "env": "normal", "call": { "name": "dx12_step_frames", "args": { "frames": "ten" } }, "expect": { "code": "E_BAD_TYPE" } },
+    { "id": "type-3-coercible", "group": "bad-type", "env": "normal", "call": { "name": "dx12_get_entity", "args": { "entity": "12" } }, "expect": { "code": "E_BAD_TYPE", "fixArgs": { "entity": 12 } } },
+    { "id": "type-4", "group": "bad-type", "env": "normal", "call": { "name": "mock_spin", "args": { "name": "Player", "speed": "fast" } }, "expect": { "code": "E_BAD_TYPE" } },
+
+    { "id": "enum-1", "group": "bad-enum", "env": "normal", "call": { "name": "dx12_terrain_generate", "args": { "name": "T", "preset": "mountain" } }, "expect": { "code": "E_BAD_ENUM", "didYouMean0": "mountains", "validValues": ["hills", "canyon", "mountains"] } },
+    { "id": "enum-2", "group": "bad-enum", "env": "normal", "call": { "name": "dx12_apply_lighting_preset", "args": { "preset": "nite" } }, "expect": { "code": "E_BAD_ENUM", "didYouMean0": "night" } },
+    { "id": "enum-3", "group": "bad-enum", "env": "normal", "call": { "name": "dx12_sculpt_brush", "args": { "name": "S", "brush": "dig" } }, "expect": { "code": "E_BAD_ENUM", "validValues": ["draw", "pull", "push"] } },
+    { "id": "enum-4", "group": "bad-enum", "env": "normal", "call": { "name": "dx12_render_debug", "args": { "mode": "normals" } }, "expect": { "code": "E_BAD_ENUM" } },
+
+    { "id": "range-1", "group": "out-of-range", "env": "normal", "call": { "name": "mock_spin", "args": { "name": "Player", "speed": 99 } }, "expect": { "code": "E_OUT_OF_RANGE", "fixArgs": { "speed": 10 } } },
+    { "id": "range-2", "group": "out-of-range", "env": "normal", "call": { "name": "dx12_scatter", "args": { "count": 500, "area": [0, 0, 10, 10], "type": "box" } }, "expect": { "code": "E_OUT_OF_RANGE", "fixArgs": { "count": 200 } } },
+    { "id": "range-3", "group": "out-of-range", "env": "normal", "call": { "name": "dx12_play_anim", "args": { "name": "P", "layer": -1 } }, "expect": { "code": "E_OUT_OF_RANGE", "fixArgs": { "layer": 0 } } },
+
+    { "id": "entity-1", "group": "not-found", "env": "normal", "call": { "name": "dx12_get_entity", "args": { "name": "Playr" } }, "expect": { "code": "E_NOT_FOUND_ENTITY", "didYouMean0": "Player" } },
+    { "id": "entity-2", "group": "not-found", "env": "normal", "call": { "name": "dx12_delete_entity", "args": { "name": "Wal_01" } }, "expect": { "code": "E_NOT_FOUND_ENTITY", "didYouMean0": "Wall_01" } },
+    { "id": "entity-3", "group": "not-found", "env": "normal", "call": { "name": "dx12_set_transform", "args": { "name": "flor", "position": [0, 0, 0] } }, "expect": { "code": "E_NOT_FOUND_ENTITY", "didYouMean0": "Floor" } },
+    { "id": "scene-1", "group": "not-found", "env": "normal", "call": { "name": "dx12_open_scene", "args": { "path": "scenes/lvl1.json" } }, "expect": { "code": "E_NOT_FOUND_SCENE", "didYouMean0": "scenes/level1.json" } },
+    { "id": "asset-1", "group": "not-found", "env": "normal", "call": { "name": "dx12_spawn_model", "args": { "path": "models/tre.glb" } }, "expect": { "code": "E_NOT_FOUND_ASSET", "didYouMean0": "models/tree.glb" } },
+
+    { "id": "stale-structured", "group": "stale", "env": "normal", "call": { "name": "mock_stale", "args": {} }, "expect": { "code": "E_STALE_SCENE", "fixTool": "dx12_list_entities" } },
+    { "id": "stale-numeric-only", "group": "stale", "env": "old", "call": { "name": "mock_stale", "args": {} }, "expect": { "code": "E_STALE_SCENE", "fixTool": "dx12_list_entities" } },
+
+    { "id": "mode-newscene-playing", "group": "mode", "env": "playing", "call": { "name": "dx12_new_scene", "args": {} }, "expect": { "code": "E_MODE_CONFLICT", "fixTool": "dx12_stop" } },
+    { "id": "mode-terrain-playing", "group": "mode", "env": "playing", "call": { "name": "dx12_terrain_generate", "args": { "name": "T" } }, "expect": { "code": "E_MODE_CONFLICT", "fixTool": "dx12_stop" } },
+    { "id": "virtual-input-off", "group": "mode", "env": "vinput-off", "call": { "name": "dx12_imgui_pointer", "args": { "action": "click", "x": 10, "y": 10 } }, "expect": { "code": "E_VIRTUAL_INPUT_OFF", "fixTool": "dx12_imgui_virtual_input" } },
+
+    { "id": "engine-unknown-method", "group": "engine", "env": "gone", "call": { "name": "mock_gone", "args": {} }, "expect": { "code": "E_UNKNOWN_TOOL" } },
+    { "id": "engine-unknown-method-old", "group": "engine", "env": "gone-old", "call": { "name": "mock_gone", "args": {} }, "expect": { "code": "E_UNKNOWN_TOOL" } },
+    { "id": "guarded-push", "group": "guarded", "env": "normal", "call": { "name": "dx12_git_push", "args": {} }, "expect": { "code": "E_GUARDED", "fixTool": "dx12_call" } },
+    { "id": "guarded-eval", "group": "guarded", "env": "normal", "call": { "name": "dx12_eval_lua", "args": { "code": "return 1" } }, "expect": { "code": "E_GUARDED" } },
+    { "id": "file-io", "group": "engine", "env": "normal", "call": { "name": "dx12_save_scene", "args": {} }, "expect": { "code": "E_FILE_IO" } },
+    { "id": "internal", "group": "engine", "env": "normal", "call": { "name": "mock_boom", "args": {} }, "expect": { "code": "E_INTERNAL" } },
+    { "id": "unsupported", "group": "engine", "env": "normal", "call": { "name": "mock_nodxr", "args": {} }, "expect": { "code": "E_UNSUPPORTED", "retryable": false } },
+
+    { "id": "timeout", "group": "connection", "env": "normal", "call": { "name": "mock_slow", "args": {}, "timeoutMs": 300 }, "expect": { "code": "E_ENGINE_TIMEOUT", "retryable": true, "fixTool": "dx12_ping" } },
+    { "id": "unreachable", "group": "connection", "env": "down", "call": { "name": "dx12_get_entity", "args": { "name": "Player" } }, "expect": { "code": "E_ENGINE_UNREACHABLE", "retryable": true, "fixCommand": "--background" } },
+    { "id": "unreachable-method", "group": "connection", "env": "down", "call": { "name": "mock_spin", "args": { "name": "Player" } }, "expect": { "code": "E_ENGINE_UNREACHABLE", "fixTool": "dx12_doctor" } }
+  ],
+  "repair": {
+    "_doc": "壊れた呼び出し 20 件。errors.test.ts が fix[0]/didYouMean[0] を【機械的に】適用して再送し、成功する割合が 80% 以上であることを見る。",
+    "calls": [
+      { "id": "r01", "env": "normal", "call": { "name": "dx12_open_sene", "args": { "path": "scenes/default.json" } } },
+      { "id": "r02", "env": "normal", "call": { "name": "dx12_get_entiy", "args": { "name": "Player" } } },
+      { "id": "r03", "env": "normal", "call": { "name": "dx12_teleport_player", "args": {} } },
+      { "id": "r04", "env": "normal", "call": { "name": "dx12_set_transform", "args": { "name": "Floor", "postion": [0, 1, 0] } } },
+      { "id": "r05", "env": "normal", "call": { "name": "dx12_get_entity", "args": { "nmae": "Player" } } },
+      { "id": "r06", "env": "normal", "call": { "name": "dx12_find_entity", "args": {} } },
+      { "id": "r07", "env": "normal", "call": { "name": "dx12_get_entity", "args": { "entity": "12" } } },
+      { "id": "r08", "env": "normal", "call": { "name": "dx12_step_frames", "args": { "frames": "10" } } },
+      { "id": "r09", "env": "normal", "call": { "name": "dx12_terrain_generate", "args": { "name": "T", "preset": "mountain" } } },
+      { "id": "r10", "env": "normal", "call": { "name": "dx12_apply_lighting_preset", "args": { "preset": "nite" } } },
+      { "id": "r11", "env": "normal", "call": { "name": "dx12_sculpt_brush", "args": { "name": "S", "brush": "puul" } } },
+      { "id": "r12", "env": "normal", "call": { "name": "mock_spin", "args": { "name": "Player", "speed": 99 } } },
+      { "id": "r13", "env": "normal", "call": { "name": "dx12_open_scene", "args": {} } },
+      { "id": "r14", "env": "normal", "call": { "name": "dx12_delete_entity", "args": { "name": "Wal_01" } } },
+      { "id": "r15", "env": "normal", "call": { "name": "dx12_set_transform", "args": { "name": "flor", "position": [0, 0, 0] } } },
+      { "id": "r16", "env": "normal", "call": { "name": "dx12_open_scene", "args": { "path": "scenes/lvl1.json" } } },
+      { "id": "r17", "env": "playing", "call": { "name": "dx12_new_scene", "args": {} } },
+      { "id": "r18", "env": "playing", "call": { "name": "dx12_terrain_generate", "args": { "name": "T", "preset": "hills" } } },
+      { "id": "r19", "env": "vinput-off", "call": { "name": "dx12_imgui_pointer", "args": { "action": "click", "x": 5, "y": 5 } } },
+      { "id": "r20", "env": "normal", "call": { "name": "dx12_spawn_model", "args": { "path": "models/rok.glb" } } }
+    ]
+  }
+}

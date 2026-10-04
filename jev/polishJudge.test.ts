@@ -18,6 +18,7 @@ import { FINDING_CODES, auditScene, polishScore, type SceneFacts } from "../poli
 import { loadLibrary } from "./library.ts";
 import { validateCases } from "./eval.ts";
 import { parseTsTools } from "../schemaDrift.ts";
+import { readToolSource } from "../toolSource.ts";
 import { LOOK_PRESETS } from "../lookDev.ts";
 import { LIGHTING_PRESETS } from "../sceneTools.ts";
 import { findVfxPreset as findVfx } from "../vfx.ts";
@@ -61,7 +62,7 @@ console.log("[1] 表の整合");
 
 console.log("[2] 次の一手は実在する MCP ツールと引数だけ");
 {
-  const tools = parseTsTools(fs.readFileSync(path.join(here, "..", "index.ts"), "utf8"));
+  const tools = parseTsTools(readToolSource(path.join(here, "..")));
   const SPREADS: Record<string, string[]> = { "...entityRef": ["entity", "name"] };
   for (const [id, fix] of Object.entries(FIXES)) {
     if (fix.tool === null) { check(`${id}: 何もしない`, id === "keep_as_is"); continue; }

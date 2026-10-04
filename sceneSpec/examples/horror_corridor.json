@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "name": "horror_corridor",
+  "comment": "ホラー廊下: 4m x 30m の廊下、天井の暗い赤灯を等間隔に、崩れた柱と木箱、突き当たりの扉。スタートから扉まで到達できることを検証する。",
+  "lighting": { "preset": "horror" },
+  "navmesh": { "build": true },
+  "verify": { "reachable": { "from": "GP_Player", "to": "GP_Exit" } },
+  "entities": [
+    { "name": "LVL_Floor", "kind": "box", "size": [4.8, 0.4, 30], "group": "LVL", "at": [0, -0.2, 0], "color": "#2a2622", "material": { "roughness": 0.85 }, "collider": "static" },
+    { "name": "LVL_Wall_L", "kind": "box", "size": [0.4, 3.2, 30], "group": "LVL", "at": [-2.2, null, 0], "place": { "on": "LVL_Floor" }, "color": "#3b3a34", "collider": "static" },
+    { "name": "LVL_Wall_R", "kind": "box", "size": [0.4, 3.2, 30], "group": "LVL", "at": [2.2, null, 0], "place": { "on": "LVL_Floor" }, "color": "#3b3a34", "collider": "static" },
+    { "name": "LVL_Ceiling", "kind": "box", "size": [4.8, 0.3, 30], "group": "LVL", "at": [0, null, 0], "place": { "relativeTo": "LVL_Wall_L", "side": "above" }, "color": "#24221f" },
+    { "name": "LVL_Wall_End", "kind": "box", "size": [4, 3.2, 0.4], "group": "LVL", "at": [0, null, 15.2], "place": { "on": "LVL_Floor" }, "color": "#3b3a34", "collider": "static" },
+    { "name": "LVL_Wall_Start", "kind": "box", "size": [4, 3.2, 0.4], "group": "LVL", "at": [0, null, -15.2], "place": { "on": "LVL_Floor" }, "color": "#3b3a34", "collider": "static" },
+    { "name": "GP_Exit", "kind": "box", "size": [1.4, 2.4, 0.15], "group": "GP", "at": [0, null, 14.9], "place": { "on": "LVL_Floor" }, "color": "#6b1f1f",
+      "material": { "emissive": [0.6, 0.05, 0.05], "emissiveIntensity": 0.8 }, "tags": ["exit"] },
+    { "name": "LGT_Bulb", "kind": "light", "light": "point", "group": "LGT",
+      "pattern": { "type": "line", "count": 5, "from": [0, 2.9, -11], "to": [0, 2.9, 11] },
+      "components": { "pointLight": { "intensity": 6.5, "range": 7, "color": [1, 0.32, 0.2] } } },
+    { "name": "LVL_Debris", "kind": "box", "size": [0.9, 0.9, 0.9], "group": "LVL", "color": "#4a3d2f",
+      "pattern": { "type": "scatter", "count": 4, "area": [-1.5, -12, 1.5, 12], "seed": 5, "minSpacing": 5, "yaw": "random" }, "place": { "on": "LVL_Floor" } },
+    { "name": "ENV_Pillar", "kind": "box", "size": [0.5, 3.2, 0.5], "group": "ENV", "color": "#4e4b44", "rotation": [0, 15, 0],
+      "pattern": { "type": "line", "count": 3, "from": [-1.8, null, -6], "to": [-1.8, null, 6] }, "place": { "on": "LVL_Floor" } },
+    { "name": "GP_Player", "kind": "fps_player", "group": "GP", "at": [0, null, -13] }
+  ]
+}

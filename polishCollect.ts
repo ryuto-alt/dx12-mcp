@@ -40,7 +40,7 @@ export async function collectSceneFacts(call: EngineCall, opts: { screenshot?: b
   facts.contactShadow = await call("get_contact_shadow", {}).catch(() => undefined) as any;
 
   // ── 動くもの / メッシュとマテリアル ──
-  const ents = await call("list_entities", { verbose: true }).catch(() => null) as any;
+  const ents = await call("list_entities", { verbose: true, limit: 0 }).catch(() => null) as any;
   const list: any[] = ents?.entities ?? [];
   facts.entityCount = list.length;
   facts.emitterCount = list.filter((e) => (e.componentTypes ?? []).includes("particleEmitter")).length;

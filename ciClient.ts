@@ -150,7 +150,7 @@ export async function validateScene(
       // ★このシーンに存在する目標だけを見る。タイトル画面やクリア画面には
       //   ゴールもプレイヤーも無いのが正しいので、無いことを不合格にしてはいけない
       //   （実際に title.json が「プレイヤーが居ない」で落ちた）。
-      const all = await eng.call("list_entities", {});
+      const all = await eng.call("list_entities", { limit: 0 });
       const present = new Set((all?.entities ?? []).map((e: any) => e.name));
       const applicable = opts.goals.filter((g) => present.has(g));
       if (applicable.length === 0) {
@@ -403,6 +403,8 @@ export async function launchHeadless(opts: {
     cwd: path.dirname(exe),      // ★CWD がここでないとスクショが WIC で開けない（既知の罠）
     detached: false,
     stdio: "ignore",
+    windowsHide: true,
+    env: { ...process.env, DX12E_NO_SPLASH: "1" },   // 起動画面(スプラッシュ)を人の画面の前面へ出さない
   });
   // ★Windows の GUI プロセス（隠し窓でも GUI サブシステム）は SIGTERM で死なない。
   //   child.kill() だけだと CI が終わってもエンジンが残り続ける（実測で残った）。

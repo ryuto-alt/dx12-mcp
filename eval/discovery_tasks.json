@@ -1,0 +1,482 @@
+{
+  "_doc": "dx12_tool_search の発見性評価(設計書 付録 A の代表 30 タスク)。各タスクに日本語の言い換えを 2 通り(queries)と、上位 3 件に入っていればよい許容ツール(expect)を置く。expect は現時点(M1/M2)で存在するツール名。設計書の Core 名は design に残す(M3 で Core が出来たら expect に足す)。recall@3 >= 90% を discovery.test.ts が判定する。",
+  "tasks": [
+    {
+      "id": 1,
+      "design": "dx12_list_entities",
+      "expect": [
+        "dx12_list_entities",
+        "dx12_get_hierarchy"
+      ],
+      "queries": [
+        "今開いているシーンの中身を一覧したい",
+        "シーンに何が置いてあるか全部見せて"
+      ],
+      "holdout": "list all entities in the current scene",
+      "core": [
+        "dx12_list_entities"
+      ]
+    },
+    {
+      "id": 2,
+      "design": "dx12_get_entity",
+      "expect": [
+        "dx12_get_entity"
+      ],
+      "queries": [
+        "Player の位置とコンポーネントを見たい",
+        "エンティティの詳細と現在の値を読む"
+      ],
+      "holdout": "show me what components the player has",
+      "core": [
+        "dx12_get_entity"
+      ]
+    },
+    {
+      "id": 3,
+      "design": "dx12_create_entity",
+      "expect": [
+        "dx12_create_entity",
+        "dx12_spawn_box"
+      ],
+      "queries": [
+        "床用の大きな箱を置いて名前を付ける",
+        "ボックスを 1 つ作って配置する"
+      ],
+      "holdout": "add a big floor cube and call it Floor",
+      "core": [
+        "dx12_create_entity"
+      ]
+    },
+    {
+      "id": 4,
+      "design": "dx12_spawn_model",
+      "expect": [
+        "dx12_spawn_model"
+      ],
+      "queries": [
+        "glb モデルを (0,0,5) に置く",
+        "3D モデルファイルをシーンに読み込んで配置したい"
+      ],
+      "holdout": "place a glb file at coordinates 0,0,5",
+      "core": [
+        "dx12_spawn_model"
+      ]
+    },
+    {
+      "id": 5,
+      "design": "dx12_set_transform",
+      "expect": [
+        "dx12_set_transform"
+      ],
+      "queries": [
+        "壁の位置とスケールを変える",
+        "オブジェクトを移動して回転させる"
+      ],
+      "holdout": "resize and move the wall",
+      "core": [
+        "dx12_set_transform"
+      ]
+    },
+    {
+      "id": 6,
+      "design": "dx12_set_component",
+      "expect": [
+        "dx12_set_component"
+      ],
+      "queries": [
+        "ポイントライトの強さを上げる",
+        "コンポーネントの値を書き換える"
+      ],
+      "holdout": "make the point light brighter",
+      "core": [
+        "dx12_set_component"
+      ]
+    },
+    {
+      "id": 7,
+      "design": "dx12_set_render_settings",
+      "expect": [
+        "dx12_set_post_process",
+        "dx12_set_render_settings"
+      ],
+      "queries": [
+        "ブルームとトーンマップを調整する",
+        "ポストプロセスの露出を変えたい"
+      ],
+      "holdout": "tweak bloom and tone mapping",
+      "core": [
+        "dx12_set_render_settings"
+      ]
+    },
+    {
+      "id": 8,
+      "design": "dx12_get_render_settings",
+      "expect": [
+        "dx12_get_ssao",
+        "dx12_get_render_settings"
+      ],
+      "queries": [
+        "今の SSAO 設定を読む",
+        "環境遮蔽の現在値を確認したい"
+      ],
+      "holdout": "what are the current ambient occlusion values",
+      "core": [
+        "dx12_get_render_settings"
+      ]
+    },
+    {
+      "id": 9,
+      "design": "dx12_look_apply",
+      "expect": [
+        "dx12_look_apply",
+        "dx12_apply_lighting_preset"
+      ],
+      "queries": [
+        "夕暮れのホラー調に一括で寄せる",
+        "画面全体の雰囲気を夜のムードにしたい"
+      ],
+      "holdout": "give the level a spooky evening mood",
+      "core": [
+        "dx12_look_apply"
+      ]
+    },
+    {
+      "id": 10,
+      "design": "dx12_material_apply",
+      "expect": [
+        "dx12_material_apply"
+      ],
+      "queries": [
+        "木材の PBR テクスチャ 4 点を貼る",
+        "マテリアルにアルベドと法線とラフネスの画像をまとめて設定する"
+      ],
+      "holdout": "apply wood albedo normal roughness maps to the material",
+      "core": [
+        "dx12_material_apply"
+      ]
+    },
+    {
+      "id": 11,
+      "design": "dx12_vfx_apply",
+      "expect": [
+        "dx12_vfx_apply"
+      ],
+      "queries": [
+        "松明の炎を置く",
+        "焚き火のパーティクルエフェクトを配置したい"
+      ],
+      "holdout": "add a burning torch fire effect",
+      "core": [
+        "dx12_vfx_apply"
+      ]
+    },
+    {
+      "id": 12,
+      "design": "dx12_edit_terrain",
+      "expect": [
+        "dx12_terrain_generate",
+        "dx12_terrain_create",
+        "dx12_terrain_set_layers",
+        "dx12_edit_terrain"
+      ],
+      "queries": [
+        "山の地形を作って雪と岩と草を割り当てる",
+        "ハイトフィールドの丘を生成したい"
+      ],
+      "holdout": "generate mountain terrain with snow rock grass layers",
+      "core": [
+        "dx12_edit_terrain"
+      ]
+    },
+    {
+      "id": 13,
+      "design": "dx12_create_lua_component",
+      "expect": [
+        "dx12_create_lua_component"
+      ],
+      "queries": [
+        "回転する Lua スクリプトを作って貼る",
+        "オブジェクトの挙動を書く新しいスクリプトを作成したい"
+      ],
+      "holdout": "write a lua script that spins an object and attach it",
+      "core": [
+        "dx12_create_lua_component"
+      ]
+    },
+    {
+      "id": 14,
+      "design": "dx12_ui_compose",
+      "expect": [
+        "dx12_ui_compose"
+      ],
+      "queries": [
+        "タイトル画面の UI を組む",
+        "ゲーム内のメニューと HUD を作りたい"
+      ],
+      "holdout": "build the main menu screen",
+      "core": [
+        "dx12_ui_compose"
+      ]
+    },
+    {
+      "id": 15,
+      "design": "dx12_apply_scene_spec",
+      "expect": [
+        "dx12_scatter",
+        "dx12_scene_write",
+        "dx12_apply_scene_spec"
+      ],
+      "queries": [
+        "木を 100 本散らして置く",
+        "たくさんのオブジェクトを一気にばら撒きたい"
+      ],
+      "holdout": "scatter a hundred trees around the map",
+      "core": [
+        "dx12_apply_scene_spec"
+      ]
+    },
+    {
+      "id": 16,
+      "design": "dx12_apply_scene_spec",
+      "expect": [
+        "dx12_apply_scene_spec",
+        "dx12_scene_write",
+        "dx12_scene_scaffold"
+      ],
+      "queries": [
+        "部屋を一式(床・壁・ライト)作って検証まで",
+        "ステージ全体をシーン JSON からまとめて生成する"
+      ],
+      "holdout": "generate a whole room with floor walls and lights in one go",
+      "core": [
+        "dx12_apply_scene_spec"
+      ]
+    },
+    {
+      "id": 17,
+      "design": "dx12_capture",
+      "expect": [
+        "dx12_screenshot_final",
+        "dx12_capture"
+      ],
+      "queries": [
+        "人が見る最終画を撮る",
+        "ポストプロセス込みの見た目のスクリーンショットを撮影したい"
+      ],
+      "holdout": "take the final screenshot the player would see",
+      "core": [
+        "dx12_capture"
+      ]
+    },
+    {
+      "id": 18,
+      "design": "dx12_capture",
+      "expect": [
+        "dx12_screenshot_from",
+        "dx12_focus_and_screenshot",
+        "dx12_capture"
+      ],
+      "queries": [
+        "ある視点から撮る",
+        "指定したカメラ位置からスクショを撮りたい"
+      ],
+      "holdout": "capture an image from a specific camera position",
+      "core": [
+        "dx12_capture"
+      ]
+    },
+    {
+      "id": 19,
+      "design": "dx12_get_log",
+      "expect": [
+        "dx12_get_log",
+        "dx12_get_script_errors"
+      ],
+      "queries": [
+        "エンジンのログとスクリプトエラーを確認する",
+        "エラーが出ていないかログを見たい"
+      ],
+      "holdout": "check the engine log for errors",
+      "core": [
+        "dx12_get_log",
+        "dx12_get_script_errors"
+      ]
+    },
+    {
+      "id": 20,
+      "design": "dx12_get_perf",
+      "expect": [
+        "dx12_perf_stats",
+        "dx12_benchmark",
+        "dx12_get_perf"
+      ],
+      "queries": [
+        "FPS とボトルネックを測る",
+        "描画が重いのでパフォーマンスを計測したい"
+      ],
+      "holdout": "how many fps are we getting and what is the bottleneck",
+      "core": [
+        "dx12_get_perf"
+      ]
+    },
+    {
+      "id": 21,
+      "design": "dx12_play",
+      "expect": [
+        "dx12_play",
+        "dx12_stop"
+      ],
+      "queries": [
+        "Play して止める",
+        "ゲームを再生して動かす"
+      ],
+      "holdout": "start the game and then stop it",
+      "core": [
+        "dx12_play",
+        "dx12_stop"
+      ]
+    },
+    {
+      "id": 22,
+      "design": "dx12_play_script(M7 で長尾へ。エディタ操作の 2 本を Core に入れるため)",
+      "expect": [
+        "dx12_play_script"
+      ],
+      "queries": [
+        "入力の台本でゴールまで行けるか確かめる",
+        "キー入力を台本にして自動でプレイし断言で検証する"
+      ],
+      "holdout": "drive the player with an input script and assert it reaches the goal",
+      "core": []
+    },
+    {
+      "id": 23,
+      "design": "dx12_run_playtests(M6 で長尾へ。Core では dx12_job_start {kind:playtest})",
+      "expect": [
+        "dx12_run_playtests",
+        "dx12_job_start"
+      ],
+      "queries": [
+        "保存済みのプレイテストを全部回す",
+        "記録した回帰テストをまとめて実行したい"
+      ],
+      "holdout": "run every saved playtest",
+      "core": [
+        "dx12_job_start"
+      ]
+    },
+    {
+      "id": 24,
+      "design": "dx12_quality_gate",
+      "expect": [
+        "dx12_quality_gate"
+      ],
+      "queries": [
+        "作業の区切りで総合検査",
+        "品質ゲートを回して合否を出す"
+      ],
+      "holdout": "run the overall quality check",
+      "core": [
+        "dx12_quality_gate"
+      ]
+    },
+    {
+      "id": 25,
+      "design": "dx12_editor_command",
+      "expect": [
+        "dx12_imgui_find",
+        "dx12_imgui_pointer",
+        "dx12_imgui_virtual_input",
+        "dx12_imgui"
+      ],
+      "queries": [
+        "「ポストプロセス」ウィンドウを開く",
+        "エディタのメニューを操作してパネルを表示したい"
+      ],
+      "holdout": "open the post process window in the editor",
+      "core": [
+        "dx12_imgui"
+      ]
+    },
+    {
+      "id": 26,
+      "design": "dx12_imgui",
+      "expect": [
+        "dx12_imgui_pointer",
+        "dx12_imgui_find",
+        "dx12_imgui_key",
+        "dx12_imgui"
+      ],
+      "queries": [
+        "Inspector の値欄をクリックして入力する",
+        "エディタ UI のボタンを仮想入力で押したい"
+      ],
+      "holdout": "click on a field in the inspector",
+      "core": [
+        "dx12_imgui"
+      ]
+    },
+    {
+      "id": 27,
+      "design": "dx12_open_scene",
+      "expect": [
+        "dx12_open_scene",
+        "dx12_save_scene"
+      ],
+      "queries": [
+        "シーンを開く",
+        "今のシーンを保存する"
+      ],
+      "holdout": "save the current scene",
+      "core": [
+        "dx12_open_scene",
+        "dx12_save_scene"
+      ]
+    },
+    {
+      "id": 28,
+      "design": "dx12_doctor",
+      "expect": [
+        "dx12_doctor"
+      ],
+      "queries": [
+        "エンジンに繋がらない原因を知りたい",
+        "接続の診断をして起動手順を教えて"
+      ],
+      "holdout": "why can't the tool connect to the engine",
+      "core": [
+        "dx12_doctor"
+      ]
+    },
+    {
+      "id": 29,
+      "design": "dx12_tool_search",
+      "expect": [
+        "dx12_navmesh_build",
+        "dx12_check_reachable"
+      ],
+      "queries": [
+        "ナビメッシュを焼いてゴールへ行けるか見る",
+        "経路探索用のメッシュを生成して到達性を確認する"
+      ],
+      "holdout": "bake a navmesh and check the goal is reachable",
+      "core": []
+    },
+    {
+      "id": 30,
+      "design": "dx12_tool_search",
+      "expect": [
+        "dx12_undo"
+      ],
+      "queries": [
+        "直前の AI の編集を元に戻す",
+        "さっきの変更を取り消したい"
+      ],
+      "holdout": "undo my last edit",
+      "core": []
+    }
+  ],
+  "_doc2": "holdout は言い換えの検証用(辞書・ヒントの調整に使っていない英語/口語の 1 通り)。discovery.test.ts は queries と holdout の両方を数える。",
+  "_doc3": "M3: 各タスクの core = Core 面(shell 5 本 + Core 28 本 + dx12_batch)で直接届く許容ツール。空のタスクは長尾(dx12_tool_search → dx12_call)で届く。expect には core のツールも入れてある(全ツール対象の検索でも Core が正解になる)。"
+}

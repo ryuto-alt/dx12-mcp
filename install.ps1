@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env pwsh
-# DX12 Engine MCP サーバのセットアップ(Windows / PowerShell)。
+# Uno Engine MCP サーバのセットアップ(Windows / PowerShell)。
 # Node v24+ を確認 -> npm install -> npm test(エンジン不要)-> Claude Code と Codex に自動登録。
 # 手で貼るコマンドは無い。CLI が入っていない環境だけ、その分を手順として表示する。
 $ErrorActionPreference = "Stop"

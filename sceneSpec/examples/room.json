@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "room",
+  "comment": "部屋: 8m x 6m。テーブルの上のランプ、左右の椅子、絨毯、本棚を壁に沿って。カメラは隅からテーブルを向く。",
+  "lighting": { "preset": "indoor" },
+  "entities": [
+    { "name": "LVL_Floor", "kind": "box", "size": [8.6, 0.2, 6.6], "group": "LVL", "at": [0, -0.1, 0], "color": "#8a6f52", "material": { "roughness": 0.6 } },
+    { "name": "LVL_Wall_N", "kind": "box", "size": [8.4, 3, 0.2], "group": "LVL", "at": [0, null, 3.1], "place": { "on": "LVL_Floor" }, "color": "#d8d2c4" },
+    { "name": "LVL_Wall_S", "kind": "box", "size": [8.4, 3, 0.2], "group": "LVL", "at": [0, null, -3.1], "place": { "on": "LVL_Floor" }, "color": "#d8d2c4" },
+    { "name": "LVL_Wall_E", "kind": "box", "size": [0.2, 3, 6], "group": "LVL", "at": [4.1, null, 0], "place": { "on": "LVL_Floor" }, "color": "#d8d2c4" },
+    { "name": "LVL_Wall_W", "kind": "box", "size": [0.2, 3, 6], "group": "LVL", "at": [-4.1, null, 0], "place": { "on": "LVL_Floor" }, "color": "#d8d2c4" },
+    { "name": "LVL_Ceiling", "kind": "box", "size": [8.4, 0.2, 6.4], "group": "LVL", "at": [0, null, 0], "place": { "relativeTo": "LVL_Wall_N", "side": "above", "align": { "z": "center" } }, "color": "#efeae0" },
+    { "name": "ENV_Rug", "kind": "box", "size": [3, 0.02, 2], "group": "ENV", "at": [0.5, null, -0.5], "place": { "on": "LVL_Floor" }, "color": "#a83a3a" },
+    { "name": "ENV_Table", "kind": "box", "size": [1.6, 0.75, 0.9], "group": "ENV", "at": [0.5, null, -0.5], "place": { "on": "ENV_Rug" }, "color": "#6b4a2b", "material": { "roughness": 0.5 } },
+    { "name": "ENV_Lamp", "kind": "sphere", "size": 0.3, "group": "ENV", "place": { "on": "ENV_Table" }, "color": "#fff2c8", "material": { "emissive": [1, 0.85, 0.5], "emissiveIntensity": 3 } },
+    { "name": "LGT_Lamp", "kind": "light", "light": "point", "group": "LGT", "place": { "relativeTo": "ENV_Lamp", "side": "above", "gap": 0.05 }, "components": { "pointLight": { "intensity": 6, "range": 9, "color": [1, 0.85, 0.6] } } },
+    { "name": "ENV_ChairL", "kind": "box", "size": [0.5, 0.9, 0.5], "group": "ENV", "place": { "relativeTo": "ENV_Table", "side": "left", "gap": 0.25 }, "color": "#8a6a48" },
+    { "name": "ENV_ChairR", "kind": "box", "size": [0.5, 0.9, 0.5], "group": "ENV", "place": { "relativeTo": "ENV_Table", "side": "right", "gap": 0.25 }, "color": "#8a6a48" },
+    { "name": "ENV_Shelf", "kind": "box", "size": [3, 2, 0.4], "group": "ENV", "at": [0, null, 2.7], "place": { "on": "LVL_Floor" }, "color": "#5a3f28" },
+    { "name": "ENV_Book", "kind": "box", "size": [0.12, 0.3, 0.22], "group": "ENV", "color": "#2f5d8a",
+      "pattern": { "type": "along", "of": "ENV_Shelf", "side": "above", "count": 8, "margin": 0.2, "gap": 0 } },
+    { "name": "LGT_Window", "kind": "light", "light": "point", "group": "LGT", "at": [3.4, 2.4, 0], "components": { "pointLight": { "intensity": 3, "range": 8, "color": [0.75, 0.85, 1] } } },
+    { "name": "CAM_Main", "kind": "camera", "group": "CAM", "at": [-3.4, 1.8, -2.5], "lookAt": "ENV_Table", "components": { "camera": { "fovDegrees": 62 } } }
+  ]
+}

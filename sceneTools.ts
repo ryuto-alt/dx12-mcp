@@ -87,6 +87,10 @@ export const RENDER_DEBUG_MODES = [
   // ラスタの絵と色が一致すれば InstanceID → GeometryInfo → VB/IB/テクスチャ の配線が正しい。
   // Dynamic Resources（SM6.6 + Resource Binding Tier 3）非対応 GPU では真っ黒になる。
   "rtAlbedo",
+  // 仮想ジオメトリ（VG 設計書。P3: 可視性バッファ / P4: 材質 resolve の検証）。VG のラスタが動いているときだけ絵が出る
+  // （OFF / 非対応 GPU では warnings で理由が返る）。
+  "vgCluster", "vgLod", "vgTri", "vgDepth", "vgOverdraw", "vgCoverage",
+  "vgMaterial", "vgMip", "vgTileMaterials", "vgNormal",
   "shadowCascade", "lightComplexity", "clusterGrid", "decalCount",
   "fogScattering", "fogTransmittance", "fogSlice", "off",
 ] as const;
